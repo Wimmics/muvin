@@ -1,0 +1,16 @@
+.legend {
+    flex-direction: row;
+    width: 100%;
+    height: 80px;
+    position: relative;
+    left: 140px;
+}
+
+.legend .link-legend{
+    padding: 10px;
+}
+
+.legend .item-legend{
+    padding: 10px;
+}
+

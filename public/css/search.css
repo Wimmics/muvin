@@ -1,0 +1,19 @@
+@keyframes buttonTransition {
+    from {
+        stroke-width: 1px;
+        stroke: yellow;
+    }
+    to {
+        stroke-width: 3px;
+        stroke: yellow;
+    }
+}
+
+.high-item {
+    animation-duration: 2s;
+    animation-iteration-count: 5;
+    animation-name: buttonTransition;
+    transform-origin: center center;
+    animation-fill-mode: forwards;
+    z-index: 100;
+}

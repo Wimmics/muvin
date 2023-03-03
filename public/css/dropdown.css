@@ -1,0 +1,47 @@
+.dropbtn {
+    background-color:teal;
+    color: white;
+    padding: 10px;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+  }
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+    left: 10px;
+}
+  
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    padding: 5px;
+    color: black;
+    overflow-y: auto;
+    height: 200px;
+    width: fit-content;
+}
+
+.dropdown-content ul {
+    padding: 0;
+}
+
+.submitbtn{
+    padding: 10px;
+    margin-left: 20px;
+    background-color: #de425b;
+    border: none;
+    color: white;
+    display: inline-block;
+    cursor: pointer;
+    position: relative;
+}
+
+.item{
+    padding: 2px;
+    width: fit-content;
+}
