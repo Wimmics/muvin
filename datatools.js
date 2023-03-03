@@ -171,7 +171,7 @@ async function transform(values) {
     }
 
     return { items: Object.values(items), 
-        // clusters: Object.values(groupedItems), 
+        clusters: Object.values(groupedItems), 
         links: Object.values(links), 
         linkTypes: linkTypes }
      

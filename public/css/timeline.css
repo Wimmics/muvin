@@ -49,3 +49,27 @@ body{
     border: 1px solid #ccc;
     display: 'none';
 }
+
+#loading{
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    background-color: white;
+    opacity: 80%;
+    display: none;
+    position: absolute;
+    top: 0;
+}
+
+#loading img{
+    position: relative;
+    left: calc(50% - 35px);
+    top: 50%;
+    text-align: center;
+}
+
+#loading p{
+    position: relative;
+    top: 55%;
+    text-align: center;
+}

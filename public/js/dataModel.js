@@ -40,6 +40,8 @@ class DataModel {
 
     async add(node) {
 
+        this.chart.showLoading()
+
         let data = await this.fetchData(node)
         await this.update(data)
         

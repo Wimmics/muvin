@@ -63,6 +63,14 @@ class Muvin extends HTMLElement {
         // this.testHal()
     }
 
+    showLoading() {
+        this.shadowRoot.querySelector('#loading').style.display = "block";
+    }
+
+    hideLoading() {
+        this.shadowRoot.querySelector('#loading').style.display = "none";
+    }
+
     /**
      * Launch test with HAL data
      */
@@ -91,6 +99,7 @@ class Muvin extends HTMLElement {
             focus = nodes[nodes.length / 2]
         }
         
+        this.hideLoading()
         this.menu.close()
         this.menu.displayViewSettings()
 
@@ -519,7 +528,10 @@ template.innerHTML = `
     <div class='tooltip' id='profile-tooltip'></div>
     
     <div class="menu">
-        <img src="/muvin/images/open.svg" id="menu-icon" width="20"; height="20"; class="menu-icon"></img>
+        
+        <h3 style="color: white;">Muvin</h3>
+        <img src="/muvin/images/open.svg" id="menu-icon" width="20" height="20" class="menu-icon"></img>
+        
 
         <div class='icon-container'>
             <img src="/muvin/images/data.svg" id="data-icon" width="20"; height="20"; class="menu-icon"></img>
@@ -537,7 +549,7 @@ template.innerHTML = `
                 </select>
             </div>
             <div >
-                <label>Starting Point</label>
+                <label>Search for</label>
                 <input type="text" list='nodes-list' id="nodes-input" placeholder="Type here">
                 <datalist id='nodes-list'></datalist>
             </div>
@@ -555,6 +567,10 @@ template.innerHTML = `
     </div>
 
     <div class="vis">
+        <div id="loading">  
+            <img width="70px" height="70px" src="/muvin/images/loading.svg"></img>
+            <p>Loading data...</p>
+        </div>
 
         <div class='legend'>  </div>
 
