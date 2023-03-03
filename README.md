@@ -6,19 +6,19 @@
  - Install the necessary packages with **npm install**
  - Run the server with **npm start**
 
-Open the application on the browser at http://localhost:8020/muvin/
+ Open the application on the browser at http://localhost:8020/muvin/
 
 ## You can explore data from any SPARQL endpoint by including your queries in the queries.js file
  1. Prepare a query that returns data describing a list of items through at least the following variables
-  - ?id: a unique value identifying the item, typically the associated URI.
-  - ?artist: the person to whom the item belongs. It is represented as a node in the network.
-  - ?name: the label of the item, e.g. the title of a paper or the name of a song
-  - ?date: the release or publication date of the item
-  - ?type: the type of item, e.g. in scientific data, it can be the publication type (conference or journal articles)
-  - ?contributors: the list of collaborators of the item, e.g. the co-authors. It should be provided as a string where different names are separated by "--", for instance:
+  - *?id:* a unique value identifying the item, typically the associated URI.
+  - *?artist:* the person to whom the item belongs. It is represented as a node in the network.
+  - *?name:* the label of the item, e.g. the title of a paper or the name of a song
+  - *?date:* the release or publication date of the item
+  - *?type:* the type of item, e.g. in scientific data, it can be the publication type (conference or journal articles)
+  - *?contributors:* the list of collaborators of the item, e.g. the co-authors. It should be provided as a string where different names are separated by "--", for instance:
     - "collaborator1--collaborator2--collaborator3": this format provides a list of collaborators' names
     - "collaborator1&&type1--collaborator2&&type2--collaborator3&&type3": this format provides the collaboration type for each collaborators, e.g. in music, each person can have a different role, such as performer, producer or composer.
-  - ?link: (optional) a link to an external service, such as the data source
+  - *?link:* (optional) a link to an external service, such as the data source
 
  2. Prepare a query that returns the names of every node available in your database, see example in queries.js under nodeNames. This will be used to support the user on choosing a starting point for the visualization and on finding new nodes to include in the network.
 
@@ -31,6 +31,10 @@ Open the application on the browser at http://localhost:8020/muvin/
  ## Online demo
 
  The visualization is available online at http://dataviz.i3s.unice.fr/muvin/
+
+ ## License
+
+ See the [LICENSE file](LICENSE).
 
 
 
