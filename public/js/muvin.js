@@ -108,7 +108,7 @@ class Muvin extends HTMLElement {
 
         this.legend.update()
 
-        this.menu.search.update(this.data.items.filter(d => !this.display_all ? d.audio && nodes.includes(d.artist.name) : nodes.includes(d.artist.name)))
+        this.menu.search.update(this.data.items.filter(d => nodes.includes(d.artist.name)))
 
         this.legend.update()
         this.xAxis.set()

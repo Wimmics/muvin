@@ -90,7 +90,7 @@ class DataModel {
     }
     
     async getNodesLabels(value) {
-        const response = await fetch('/muvin/' + value + '/nodes')
+        const response = await fetch('/muvin/data/' + value + '/nodes')
         this.nodeLabels = await response.json()
     }
 

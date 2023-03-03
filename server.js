@@ -49,7 +49,7 @@ app.get(prefix + '/demo', function (req, res) {
     res.render('index');
 })
 
-app.get(prefix + '/:app/nodes', async function(req, res) {
+app.get(prefix + '/data/:app/nodes', async function(req, res) {
     let dir = path.join(__dirname, `data/${req.params.app}/`)
     if (!fs.existsSync(dir)){
         fs.mkdirSync(dir);
