@@ -10,14 +10,30 @@ class Menu{
 
         this.openIcon = '/muvin/images/open.svg';
         this.closeIcon = '/muvin/images/close.svg';
-
-        this.search = new Search()
-
     }
 
     init() {
         const _this = this;
-        this.search.init()
+        let eventSource;   
+
+        this.div.select("#nodes-input")
+            .on('keydown', () => eventSource = d3.event.key ? 'key' : 'list')
+            .on('input', function() {
+                if (eventSource === 'key') {
+                    if (this.value.length > 2) 
+                        _this.updateAutocomplete(this.value.toLowerCase())
+                } else _this.chart.data.add(this.value)
+            })
+        
+
+        this.div.select('#items-input')
+            .on('keydown', () => eventSource = d3.event.key ? 'key' : 'list')
+            .on('input', function() {
+                if (eventSource === 'key') return;
+                _this.chart.nodes.highlightItem(this.value)
+            })
+
+        this.div.select('#items-input-clear').on('click', () => this.chart.nodes.clearHighlight())
 
         this.div.select('#toggle-best-of')
             .on('change', function() { _this.chart.toggleBestOf(this.checked) })
@@ -29,6 +45,7 @@ class Menu{
             .on('change', function() { 
                 _this.changeDataset(this.value)
              })
+             
     }
 
     changeDataset(value) {
@@ -43,17 +60,47 @@ class Menu{
         this.chart.data.clear()
         this.chart.data.getNodesLabels(value)
     }
+
+    updateItemsSearch(data) {
+        this.data = data
+
+        let songNames = this.data.map(d => d.name)
+        songNames = songNames.filter((d,i) => songNames.indexOf(d) === i)
+        songNames.sort((a,b) => a.localeCompare(b))
+
+        d3.select(this.chart.shadowRoot.querySelector('#items-list'))
+            .selectAll('option')
+            .data(songNames)
+            .join(
+                enter => enter.append('option'),
+                update => update,
+                exit => exit.remove()
+            ).attr('value', d => d)
+    
+    }
+
+    updateAutocomplete(value) {
+
+        let labels = this.chart.data.nodeLabels.filter(d => d.name.value.toLowerCase().includes(value))
+        labels.sort( (a,b) => a.name.value.localeCompare(b.name.value))
+ 
+        d3.select(this.chart.shadowRoot.querySelector('#nodes-list'))
+            .selectAll('option')
+            .data(labels)
+            .join(
+                enter => enter.append('option'),
+                update => update,
+                exit => exit.remove()
+            ).attr('value', d => d.name.value)
+        
+    }
     
     displayViewSettings() {
         this.div.select('#view-controls').style('display', 'block')
-
-        this.div.select('#best-of').style('display', this.chart.getAttribute('wasabi') ? 'block' : 'none')
     }
 
     hideViewSettings() {
         this.div.select('#view-controls').style('display', 'none')
-
-        this.div.select('#best-of').style('display', 'none')
     }
 
     open() {

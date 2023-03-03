@@ -108,7 +108,7 @@ class Muvin extends HTMLElement {
 
         this.legend.update()
 
-        this.menu.search.update(this.data.items.filter(d => nodes.includes(d.artist.name)))
+        this.menu.updateItemsSearch(this.data.items.filter(d => nodes.includes(d.artist.name)))
 
         this.legend.update()
         this.xAxis.set()
@@ -549,14 +549,6 @@ template.innerHTML = `
                         <datalist id='items-list'></datalist>
                         <button id='items-input-clear'>Clear</button>
                     </div>
-                    <table>
-                        <tr id="best-of" style="display: none;">
-                            <td><input type="checkbox" id="toggle-best-of"></td>
-                            <td>Display Best-Of Albums</td>
-                            <td><img src="/muvin/images/info.svg"  width="15" height="15" class="info-icon" title="By default, only the original discography of artists is displayed.\nCheck this box to show all production.">
-                            </img></td>
-                        </tr>
-                    </table>
                 </div>
             </div>
         </div>

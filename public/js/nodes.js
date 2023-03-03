@@ -194,4 +194,43 @@ class NodesGroup {
             .attr('opacity', d => this.opacity(d) )
             .attr('stroke-width', 1)
     }
+
+    highlightItem(name){
+        let packGroups = d3.selectAll(this.chart.shadowRoot.querySelectorAll('.item-circle'))
+            .filter(d => this.opacity(d) ? true : false)
+
+        let selection = packGroups.filter(d => d.name === name)
+       
+        if (selection.size()) {
+            let data = []
+            selection.each(function() {
+                let d = d3.select(this).datum()
+
+                data.push({
+                    cx: d.x,
+                    cy: d.y,
+                    r: d.r 
+                })
+            })   
+
+            d3.select(this.chart.shadowRoot.querySelector('#chart-group'))
+                .selectAll('.highlight')
+                .data(data)
+                .join(
+                    enter => enter.append('circle')
+                        .attr('fill', 'none')
+                        .classed('highlight high-item', true),
+                    update => update,
+                    exit => exit.remove()
+                )
+                .attrs(d => d)
+        } else {
+            d3.selectAll(this.chart.shadowRoot.querySelectorAll('.highlight')).classed('high-item', false)
+        }
+    }
+
+    clearHighlight() {
+        this.chart.shadowRoot.querySelector('#items-input').value = '';
+        this.highlightItem('')
+    }
 }
