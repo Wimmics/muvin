@@ -1,19 +1,28 @@
 const fs = require('fs');
 const path = require('path');
-const { entpoints, queries, endpoints } = require('./queries')
+const { datasets } = require('./queries')
 const sparql = require('./sparql_helper')
 
-async function fetchItems(db, author) {
-    let query = queries[db].prefixes + queries[db].items.replace(/\$author/g, author)
-
-    return await sparql.executeQuery(query, endpoints[db])
-
+async function fetchItems(db, node) {
+    let query;    
+    switch(datasets[db].type) {
+        case 'sparql':
+            query = datasets[db].prefixes + datasets[db].items.replace(/\$author/g, node.value)
+            return await sparql.executeQuery(query, datasets[db].url)
+        case 'api':
+            query = datasets[db].items.replace(/\$category/g, node.type).replace(/\$value/g, encodeURIComponent(node.value))
+            let res = await sparql.sendRequest(query)
+            return JSON.parse(res)
+        default:
+            return null;
+    }
+    
 }
 
-async function fetchNodeData(db, author) {
-    let query = queries[db].prefixes + queries[db].nodeFeatures.replace(/\$author/g, author)
+async function fetchNodeData(db, node) {
+    let query = datasets[db].prefixes + datasets[db].nodeFeatures.replace(/\$author/g, node.value)
 
-    let result = await sparql.sendRequest(query.replace('$offset', 0), endpoints[db])
+    let result = await sparql.sendRequest(sparql.getSparqlUrl(query.replace('$offset', 0), datasets[db].url))
     let bindings;
     try{
         result = JSON.parse(result)
@@ -27,18 +36,31 @@ async function fetchNodeData(db, author) {
 }
 
 async function fetchNodes(db) {
-    let query = queries[db].prefixes + queries[db].nodeNames
+    let data = [];
 
-    let data = await sparql.executeQuery(query, endpoints[db])
+    switch(datasets[db].type) {
+        case 'sparql':
+            let query = datasets[db].prefixes + datasets[db].nodeNames
+            data = await sparql.executeQuery(query, datasets[db].url)
+            data = data.map( d => ( {value: d.value.value} )) 
+            break;
+        case 'api':
+            for (let query of datasets[db].nodeNames) {
+                let res = await sparql.sendRequest(query)
+                data = data.concat(JSON.parse(res))
+            }
+            break;
+    }
+    
     let out = "[" + data.map(el => JSON.stringify(el, null, 4)).join(",") + "]";
     fs.writeFileSync(path.join(__dirname, `/data/${db}/nodes.json`), out)    
     return data
 }
 
-async function clean() {
-    let values = JSON.parse(JSON.stringify(arguments[0]))
-   
-    values.forEach( d => {
+async function clean(values) {
+    let cleanValues = JSON.parse(JSON.stringify(values))
+
+    cleanValues.forEach( d => {
         Object.keys(d).forEach( key => {
             d[key] = d[key].value
 
@@ -72,7 +94,38 @@ async function clean() {
         })
     })
 
-    return values
+    return cleanValues
+}
+
+async function cleanCroboraResults(values, node) {
+    let cleanValues = values.map(d => d.records).flat()
+
+    let categories = ['event', 'location', 'illustration', 'celebrity']
+    cleanValues = cleanValues.map(d => {
+        
+        let getContributors = () => {
+            let vals = []
+            categories.forEach(key => {
+                if (d[key]) d[key].forEach( x => vals.push({ name: x, type: d.channel } ))
+            })
+            return vals
+        }
+
+        return {
+            id: d._id,
+            artist: node.value,
+            name: d.image_title,
+            date: d.day_airing,
+            type: d.channel,
+            contributors: getContributors(),
+            link: `http://dataviz.i3s.unice.fr/crobora/document/${d.ID_document}`,
+            parentId: d.ID_document,
+            parentName: d.document_title,
+            parentDate: d.day_airing
+        }
+    })
+
+    return cleanValues
 }
 
 async function getLinkTypes(values) {
@@ -81,7 +134,7 @@ async function getLinkTypes(values) {
 }
 
 async function transform(values) {
-    
+
     let groupedItems = {}
     let items = {}
     let links = {}
@@ -96,8 +149,7 @@ async function transform(values) {
                                                 name: item.parentName, 
                                                 date: item.parentDate, 
                                                 year: year, 
-                                                artist: { name: item.parentArtistName, id: item.parentArtistId }, 
-                                                type: 'album'}
+                                                artist: { name: item.parentArtistName || item.artist, id: item.parentArtistId } }
 
         let contributions = {}
         for (let type of linkTypes){ 
@@ -138,7 +190,7 @@ async function transform(values) {
         for (let c of item.contributors) {
             if (item.artist === c.name) continue
 
-            let target = item.parentId ? item.parentArtistName : item.artist;
+            let target = item.parentArtistName ? item.parentArtistName : item.artist;
             let key = `${c.name}-${target}-${year}-${item.id}`    
             if (!links[key]) 
                 links[key] = {
@@ -156,7 +208,7 @@ async function transform(values) {
 
     for (let item of Object.values(items)) {
 
-        if (!item.parent || item.parent.artist.name != item.artist.name) {// singles or songs where the artist contributed but that do not belong to them
+        if (!item.parent || (item.parent.artist && item.parent.artist.name != item.artist.name)) {// singles or songs where the artist contributed but that do not belong to them
             groupedItems[item.id] = {...item}
         } else {
 
@@ -180,48 +232,55 @@ async function transform(values) {
 /// for testing the class
 
 async function fetchData(db, node) {
-    
     let values = await fetchItems(db, node) 
-    values = await clean(values)
+
+    if (datasets[db].type === "sparql")
+        values = await clean(values)
+    else values = await cleanCroboraResults(values, node)
+
+    // fs.writeFileSync(path.join(__dirname, `/data/${db}/raw.json`), JSON.stringify(values, null, 4))
 
     let data = await transform(values)
 
-    let features = {}
-    let res = await fetchNodeData(db, node)
-    if (res) {
-        let members = null;
-        if (res.members) {
-            members = res.members.value.split('--')
-                .map(d => {
-                    let parts = d.split('&&') 
-                    return {
-                        name: parts[0],
-                        startDate: parts[1] === "NA" ? 'Not Available' : parts[1],
-                        endDate: parts[2] === "NA" ? 'Not Available' : parts[2]
-                    }
-                })
+    data.artists = {}
+    if (datasets[db].type === "sparql") {
+        let res = await fetchNodeData(db, node)
+        if (res) {
+            let members = null;
+            if (res.members) {
+                members = res.members.value.split('--')
+                    .map(d => {
+                        let parts = d.split('&&') 
+                        return {
+                            name: parts[0],
+                            startDate: parts[1] === "NA" ? 'Not Available' : parts[1],
+                            endDate: parts[2] === "NA" ? 'Not Available' : parts[2]
+                        }
+                    })
+            }
+
+            data.artists[res.artist.value] = {
+                name: res.artist.value,
+                id: res.id.value,
+                type: res.type.value.split('--'),
+                members: members || "Not Available",
+                lifespan: { from: res.from ? res.from.value : 'Not Available', to: res.to ? res.to.value : 'Not Available'}
+            }
         }
 
-        features[res.artist.value] = {
-            name: res.artist.value,
-            id: res.id.value,
-            type: res.type.value.split('--'),
-            members: members || "Not Available",
-            lifespan: { from: res.from ? res.from.value : 'Not Available', to: res.to ? res.to.value : 'Not Available'}
+        // data.artists = features
+    } else {
+        data.artists[node.value] = {
+            name: node.value,
+            type: node.type
         }
     }
 
-    data.artists = features
-
-    // the following are for debugging
-    // fs.writeFileSync(path.join(__dirname, `/data/${db}/${node}-wasabidata_items.json`), JSON.stringify(data.items, null, 4))
-    // fs.writeFileSync(path.join(__dirname, `/data/${db}/${node}-wasabidata_grouped.json`), JSON.stringify(data.groupedItems, null, 4))
-    // fs.writeFileSync(path.join(__dirname, `/data/${db}/${node}-wasabidata_links.json`), JSON.stringify(data.links, null, 4))  
-
-    fs.writeFileSync(path.join(__dirname, `/data/${db}/${node}-data_vis.json`), JSON.stringify(data, null, 4)) 
+    let filename = `data/${db}/${node.value}${node.type ? '-' + node.type : ''}-data_vis.json`
+    fs.writeFileSync(path.join(__dirname, filename), JSON.stringify(data, null, 4)) 
 
     return data
 }
 
-// fetchData()
+// fetchData('crobora', {value: 'Angela Merkel', type: 'celebrity'} )
 module.exports = { fetchData, fetchNodes }

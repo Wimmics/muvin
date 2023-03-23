@@ -26,10 +26,22 @@
     <script src="/muvin/js/links.js"></script>
     <script src="/muvin/js/node-links.js"></script>
     <script src="/muvin/js/nodes.js"></script>
+
     <script src="/muvin/js/tooltip.js"></script>
+    <script src="/muvin/js/publicationsTooltip.js"></script>
+    <script src="/muvin/js/musicTooltip.js"></script>
+    <script src="/muvin/js/imageTooltip.js"></script>
+
     <script src="/muvin/js/muvin.js" type="module"></script>
 </head>
 
 <body>
-    <vis-muvin id="muvin" ></vis-muvin>
+    <vis-muvin id="muvin" app=<%= locals.app %> ></vis-muvin>
+
+    <script>
+        let locals = <%- JSON.stringify(locals) %>;
+
+        if (locals.params.value && locals.params.value.length) 
+            document.querySelector("#muvin").setAttribute("value", locals.params.value)
+    </script>
 </body>

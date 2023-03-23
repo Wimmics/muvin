@@ -45,8 +45,8 @@ app.get(prefix, function (req, res) {
 })
 
 // index page 
-app.get(prefix + '/demo', function (req, res) {
-    res.render('index');
+app.get(prefix + '/:app', function (req, res) {
+    res.render('index', { app: req.params.app, params: req.query } );
 })
 
 app.get(prefix + '/data/:app/nodes', async function(req, res) {
@@ -62,12 +62,16 @@ app.get(prefix + '/data/:app/nodes', async function(req, res) {
     } else res.send(JSON.stringify(await datatools.fetchNodes(req.params.app)))
 })
 
-app.get(prefix + '/data/:app/:value', async function(req, res) {
-    let datafile = path.join(__dirname, `data/${req.params.app}/${req.params.value}-data_vis.json`);
+app.get(prefix + '/data/:app', async function(req, res) {
+    let node = {value: req.query.value, type: req.query.type === 'undefined' ? undefined : req.query.type}
+
+    let filename = `data/${req.params.app}/${node.value}${node.type ? '-' + node.type : ''}-data_vis.json`
+    console.log("filename = ", filename)
+    let datafile = path.join(__dirname, filename);
     if (fs.existsSync(datafile))
         res.sendFile(datafile);
     else {
-        res.send(JSON.stringify(await datatools.fetchData(req.params.app, req.params.value)))
+        res.send(JSON.stringify(await datatools.fetchData(req.params.app, node)))
     }
 })
 

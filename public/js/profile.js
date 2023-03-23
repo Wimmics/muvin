@@ -148,7 +148,7 @@ class ProfilesGroup {
             .attr('opacity', '1')
             .on('mouseenter', d => {let e = d3.event; this.mouseover(e, d); })
             .on('mousemove', d => {let e = d3.event; this.mouseover(e, d); })
-            .on('mouseout', () => this.mouseout())
+            .on('mouseleave', () => this.mouseout())
             .on('click', d => {let e = d3.event; this.select(e, d); })
 
         let dimensions = this.chart.getDimensions()
@@ -180,7 +180,8 @@ class ProfilesGroup {
 
     mouseover(e, d) {
 
-        this.chart.tooltip.setContent(this.getTooltipContent(e, d), this.tooltipId)
+        // this.chart.tooltip.setContent(this.getTooltipContent(e, d), this.tooltipId)
+        this.chart.tooltip.setProfileContent(e, d, this.tooltipId)
         this.chart.tooltip.show(e, this.tooltipId)
        
         let node = d[0].data.artist
@@ -204,20 +205,4 @@ class ProfilesGroup {
 
         this.chart.fstlinks.reverse()
     }  
-
-    getTooltipContent(e, d) {
-        let artist = d[0].data.artist || d[0].data.artist.name
-        let year = this.chart.xAxis.invert(e.pageX, 1)
-
-        let data = this.chart.getData()
-        let values = data.items.filter(e => e.artist.name === artist && e.year === year && e.artist.contribution.includes(d.key))
-        if (!this.chart.displayBestOfs())
-            values = values.filter(e => e.audio)
-        
-
-        return `<b> ${artist}</b><br><br>
-        <b>Contribution Type:</b> ${capitalizeFirstLetter(d.key)}<br><br>
-        <b>${values.length}</b> items in <b>${year}</b>`
-
-    }
 }

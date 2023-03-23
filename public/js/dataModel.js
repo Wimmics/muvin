@@ -15,7 +15,9 @@ class DataModel {
     }
 
     async fetchData(node) {
-        const response = await fetch('/muvin/data/' + this.chart.getAttribute("app") + '/' + node)
+        let data = this.nodeLabels.find(d => d.value === node)
+
+        const response = await fetch('/muvin/data/' + this.chart.app + '?value=' + node + '&type=' + data.type)
 
         return await response.json()
     }
@@ -94,10 +96,18 @@ class DataModel {
     async getNodesLabels(value) {
         const response = await fetch('/muvin/data/' + value + '/nodes')
         this.nodeLabels = await response.json()
+        
     }
 
     isNodeExplorable(node){
-        return this.nodeLabels.some(d => d.name.value === node)
+        return this.nodeLabels.some(d => d.value === node)
+    }
+
+    getMatchingLabels(value) {
+        let labels = this.chart.data.nodeLabels.filter(d => d.value.toLowerCase().includes(value))
+        labels.sort( (a,b) => a.value.localeCompare(b.value))
+
+        return labels
     }
 
     setCollaborations() {

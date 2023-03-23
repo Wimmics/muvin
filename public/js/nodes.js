@@ -73,7 +73,7 @@ class NodesGroup {
                 exit => exit.remove()        
             )
             .on('contextmenu', d3.contextMenu(d => this.chart.getContextMenu(d)))
-            .on('mouseover', d => { let e = d3.event; this.mouseover(e, d, 'item') })
+            .on('mouseenter', d => { let e = d3.event; this.mouseover(e, d, 'item') })
             .on('mouseleave', () => this.mouseout()) // set a timeout to ensure that mouseout is not triggered while rapidly changing the hover
 
 
@@ -115,22 +115,17 @@ class NodesGroup {
     mouseover(e, d, tooltipId) {
         if ((this.chart.getTimeSelection() && !this.chart.isSelected(d.year)) || (d.children && d.name === 'singles')) return
 
-        this.chart.tooltip.setContent(this.getTooltipContent(d), tooltipId)
+        this.chart.tooltip.setNodeContent(d, tooltipId)
         this.chart.tooltip.show(e, tooltipId)
         this.tooltipId = tooltipId;
-
-        let nodes = this.chart.getConnectedNodes() // get nodes affected by the freeze, when it is active
-        let isTheSame = e => e.id === d.id && (e.parent ? e.parent.id === d.parent.id : true) // compare the parent as well to avoid showing the play icon on duplicate items (the ones that appear on the timeline of different arists)
-
-        this.group.selectAll('.item-audio-ctrl')
-            .attr('opacity', e => e.audio && 
-                (this.chart.isFreezeActive() ? isTheSame(e) && nodes && nodes.snd.includes(e.id) : isTheSame(e)) ? .7 : 0)
 
         if (this.chart.isFreezeActive()) return
 
         let collab = d.contnames ? d.contnames.filter( (e,i) => e != d.artist.name && this.chart.areItemsVisible(e)) : []
 
         this.group.selectAll('.item-circle')
+            .transition()
+            .duration(100)
             .attr('opacity', e => {
                 if (!this.chart.isNodeVisible(e.artist.name)) return 0
                 if (collab.length && e.artist.name != d.artist.name && !collab.includes(e.artist.name)) return 0
@@ -150,26 +145,24 @@ class NodesGroup {
         this.chart.profiles.downplay(d)
     }
 
-    getTooltipContent(d) {
-        let app = this.chart.getAttribute('app')
+    // getTooltipContent(d) {
 
-        const itemName = `<b>${d.name} (${d.year})</b><br>`
-        const audioPlay = d.audio ? 'Click to listen' : 'No audio available'; 
-        const type = `Document type: ${d.type}`
-        const more = `<br><br>Right-click for more`
+    //     const itemName = `<b>${d.name} (${d.year})</b><br>`
+    //     const audioPlay = d.audio ? 'Click to listen' : 'No audio available'; 
+    //     const type = `Document type: ${d.type}`
+    //     const more = `<br><br>Right-click for more`
         
-        const contributors = e => {
-            if (this.chart.app === 'wasabi')
-                return Object.keys(e.conttypes).map(key => `<b>${capitalizeFirstLetter(key)}</b>: ${e.conttypes[key].length ? e.conttypes[key].join(', ') : 'No Data'}`).join('<br>')
-            return `<b>Author(s):</b> ${e.contnames.map(val => capitalizeFirstLetter(val)).join(', ')}`
-        } 
+    //     const contributors = e => {
+    //         if (this.chart.app === 'wasabi')
+    //             return Object.keys(e.conttypes).map(key => `<b>${capitalizeFirstLetter(key)}</b>: ${e.conttypes[key].length ? e.conttypes[key].join(', ') : 'No Data'}`).join('<br>')
+    //         return `<b>Author(s):</b> ${e.contnames.map(val => capitalizeFirstLetter(val)).join(', ')}`
+    //     } 
 
-        return d.children ? `${itemName}<b>Artist:</b> ${d.artist.name}<br>${d.children.length} songs<br><br>${audioPlay}${more}` : 
-        `${itemName}<br>${contributors(d)}<br><br>${app != 'wasabi' ? type : audioPlay}${more}`; 
-    }
+    //     return d.children ? `${itemName}<b>Artist:</b> ${d.artist.name}<br>${d.children.length} songs<br><br>${audioPlay}${more}` : 
+    //     `${itemName}<br>${contributors(d)}<br><br>${this.chart.app != 'wasabi' ? type : audioPlay}${more}`; 
+    // }
 
     mouseout() {
-        window.clearTimeout(this.mouseoverTimeout)
 
         this.chart.fstlinks.reverse()
 
@@ -177,9 +170,6 @@ class NodesGroup {
         this.tooltipId = null;
         
         this.chart.profiles.reverseDownplay()
-
-        this.group.selectAll('.item-audio-ctrl')
-            .attr('opacity', 0)
 
         if (this.chart.isFreezeActive()) return;
 

@@ -19,12 +19,10 @@ class Tooltip {
     show(event, id) {
         d3.select(this.chart.shadowRoot.querySelector(`#${id}-tooltip`))
             .styles({
-                left: event.pageX + 'px',
-                top: event.pageY +'px',
+                left: event.pageX + 10 + 'px',
+                top: event.pageY + 10 +'px',
                 display: 'block',
                 'pointer-events': 'none'
             })
-
-            
     }
 }

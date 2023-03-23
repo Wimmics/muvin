@@ -41,10 +41,10 @@ class Menu{
         this.div.selectAll('.menu-icon')
             .on('click', () => this.toggle())
 
-        this.div.select("select#dataset-list")
-            .on('change', function() { 
-                _this.changeDataset(this.value)
-             })
+        // this.div.select("select#dataset-list")
+        //     .on('change', function() { 
+        //         _this.changeDataset(this.value)
+        //      })
              
     }
 
@@ -81,8 +81,7 @@ class Menu{
 
     updateAutocomplete(value) {
 
-        let labels = this.chart.data.nodeLabels.filter(d => d.name.value.toLowerCase().includes(value))
-        labels.sort( (a,b) => a.name.value.localeCompare(b.name.value))
+        let labels = this.chart.data.getMatchingLabels(value)
  
         d3.select(this.chart.shadowRoot.querySelector('#nodes-list'))
             .selectAll('option')
@@ -91,7 +90,7 @@ class Menu{
                 enter => enter.append('option'),
                 update => update,
                 exit => exit.remove()
-            ).attr('value', d => d.name.value)
+            ).attr('value', d => d.value)
         
     }
     

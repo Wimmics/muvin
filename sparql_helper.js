@@ -9,12 +9,7 @@ function prepare(query) {
     return query;
 }
 
-async function sendRequest(query, uri){
-
-    // var wasabiAPISongById = wasabiUrl + "/api/v1/song/id/"
-    let url = uri + "?query=";
-    url = url + prepare(query);
-    url = url + "&format=application%2Fsparql-results%2Bjson";
+async function sendRequest(url){
     
     let result = await fetch(url).then(async function(response){
       if(response.status >= 200 && response.status < 300){
@@ -26,10 +21,15 @@ async function sendRequest(query, uri){
     return result
 }
 
+function getSparqlUrl(query, uri) {
+	return uri + "?query=" + prepare(query) + "&format=application%2Fsparql-results%2Bjson";
+}
+
 async function executeQuery(query, endpoint) {
 	let offset = 0
 	let data = []
-	let result = await sendRequest(query.replace('$offset', offset), endpoint )
+	
+	let result = await sendRequest( getSparqlUrl( query.replace('$offset', offset), endpoint ) )
 	
 	try {
 		
@@ -41,7 +41,7 @@ async function executeQuery(query, endpoint) {
 			data = data.concat(bindings)
 			
 			offset += 10000;
-			result = await sendRequest(query.replace('$offset', offset), endpoint)
+			result = await sendRequest(getSparqlUrl(query.replace('$offset', offset), endpoint))
 			result = JSON.parse(result)
 			bindings = result.results.bindings
       	}
@@ -53,4 +53,4 @@ async function executeQuery(query, endpoint) {
   	return data;
 }
 
-module.exports = { executeQuery, sendRequest }
+module.exports = { executeQuery, sendRequest, getSparqlUrl }

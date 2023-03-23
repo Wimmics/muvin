@@ -22,6 +22,7 @@ class Muvin extends HTMLElement {
 
     async connectedCallback() {
         this.shadowRoot.appendChild(template.content.cloneNode(true));
+        this.app = this.getAttribute("app")
 
         this.div = d3.select(this.shadowRoot.querySelector('div.timeline'))
         this.svg = this.div.select('svg#chart')
@@ -50,15 +51,23 @@ class Muvin extends HTMLElement {
 
         this.profiles = new ProfilesGroup()
 
-        this.tooltip = new Tooltip()
-        this.tooltip.set()
+        if (this.app === 'hal')
+            this.tooltip = new PublicationsTooltip()
+        else if (this.app === 'wasabi')
+            this.tooltip = new MusicTooltip()
+        else if (this.app === 'crobora')
+            this.tooltip = new ImageTooltip()
+        // this.tooltip.set()
 
         this.menu = new Menu()
         this.menu.init()
         this.menu.open()
 
-        this.setAttribute('app', 'hal')
-        await this.data.getNodesLabels('hal')
+        
+
+        // this.setAttribute('app', 'crobora')
+        await this.data.getNodesLabels(this.app)
+        this.test()
 
         // this.testHal()
     }
@@ -74,22 +83,22 @@ class Muvin extends HTMLElement {
     /**
      * Launch test with HAL data
      */
-    async testHal() {
-        this.setAttribute('app', 'hal')
-        await this.data.getNodesLabels('hal')
-        await this.data.add('Marco Winckler')
-        let values = ['Philippe Palanque', 'Thiago Rocha Silva', 'Lucile Sassatelli', 'Célia Martinie', 'Aline Menin']
-        values.forEach(async (d) => await this.data.add(d))
-    }
-
-    /**
-     * Launch test with Wasabi data
-     */
-    async testWasabi() {
-        this.setAttribute('app', 'wasabi')
-        this.data.getNodesLabels('wasabi')
-        await this.data.add('Eminem')
-        let values = ['50 Cent', 'Adam Levine', 'Dr. Dre', 'Bruno Mars']
+    async test() {
+        let values = [];
+        switch(this.app) {
+            case 'crobora':
+                // await this.data.add('Marco Winckler')
+                values = ['Angela Merkel']
+                break;
+            case 'hal':
+                values = ['Aline Menin']
+                // values = ['Marco Winckler', 'Philippe Palanque', 'Thiago Rocha Silva', 'Lucile Sassatelli', 'Célia Martinie', 'Aline Menin']
+                break;
+            case 'wasabi':
+                values = ['Eminem']
+                // values = ['Eminem', '50 Cent', 'Adam Levine', 'Dr. Dre', 'Bruno Mars']
+                break;
+        }
         values.forEach(async (d) => await this.data.add(d))
     }
 
@@ -531,7 +540,6 @@ template.innerHTML = `
         
         <h3 style="color: white;">Muvin</h3>
         <img src="/muvin/images/open.svg" id="menu-icon" width="20" height="20" class="menu-icon"></img>
-        
 
         <div class='icon-container'>
             <img src="/muvin/images/data.svg" id="data-icon" width="20"; height="20"; class="menu-icon"></img>
@@ -540,14 +548,15 @@ template.innerHTML = `
         </div>
 
         <div id='menu-items' class='settings'>
-            <div >
+            <!-- <div >
                 <label>Dataset</label>
                 <select id="dataset-list">
                     <option value="" disabled selected>Select a dataset</option>
-                    <option value="hal" selected>Hal Open Archive</option>
+                    <option value="hal">Hal Open Archive</option>
                     <option value="wasabi">Wasabi</option>
+                    <option value="crobora" selected>Crobora</option>
                 </select>
-            </div>
+            </div> -->
             <div >
                 <label>Search for</label>
                 <input type="text" list='nodes-list' id="nodes-input" placeholder="Type here">

@@ -1,10 +1,11 @@
-const endpoints = {
-    wasabi: "http://wasabi.inria.fr/sparql",
-    hal: "http://sparql.archives-ouvertes.fr/sparql"
-}
+const datasets = {
 
-const queries = {
-    wasabi: { prefixes: `
+    // Wasabi
+    wasabi: { 
+        type: 'sparql',
+        url: "http://wasabi.inria.fr/sparql",
+
+        prefixes: `
         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
         prefix dcterms: <http://purl.org/dc/terms/>
         prefix foaf:    <http://xmlns.com/foaf/0.1/>
@@ -67,13 +68,19 @@ const queries = {
 
         } `,
 
-        nodeNames: `SELECT distinct ?a ?name WHERE {
+        nodeNames: `SELECT distinct ?a ?value WHERE {
             { ?a a wsb:Artist_Person } union { ?a a wsb:Artist_Group } union { ?a a  mo:MusicArtist}
-            ?a foaf:name ?name
+            ?a foaf:name ?value
           } limit 10000 offset $offset`
 
     },
+
+
+    // HAL Archives Ouverts
     hal: {
+        type: 'sparql',
+        url: "http://sparql.archives-ouvertes.fr/sparql",
+
         prefixes: `
         PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX hsc: <http://data.archives-ouvertes.fr/schema/>
@@ -129,12 +136,19 @@ const queries = {
             }
         `,
 
-        nodeNames: `SELECT distinct ?name WHERE {
-            ?a a foaf:Person ; foaf:name ?name . 
+        nodeNames: `SELECT distinct ?value WHERE {
+            ?a a foaf:Person ; foaf:name ?value . 
 
           } limit 10000 offset $offset`
-        
-    }
+    } ,
+
+    // CROBORA
+    crobora: {
+        type: 'api',
+        url: "http://dataviz.i3s.unice.fr/crobora-api/",
+        nodeNames: ['http://dataviz.i3s.unice.fr/crobora-api/cluster/names', 'http://dataviz.i3s.unice.fr/crobora-api/cluster/names2'],
+        items: 'http://dataviz.i3s.unice.fr/crobora-api/search/imagesOR?categories=$category&keywords=$value&options=illustration&options=location&options=celebrity&options=event'
+    }   
 }
 
-module.exports = { endpoints, queries }
+module.exports = { datasets }
