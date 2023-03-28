@@ -7,75 +7,44 @@ class NodesGroup {
         this.forceSimulation = d3.forceSimulation()
             .alphaMin(.1)
             .force("x", d3.forceX()
-                .strength(() => this.chart.getTimeSelection() ? .2 : .5)
+                .strength(() => this.chart.getTimeSelection() ? .7 : .9)
                 .x(d => this.chart.xAxis.scale(d.year)))
             .force("y", d3.forceY()
-                .strength(() => this.chart.getTimeSelection() ? .8 : .6)
+                .strength(() => this.chart.getTimeSelection() ? .4 : .2)
                 .y(d => this.chart.yAxis.scale(d.artist.name ))) 
             .force("collide", d3.forceCollide().radius(d => d.r).iterations(32)) // Force that avoids circle overlapping
 
         this.mouseoverTimeout;
         this.tooltipId = null;
 
-        this.radius = {min: 3, max: 15, minFocus: 12, maxFocus: 45}
-
-        this.radiusScale = d3.scaleLinear().range([this.radius.min, this.radius.max])
+        this.circleAttrs = {
+            r: d => d.r,
+            fill: () => this.chart.getColors('item').color,
+            stroke: '#000',
+            opacity: d => this.opacity(d),
+            class: 'item-circle'
+        }
     }
 
-    set() {
-    }
+    set() {}
+
+    async computeRadius() {}
+
+    async appendNodes() { }
 
     // draw the second level nodes of the network (e.g. documents, songs/albums)
     async draw() {
 
         this.data = this.chart.data.items;
-        this.radiusScale.domain(d3.extent(this.data, d => d.contCount))
+        
+        await this.computeRadius()
 
-        this.data.forEach(d => {
-            if (this.chart.getTimeSelection()) {
-                if (this.chart.isSelected(d.year)) 
-                    this.radiusScale.range([this.radius.minFocus, this.radius.maxFocus])
-                
-                else {
-                    let values = this.chart.xAxis.values
-                    let index = values.indexOf(this.chart.getTimeSelection())
-                    let distance = Math.abs(values.indexOf(d.year) - index)
+        await this.appendNodes()
 
-                    let ratio = distance < 4 ? .25 * ( 4 - distance) : .05
-                    
-                    this.radiusScale.range([this.radius.minFocus * ratio, this.radius.maxFocus * ratio])
-                }
-            } else this.radiusScale.range([this.radius.min, this.radius.max])
-            d.r = this.radiusScale(d.contCount)
-        })
-    
-        const circleAttrs = {
-            r: d => d.r,
-            fill: this.chart.getColors('item').color,
-            stroke: '#000',
-            opacity: d => this.opacity(d),
-            class: 'item-circle'
-        }
-
-        // a group per item (e.g. an item == a song)
-        this.group.selectAll('g.artist')
-            .selectAll('.doc')            
-            .data(d => this.data.filter(e => e.artist.name === d) )
-            .join(
-                enter => enter.append('g')
-                    .classed('doc', true)
-                    .style('pointer-events', d => this.opacity(d) ? 'auto' : 'none')
-                    .call(g => g.append('circle')
-                            .attrs(circleAttrs)),
-                update => update.style('pointer-events', d => this.opacity(d) ? 'auto' : 'none')
-                    .call(g => g.select('circle')
-                            .attrs(circleAttrs) ),
-                exit => exit.remove()        
-            )
+        this.group.selectAll('.doc')
             .on('contextmenu', d3.contextMenu(d => this.chart.getContextMenu(d)))
             .on('mouseenter', d => { let e = d3.event; this.mouseover(e, d, 'item') })
             .on('mouseleave', () => this.mouseout()) // set a timeout to ensure that mouseout is not triggered while rapidly changing the hover
-
 
         this.placeItems()
 
@@ -88,7 +57,7 @@ class NodesGroup {
         this.forceSimulation.alpha(1).restart()
         this.forceSimulation.tick(10)
         this.forceSimulation.on("tick", () => this.group.selectAll('.doc')
-                .attr('transform', d => {if (!d.x || !d.y) console.log(d); return `translate(${d.x}, ${d.y})` }))
+                .attr('transform', d => `translate(${d.x}, ${d.y})` ))
                 
             .on('end', () => { if (this.chart.getTimeSelection()) this.chart.sndlinks.draw() })
     }
@@ -144,23 +113,6 @@ class NodesGroup {
         this.chart.fstlinks.highlight(d)
         this.chart.profiles.downplay(d)
     }
-
-    // getTooltipContent(d) {
-
-    //     const itemName = `<b>${d.name} (${d.year})</b><br>`
-    //     const audioPlay = d.audio ? 'Click to listen' : 'No audio available'; 
-    //     const type = `Document type: ${d.type}`
-    //     const more = `<br><br>Right-click for more`
-        
-    //     const contributors = e => {
-    //         if (this.chart.app === 'wasabi')
-    //             return Object.keys(e.conttypes).map(key => `<b>${capitalizeFirstLetter(key)}</b>: ${e.conttypes[key].length ? e.conttypes[key].join(', ') : 'No Data'}`).join('<br>')
-    //         return `<b>Author(s):</b> ${e.contnames.map(val => capitalizeFirstLetter(val)).join(', ')}`
-    //     } 
-
-    //     return d.children ? `${itemName}<b>Artist:</b> ${d.artist.name}<br>${d.children.length} songs<br><br>${audioPlay}${more}` : 
-    //     `${itemName}<br>${contributors(d)}<br><br>${this.chart.app != 'wasabi' ? type : audioPlay}${more}`; 
-    // }
 
     mouseout() {
 

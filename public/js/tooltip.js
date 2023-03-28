@@ -17,10 +17,22 @@ class Tooltip {
     }
 
     show(event, id) {
-        d3.select(this.chart.shadowRoot.querySelector(`#${id}-tooltip`))
+        let tooltip = this.chart.shadowRoot.querySelector(`#${id}-tooltip`)
+        // console.log(tooltip)
+        let x = event.pageX + 10,
+            y = event.pageY + 10,
+            tHeight = tooltip.clientHeight,
+            tWidth = tooltip.clientWidth;
+
+        // console.log(x, tWidth, window.innerWidth, x + tWidth)
+
+        if ( (x + tWidth) > window.innerWidth) x = window.innerWidth - tWidth
+        if ( (y + tHeight) > window.innerHeight) y = window.innerHeight - tHeight
+
+        d3.select(tooltip)
             .styles({
-                left: event.pageX + 10 + 'px',
-                top: event.pageY + 10 +'px',
+                left: x + 'px',
+                top: y +'px',
                 display: 'block',
                 'pointer-events': 'none'
             })

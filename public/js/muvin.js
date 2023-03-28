@@ -44,7 +44,9 @@ class Muvin extends HTMLElement {
         this.legend = new Legend() // color legend for links (different types) and items (nodes of the second level of the network)
         this.legend.init()
 
-        this.nodes = new NodesGroup()
+        this.nodes = this.app === 'crobora' ? new ImageNodes() : new NormalNodes()
+        this.nodes.set()
+        
         this.fstlinks = new LinksGroup()
         this.sndlinks = new NodeLinksGroup()
         this.sndlinks.set()
@@ -57,7 +59,6 @@ class Muvin extends HTMLElement {
             this.tooltip = new MusicTooltip()
         else if (this.app === 'crobora')
             this.tooltip = new ImageTooltip()
-        // this.tooltip.set()
 
         this.menu = new Menu()
         this.menu.init()

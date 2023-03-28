@@ -136,14 +136,14 @@ class DataModel {
                 gradient: ['#ffffff', '#f5f5f5', '#ececec', '#e2e2e2'] // used by the audio player
             },
             item: {
-                color: '#9e2e09',
+                color: '#ab418f',
                 gradient: ['#9e2e09', '#c36846', '#e3a084', '#ffd8c8']
             },
             discography: {
-                color: d3.schemeBlues[0],
-                gradient: d3.schemeBlues[this.linkTypes.length]
+                color: d3.schemeGreens[0],
+                gradient: d3.schemeGreens[this.linkTypes.length]
             },
-            typeScale: d3.scaleOrdinal(d3.schemeBlues[this.linkTypes.length + 2]).domain(this.linkTypes)
+            typeScale: d3.scaleOrdinal(d3.schemeGreens[this.linkTypes.length + 2]).domain(this.linkTypes)
         }
 
     }

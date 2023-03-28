@@ -81,3 +81,23 @@ function getTicksDistance(scale, breaks) {
     return spaces;
 }
 
+function getImageLink(image_title) {
+    let path = "http://dataviz.i3s.unice.fr/crobora/assets/images/images_archives/"
+
+    image_title = encodeURIComponent(image_title)
+    if (image_title.includes("TF1")){
+      return path + 'Atlas_TF1/' + image_title +".png";
+    } else if (image_title.includes("FR2")){
+      return path + 'Atlas_France2/' + image_title +".png";
+    } else if (image_title.includes("FR3")){
+      return path + 'Atlas_France3/' + image_title +".png";
+    } else if (image_title.includes("ARTE")){
+      return path + 'Atlas_Arte/' + image_title +".jpg";
+    } else if (image_title.includes("TG1")){
+      return path + 'Atlas_RaiUno/' + image_title +".png";
+    } else if (image_title.includes("TG2")){
+      return path + 'Atlas_RaiDue/'+ image_title +".png";
+    } else {
+      return path + 'Atlas_WebFR/'+ image_title +".PNG";
+    }
+  }
