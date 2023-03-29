@@ -21,6 +21,7 @@ class ImageNodes extends NodesGroup {
             alt: d => d.name,
             opacity: d => this.opacity(d),
             class: 'item-circle',
+            // border: '10px solid #000',
             display: d => this.chart.getTimeSelection() && this.chart.isSelected(d.year) ? 'block' : 'none',
             'clip-path': d => this.chart.getTimeSelection() && this.chart.isSelected(d.year) ? 'url(#clipObj-focus)' : 'none'
         }
@@ -38,10 +39,8 @@ class ImageNodes extends NodesGroup {
         let leftmostPos = this.chart.xAxis.scale(values[0])
         let rightmostPos = this.chart.xAxis.scale(values[values.length - 1])
 
-        console.log(d3.range(0.04, 0.4, 0.1))
         let leftScale = d3.scaleQuantize().domain([leftmostPos, focusPos]).range(d3.range(0.04, 0.4, 0.1))
         let rightScale = d3.scaleQuantize().domain([focusPos, rightmostPos]).range(d3.range(0.4, 0.04, -0.1))
-
 
         this.data.forEach(d => {
             if (this.chart.getTimeSelection()) {

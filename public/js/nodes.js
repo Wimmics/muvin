@@ -59,7 +59,7 @@ class NodesGroup {
         this.forceSimulation.on("tick", () => this.group.selectAll('.doc')
                 .attr('transform', d => `translate(${d.x}, ${d.y})` ))
                 
-            .on('end', () => { if (this.chart.getTimeSelection()) this.chart.sndlinks.draw() })
+            // .on('end', () => { if (this.chart.getTimeSelection()) this.chart.sndlinks.draw() })  
     }
 
     /**
@@ -105,9 +105,7 @@ class NodesGroup {
             })
             .attr('stroke-width', e => d.id === e.id ? 3 : 1)
 
-        this.chart.group.selectAll('.path-link')
-            .transition('focus-link')
-            .duration(500)
+        this.chart.group.selectAll('.node-link')
             .attr('opacity', function(e) { return d3.select(this.parentNode).datum().value.id === d.id ? 1 : 0 })     
 
         this.chart.fstlinks.highlight(d)
@@ -117,6 +115,7 @@ class NodesGroup {
     mouseout() {
 
         this.chart.fstlinks.reverse()
+        this.chart.sndlinks.reverse()
 
         this.chart.tooltip.hide(this.tooltipId)
         this.tooltipId = null;

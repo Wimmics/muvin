@@ -63,6 +63,11 @@ class NodeLinksGroup{
         this.group.selectAll('.node-link').attr('opacity', 0)
     }
 
+    reverse() {
+        this.group.selectAll('.node-link')
+            .attr('opacity', 1)
+    }
+
     mouseover(d, elem) {        
         if (!this.chart.getTimeSelection()) return
 
@@ -82,8 +87,7 @@ class NodeLinksGroup{
     mouseout() {
         if (!this.chart.getTimeSelection()) return
         
-        this.group.selectAll('.node-link')
-            .attr('opacity', 1)
+        this.reverse()
         
         this.chart.group.selectAll('.item-circle')
             .attr('opacity', 1)
@@ -102,17 +106,14 @@ class NodeLinksGroup{
         let links = this.chart.data.links.filter(d => this.chart.areItemsVisible(d.source) && this.chart.areItemsVisible(d.target) && this.chart.isSelected(d.year))
 
         links = links.filter( (d,i) => links.findIndex(e => ((e.source === d.source && e.target === d.target) || (e.source === d.target && e.target === d.source)) && e.item.id === d.item.id) === i)
-        
+
         let linkedItems = links.map(d => d.item.id)
-        let selection = this.chart.group.selectAll('.doc').filter(e => linkedItems.includes(e.id) && this.chart.isSelected(e.year))
+        let selection = this.chart.data.items.filter(e => linkedItems.includes(e.id) && this.chart.isSelected(e.year))
         let data = []
 
-        let dim = this.chart.getDimensions()
-
         links.forEach(d => {
-            let nodes = selection.filter(e =>  [d.source, d.target].includes(e.artist.name) && e.id === d.item.id ).nodes()
-            let nodesData = nodes.map(e => d3.select(e).datum()) // recover the associated data for each element
-            for (let j = 0; j < nodes.length - 1; j++) {
+            let nodesData = selection.filter(e =>  [d.source, d.target].includes(e.artist.name) && e.id === d.item.id )
+            for (let j = 0; j < nodesData.length - 1; j++) {
 
                 let sourceIndex = nodesData.findIndex(e => e.artist.name === d.source)
                 let sData = nodesData[sourceIndex]
@@ -149,8 +150,6 @@ class NodeLinksGroup{
                 data.push({value: d.item,
                     sourceArtist: d.source, 
                     targetArtist: d.target, 
-                    // sourceNode: nodes[sourceIndex],
-                    // targetNode: nodes[targetIndex],
                     types: types,
                     values: values
                 })

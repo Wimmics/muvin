@@ -6,7 +6,7 @@ class TimeAxis{
 
         this.slider = d3.select(this.chart.shadowRoot.querySelector('#x-slider'))
 
-        this.distortion = 15
+        this.distortion = 10
     }
 
     set() {
