@@ -106,7 +106,7 @@ async function cleanCroboraResults(values, node) {
         let getContributors = () => {
             let vals = []
             categories.forEach(key => {
-                if (d[key]) d[key].forEach( x => vals.push({ name: x, type: d.channel } ))
+                if (d[key]) d[key].forEach( x => vals.push({ name: x, type: d.channel, itemType: key } ))
             })
             return vals
         }
@@ -116,7 +116,7 @@ async function cleanCroboraResults(values, node) {
             artist: node.value,
             name: d.image_title,
             date: d.day_airing,
-            type: d.channel,
+            type: node.type,
             contributors: getContributors(),
             link: `http://dataviz.i3s.unice.fr/crobora/document/${d.ID_document}`,
             parentId: d.ID_document,
@@ -169,22 +169,22 @@ async function transform(values) {
             date: item.date,
             year: year,
             type: item.type,
+            contributors: item.contributors,
             contnames: contributors,
-            conttypes: contributions,
             parent: parent,
-            contCount: contributors.length,
+            contCount: item.contributors.length,
             link: item.link  
         }
 
         let key = `${item.id}-${item.artist}`
         if (items[key]) {
             value.contnames.forEach( d => { if (!items[key].contnames.includes(d)) items[key].contnames.push(d) })
-            Object.keys(value.conttypes).forEach(d => {
-                value.conttypes[d].forEach(e => {
-                    if (!items[key].conttypes[d].includes(e))
-                        items[key].conttypes[d].push(e)
-                })  
-            })
+            // Object.keys(value.conttypes).forEach(d => {
+            //     value.conttypes[d].forEach(e => {
+            //         if (!items[key].conttypes[d].includes(e))
+            //             items[key].conttypes[d].push(e)
+            //     })  
+            // })
         } else items[key] = {...value}
 
         for (let c of item.contributors) {

@@ -38,7 +38,7 @@ body{
 }
 
 .tooltip{
-    min-width: 150px;
+    max-width: 350px;
     height: auto;
     position: absolute;
     z-index: 10;

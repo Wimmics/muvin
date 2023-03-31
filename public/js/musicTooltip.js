@@ -3,13 +3,20 @@ class MusicTooltip extends Tooltip{
         super()
     }
 
-    setNodeContent(d, id) {
-        const itemName = `<b>${d.name} (${d.year})</b><br>`
-        const more = `<br><br>Right-click for more`
+    setItemContent(d, id) {
         
-        const contributors = e => Object.keys(e.conttypes).map(key => `<b>${capitalizeFirstLetter(key)}</b>: ${e.conttypes[key].length ? e.conttypes[key].join(', ') : 'No Data'}`).join('<br>')
+        let conttypes = d.contributors.map(e => e.type)
+        conttypes = conttypes.filter( (e,i) => conttypes.indexOf(e) === i)
 
-        let content = `${itemName}<br>${contributors(d)}<br>${more}`
+        const contributors = e => conttypes.map(key => {
+            let names = d.contributors.filter(e => e.type === key).map(e => e.name)
+            return `<b>${capitalizeFirstLetter(key)}</b>: ${names.join(', ')}`
+        }).join('<br>')
+
+        let content = `<b>${d.name} (${d.year})</b><br>
+            ${d.parent ? `Album: <b>${d.parent.name} (${d.parent.artist.name})</b><br><br>` : ''}
+            ${contributors(d)}<br>
+            <br><br>Right-click for more`
         
         this.setContent(content, id); 
     }
@@ -18,8 +25,8 @@ class MusicTooltip extends Tooltip{
         let artist = d[0].data.artist || d[0].data.artist.name
         let year = this.chart.xAxis.invert(e.pageX, 1)
 
-        let data = this.chart.getData()
-        let values = data.items.filter(e => e.artist.name === artist && e.year === year && e.artist.contribution.includes(d.key))
+        let data = this.chart.data.getItems()
+        let values = data.filter(e => e.artist.name === artist && e.year === year && e.artist.contribution.includes(d.key))
 
         let content = `<b> ${artist}</b><br><br>
         <b>Contribution Type:</b> ${capitalizeFirstLetter(d.key)}<br><br>

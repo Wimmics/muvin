@@ -8,29 +8,33 @@ class NodeLinksGroup{
     }
 
     set() {
+
+        this.linkInfo = d => `${d.sourceArtist} → ${d.targetArtist}\nItem: ${d.value.name}\nContribution: ${d.types.map(e => capitalizeFirstLetter(e)).join(', ')}`
         
-        // this.setGradientPattern()
-        // this.setArrowhead()
+        this.linkGenerator = d3.linkVertical()
+            .x(d => d.x)
+            .y(d => d.y)
+
+        this.pathAttrs = {
+            "stroke": d => this.chart.getTypeColor(d.type),
+            'stroke-width': 5,
+            'fill': 'none',
+            'd': d => this.linkGenerator(d)
+        }
+
+        this.strokeAttrs = {
+            "stroke": d => d3.rgb(this.chart.getTypeColor(d.type)).darker(),
+            'stroke-width': 7,
+            'fill': 'none',
+            'd': d => this.linkGenerator(d)
+        }
     }
 
     // draw the second level links (e.g. links between second level nodes -- songs/documents)
     draw() {
         const _this = this;
 
-        const linkInfo = d => `${d.sourceArtist} → ${d.targetArtist}\nItem: ${d.value.name}\nContribution: ${d.types.map(e => capitalizeFirstLetter(e)).join(', ')}`
-
         let data = this.getData()
-        
-        let linkGenerator = d3.linkVertical()
-            .x(d => d.x)
-            .y(d => d.y)
-
-        let pathAttrs = {
-            "stroke": '#000',
-            'stroke-width': 4,
-            'fill': 'none',
-            'd': d => linkGenerator(d)
-        }
 
         let link = this.group.selectAll('.node-link')
             .data(data)
@@ -39,21 +43,31 @@ class NodeLinksGroup{
                     .classed('node-link', true)
                     .on('mouseenter', function(d) { _this.mouseover(d, this) })
                     .on('mouseleave', () => this.mouseout())                    
-                    .call(g => g.append('title').text(linkInfo)),
-                update => update.call(g => g.select('title').text(linkInfo)),
+                    .call(g => g.append('title').text(this.linkInfo)),
+                update => update.call(g => g.select('title').text(this.linkInfo)),
                 exit => exit.remove()
             )
             .call(g => g.transition()
                 .duration(500)
                 .attr('opacity', 1))
 
-        link.selectAll('path')
+        link.selectAll('path.path-stroke')
+            .data(d => d.values)
+            .join(
+                enter => enter.append('path')
+                    .attr('class', 'path-stroke')
+                    .attrs(this.strokeAttrs),
+                update => update.call(path => path.attrs(this.strokeAttrs)),
+                exit => exit.remove()
+            )
+
+        link.selectAll('path.path-link')
             .data(d => d.values)
             .join(
                 enter => enter.append('path')
                     .attr('class', 'path-link')
-                    .attrs(pathAttrs),
-                update => update.call(path => path.attrs(pathAttrs)),
+                    .attrs(this.pathAttrs),
+                update => update.call(path => path.attrs(this.pathAttrs)),
                 exit => exit.remove()
             )
                     
@@ -103,12 +117,12 @@ class NodeLinksGroup{
      */
     getData() {
         // keep one link per node
-        let links = this.chart.data.links.filter(d => this.chart.areItemsVisible(d.source) && this.chart.areItemsVisible(d.target) && this.chart.isSelected(d.year))
+        let links = this.chart.data.getLinks().filter(d => this.chart.areItemsVisible(d.source) && this.chart.areItemsVisible(d.target) && this.chart.isSelected(d.year))
 
         links = links.filter( (d,i) => links.findIndex(e => ((e.source === d.source && e.target === d.target) || (e.source === d.target && e.target === d.source)) && e.item.id === d.item.id) === i)
 
         let linkedItems = links.map(d => d.item.id)
-        let selection = this.chart.data.items.filter(e => linkedItems.includes(e.id) && this.chart.isSelected(e.year))
+        let selection = this.chart.data.getItems().filter(e => linkedItems.includes(e.id) && this.chart.isSelected(e.year))
         let data = []
 
         links.forEach(d => {
@@ -117,12 +131,12 @@ class NodeLinksGroup{
 
                 let sourceIndex = nodesData.findIndex(e => e.artist.name === d.source)
                 let sData = nodesData[sourceIndex]
-                let source = {x: sData.x, y: sData.y}
+                let source = this.chart.app === 'crobora' ? {x: sData.x - (this.chart.xAxis.scale(sData.year) * .1) + sData.r, y: sData.y + sData.r} : {x: sData.x, y: sData.y}
                 let sourceRadius = sData.r
 
                 let targetIndex = nodesData.findIndex(e => e.artist.name === d.target)
                 let tData = nodesData[targetIndex]
-                let target = {x: tData.x, y: tData.y}
+                let target = this.chart.app === 'crobora' ? {x: tData.x - (this.chart.xAxis.scale(tData.year) * .1) + tData.r, y: tData.y} : {x: tData.x, y: tData.y}
                 let targetRadius = tData.r
                 
                 if (source.y > target.y) {

@@ -20,7 +20,7 @@ class ProfilesGroup {
         nodes.forEach(artist => {
             dates.forEach(year => {       
                 
-                let res = chartdata.clusters.filter(d => d.artist.name === artist && d.year === year)
+                let res = chartdata.getItems().filter(d => d.artist.name === artist && d.year === year)
                 if (!this.chart.displayBestOfs())
                     res = res.filter(d => d.audio)
 
@@ -31,7 +31,7 @@ class ProfilesGroup {
                 }
 
                 types.forEach(type => {
-                    let resType = chartdata.items.filter(d => d.artist.name === artist && d.year === year && d.artist.contribution.includes(type))
+                    let resType = chartdata.getItems().filter(d => d.artist.name === artist && d.year === year && d.artist.contribution.includes(type))
                     if ( !this.chart.displayBestOfs())
                         resType = resType.filter(d => d.audio)
                     item[type] = resType.length

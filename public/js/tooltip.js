@@ -4,7 +4,12 @@ class Tooltip {
     }
 
     set() {
-       
+    
+    }
+
+    hideAll() {
+        d3.selectAll(this.chart.shadowRoot.querySelectorAll('.tooltip'))
+            .style('display', 'none')
     }
 
     hide(id) {
@@ -18,22 +23,20 @@ class Tooltip {
 
     show(event, id) {
         let tooltip = this.chart.shadowRoot.querySelector(`#${id}-tooltip`)
-        // console.log(tooltip)
+        tooltip.style.display = 'block';
+        
         let x = event.pageX + 10,
             y = event.pageY + 10,
             tHeight = tooltip.clientHeight,
             tWidth = tooltip.clientWidth;
 
-        // console.log(x, tWidth, window.innerWidth, x + tWidth)
-
-        if ( (x + tWidth) > window.innerWidth) x = window.innerWidth - tWidth
-        if ( (y + tHeight) > window.innerHeight) y = window.innerHeight - tHeight
+        if ( (x + tWidth) > window.innerWidth) x -= (tWidth + 30)
+        if ( (y + tHeight) > window.innerHeight) y -= (tHeight + 30)
 
         d3.select(tooltip)
             .styles({
                 left: x + 'px',
                 top: y +'px',
-                display: 'block',
                 'pointer-events': 'none'
             })
     }

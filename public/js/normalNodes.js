@@ -7,6 +7,11 @@ class NormalNodes extends NodesGroup{
         this.radiusScale = d3.scaleLinear().range([this.radius.min, this.radius.max])
     }
 
+    set() {
+        this.forceSimulation.on("tick", () => this.group.selectAll('.doc')
+            .attr('transform', d => `translate(${d.x}, ${d.y})` ))
+    }
+
     async computeRadius() {
         this.radiusScale.domain(d3.extent(this.data, d => d.contCount))
 

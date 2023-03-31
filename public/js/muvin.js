@@ -60,17 +60,15 @@ class Muvin extends HTMLElement {
         else if (this.app === 'crobora')
             this.tooltip = new ImageTooltip()
 
+        this.tooltip.hideAll()
+
         this.menu = new Menu()
         this.menu.init()
         this.menu.open()
 
-        
-
-        // this.setAttribute('app', 'crobora')
         await this.data.getNodesLabels(this.app)
         this.test()
 
-        // this.testHal()
     }
 
     showLoading() {
@@ -86,18 +84,17 @@ class Muvin extends HTMLElement {
      */
     async test() {
         let values = [];
+        console.log('app =', this.app)
         switch(this.app) {
             case 'crobora':
-                // await this.data.add('Marco Winckler')
-                values = ['Angela Merkel']
+                values = ['Angela Merkel', 'Nicolas Sarkozy']
                 break;
             case 'hal':
-                values = ['Aline Menin']
+                values = ['Aline Menin', 'Marco Winckler']
                 // values = ['Marco Winckler', 'Philippe Palanque', 'Thiago Rocha Silva', 'Lucile Sassatelli', 'Célia Martinie', 'Aline Menin']
                 break;
             case 'wasabi':
-                values = ['Eminem']
-                // values = ['Eminem', '50 Cent', 'Adam Levine', 'Dr. Dre', 'Bruno Mars']
+                values = ['Queen', 'Freddie Mercury', 'David Bowie']
                 break;
         }
         values.forEach(async (d) => await this.data.add(d))
@@ -127,7 +124,7 @@ class Muvin extends HTMLElement {
 
         this.legend.update()
 
-        this.menu.updateItemsSearch(this.data.items.filter(d => nodes.includes(d.artist.name)))
+        this.menu.updateItemsSearch(this.data.getItems().filter(d => nodes.includes(d.artist.name)))
 
         this.legend.update()
         this.xAxis.set()
@@ -245,7 +242,7 @@ class Muvin extends HTMLElement {
     }
 
     isUncertain(d) {
-        return this.data.items.filter(a => a.id === d.id && a.year === d.year).length === 1
+        return this.data.getItems().filter(a => a.id === d.id && a.year === d.year).length === 1
     }
 
     // return chart dimensions
@@ -308,7 +305,7 @@ class Muvin extends HTMLElement {
         let targets = this.data.links.filter(e => e.source === value || e.target === value).map(e => e.target === value ? e.source : e.target)
         targets =  targets.filter((e,i) => this.yAxis.values.includes(e) && targets.indexOf(e) === i)
 
-        let nodes = this.data.items.filter(e => {
+        let nodes = this.data.getItems().filter(e => {
             let values = e.children ? e.children.map(item => item.contnames).flat() : e.contnames
             return values.includes(value) && values.some(a => targets.includes(a)) 
         })
@@ -549,15 +546,6 @@ template.innerHTML = `
         </div>
 
         <div id='menu-items' class='settings'>
-            <!-- <div >
-                <label>Dataset</label>
-                <select id="dataset-list">
-                    <option value="" disabled selected>Select a dataset</option>
-                    <option value="hal">Hal Open Archive</option>
-                    <option value="wasabi">Wasabi</option>
-                    <option value="crobora" selected>Crobora</option>
-                </select>
-            </div> -->
             <div >
                 <label>Search for</label>
                 <input type="text" list='nodes-list' id="nodes-input" placeholder="Type here">

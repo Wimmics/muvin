@@ -8,6 +8,9 @@ class DataModel {
         this.links = []
         this.linkTypes = []
 
+        this.filters = {
+            linkTypes: []
+        }
     }
 
     async init() {
@@ -33,7 +36,7 @@ class DataModel {
     async remove(node, focus) {
         delete this.artists[node];
         this.items = this.items.filter(d => d.artist.name !== node)
-        this.clusters = this.clusters.filter(d => d.artist.name !== node)
+        // this.clusters = this.clusters.filter(d => d.artist.name !== node)
 
         this.setColors()
         this.setCollaborations()
@@ -53,7 +56,7 @@ class DataModel {
     }
 
     async update(data) {
-        this.clusters = this.clusters.concat(data.clusters)
+        // this.clusters = this.clusters.concat(data.clusters)
         this.items = this.items.concat(data.items)
         this.links = this.links.concat(data.links)
         
@@ -64,7 +67,24 @@ class DataModel {
 
         Object.keys(data.artists).forEach(d => {
             this.artists[d] = data.artists[d]
-        })        
+        })  
+
+        console.log(this.items)
+
+    }
+
+    async updateFilters(type, values) {
+        this.filters[type] = values
+
+        this.chart.update(Object.keys(this.artists))
+    }
+
+    getItems() {
+        return this.items.filter(d => !d.artist.contribution.every(e => this.filters.linkTypes.includes(e)) )
+    }
+
+    getLinks() {
+        return this.links.filter(d => !d.type.every(e => this.filters.linkTypes.includes(e)) )
     }
 
     isNodeValid(node) {
@@ -143,7 +163,7 @@ class DataModel {
                 color: d3.schemeGreens[0],
                 gradient: d3.schemeGreens[this.linkTypes.length]
             },
-            typeScale: d3.scaleOrdinal(d3.schemeGreens[this.linkTypes.length + 2]).domain(this.linkTypes)
+            typeScale: d3.scaleOrdinal(d3.schemeGreens[this.linkTypes.length ]).domain(this.linkTypes)
         }
 
     }

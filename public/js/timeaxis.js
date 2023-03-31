@@ -6,7 +6,7 @@ class TimeAxis{
 
         this.slider = d3.select(this.chart.shadowRoot.querySelector('#x-slider'))
 
-        this.distortion = 10
+        this.distortion = 20
     }
 
     set() {
@@ -66,7 +66,6 @@ class TimeAxis{
     }
 
     async setDistortion(d) {
-        this.chart.sndlinks.hide()
 
         let res = this.getItemsByTime(d)
         let values = res ? res.values : []
@@ -74,6 +73,7 @@ class TimeAxis{
         if (d3.sum(values.filter(e => this.chart.getNodeSelection() ? this.chart.isSelected(e.artist) && e.year === d : e.year === d), e => e.values.length) === 0) return;
 
         d3.select(this.chart.shadowRoot.querySelector("#group-chart")).selectAll('.node-link').attr('opacity', 0)
+        this.chart.sndlinks.hide()
         
         this.scale.distortion(this.focus === d ? 0 : this.distortion).focus(this.defaultScale(d))
     
@@ -102,6 +102,8 @@ class TimeAxis{
     }
 
     setSliderPosition(pos, year) {
+        if (!year) return;
+       
         let width = d3.max([this.getStep(year), 20])
         let slider = this.slider.selectAll('rect.move')
 
@@ -112,12 +114,14 @@ class TimeAxis{
 
     setSlider() {
 
-        // let sliderSelector = d3.select(this.chart.shadowRoot.querySelector('#x-slider'))
         let dimensions = this.chart.getDimensions()
 
         let selectedYear, xPos;
 
-        const dragBehavior = d => {
+        const dragBehavior = (year) => {
+            if (year === selectedYear) return;
+            selectedYear = year // update the current year on focus
+
             this.chart.sndlinks.hide()
             if (this.focus && this.focus != selectedYear) 
                 this.setDistortion(selectedYear)
@@ -128,7 +132,7 @@ class TimeAxis{
         }
 
         let drag = d3.drag()
-            .on('start', () => dragBehavior())
+            .on('start', () => dragBehavior(selectedYear))
             .on('drag', () => {
                 let direction = xPos - d3.event.x
                 xPos = d3.event.x
@@ -138,9 +142,9 @@ class TimeAxis{
                 xPos = xPos <= dimensions.left ? dimensions.left : xPos
                 xPos = xPos >= rightmostpos ? rightmostpos : xPos
 
-                selectedYear = this.invert(xPos, direction)
+                let year = this.invert(xPos, direction)
 
-                dragBehavior()
+                dragBehavior(year)
             }).on('end', () => {
                 
                 this.setSliderPosition(this.scale(selectedYear) - this.getStep(selectedYear)/ 2, selectedYear)

@@ -28,8 +28,6 @@ class NodesAxis {
     set() {
         let dimensions = this.chart.getDimensions()
 
-        this.displayAudio = this.chart.getAttribute('app') === 'wasabi' // only display audio controllers for the Wasabi dataset
-
         let chartData = this.chart.getData()
         this.data = chartData.artists
         this.values = chartData.nodes
@@ -245,7 +243,7 @@ class NodesAxis {
     }
 
     mouseover(e, d) {
-        if (this.displayAudio) {
+        if (this.chart.app === 'wasabi') {
             this.chart.tooltip.setContent(this.getTooltipContent(d), this.tooltipId)
             this.chart.tooltip.show(e, this.tooltipId)
         }

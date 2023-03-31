@@ -6,9 +6,6 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const datatools = require('./datatools')
 
-
-// const data = new Data()
-
 /**
  * HTTP node server
  * Browser form send HTTP request to this node server
@@ -50,6 +47,12 @@ app.get(prefix + '/:app', function (req, res) {
 })
 
 app.get(prefix + '/data/:app/nodes', async function(req, res) {
+    let parentdir = path.join(__dirname, 'data/')
+   
+    if (!fs.existsSync(parentdir)){
+        fs.mkdirSync(parentdir);
+    }
+
     let dir = path.join(__dirname, `data/${req.params.app}/`)
     if (!fs.existsSync(dir)){
         fs.mkdirSync(dir);

@@ -7,12 +7,15 @@ class NodesGroup {
         this.forceSimulation = d3.forceSimulation()
             .alphaMin(.1)
             .force("x", d3.forceX()
-                .strength(() => this.chart.getTimeSelection() ? .7 : .9)
+                .strength(d => this.chart.getTimeSelection() && this.chart.isSelected(d.year) ? .4 : .9)
                 .x(d => this.chart.xAxis.scale(d.year)))
             .force("y", d3.forceY()
-                .strength(() => this.chart.getTimeSelection() ? .4 : .2)
+                .strength(d => this.chart.getTimeSelection() && this.chart.isSelected(d.year) ? .8 : .2)
                 .y(d => this.chart.yAxis.scale(d.artist.name ))) 
             .force("collide", d3.forceCollide().radius(d => d.r).iterations(32)) // Force that avoids circle overlapping
+            .tick(10)
+                
+            .on('end', () => { if (this.chart.getTimeSelection()) this.chart.sndlinks.draw() }) 
 
         this.mouseoverTimeout;
         this.tooltipId = null;
@@ -35,7 +38,7 @@ class NodesGroup {
     // draw the second level nodes of the network (e.g. documents, songs/albums)
     async draw() {
 
-        this.data = this.chart.data.items;
+        this.data = this.chart.data.getItems();
         
         await this.computeRadius()
 
@@ -55,11 +58,6 @@ class NodesGroup {
         this.forceSimulation.force('x').initialize(this.data)
         this.forceSimulation.force('collide').initialize(this.data)
         this.forceSimulation.alpha(1).restart()
-        this.forceSimulation.tick(10)
-        this.forceSimulation.on("tick", () => this.group.selectAll('.doc')
-                .attr('transform', d => `translate(${d.x}, ${d.y})` ))
-                
-            // .on('end', () => { if (this.chart.getTimeSelection()) this.chart.sndlinks.draw() })  
     }
 
     /**
@@ -84,7 +82,7 @@ class NodesGroup {
     mouseover(e, d, tooltipId) {
         if ((this.chart.getTimeSelection() && !this.chart.isSelected(d.year)) || (d.children && d.name === 'singles')) return
 
-        this.chart.tooltip.setNodeContent(d, tooltipId)
+        this.chart.tooltip.setItemContent(d, tooltipId)
         this.chart.tooltip.show(e, tooltipId)
         this.tooltipId = tooltipId;
 
@@ -105,8 +103,13 @@ class NodesGroup {
             })
             .attr('stroke-width', e => d.id === e.id ? 3 : 1)
 
-        this.chart.group.selectAll('.node-link')
-            .attr('opacity', function(e) { return d3.select(this.parentNode).datum().value.id === d.id ? 1 : 0 })     
+        if (this.chart.getTimeSelection() && this.chart.isSelected(d.year)) {
+            this.chart.group.selectAll('.node-link')
+                .attr('opacity', function(e) { return d3.select(this).datum().value.id === d.id ? 1 : 0 })    
+            
+            this.chart.group.selectAll('.image-border')
+                .attr('stroke', e => e.id === d.id ? '#000' : '#fff')
+        }
 
         this.chart.fstlinks.highlight(d)
         this.chart.profiles.downplay(d)
@@ -115,7 +118,7 @@ class NodesGroup {
     mouseout() {
 
         this.chart.fstlinks.reverse()
-        this.chart.sndlinks.reverse()
+        if (this.chart.getTimeSelection()) this.chart.sndlinks.reverse()
 
         this.chart.tooltip.hide(this.tooltipId)
         this.tooltipId = null;
@@ -134,6 +137,8 @@ class NodesGroup {
             .duration(100)
             .attr('opacity', d => this.opacity(d) )
             .attr('stroke-width', 1)
+
+        this.chart.group.selectAll('.image-border').attr('stroke', '#fff')
     }
 
     highlightItem(name){

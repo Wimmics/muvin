@@ -3,7 +3,7 @@ class PublicationsTooltip extends Tooltip{
         super()
     }
 
-    setNodeContent(d, id) {
+    setItemContent(d, id) {
         const itemName = `<b>${d.name} (${d.year})</b><br>`
         const type = `<b>Document type:</b> ${d.type}`
         const more = `<br><br>Right-click for more`
@@ -17,8 +17,8 @@ class PublicationsTooltip extends Tooltip{
         let artist = d[0].data.artist
         let year = this.chart.xAxis.invert(e.pageX, 1)
 
-        let data = this.chart.getData()
-        let values = data.items.filter(e => e.artist.name === artist && e.year === year && e.artist.contribution.includes(d.key))
+        let data = this.chart.data.getItems()
+        let values = data.filter(e => e.artist.name === artist && e.year === year && e.artist.contribution.includes(d.key))
         
 
         let content = `<b> ${artist}</b><br><br>

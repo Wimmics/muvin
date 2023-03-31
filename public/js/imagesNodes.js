@@ -12,7 +12,7 @@ class ImageNodes extends NodesGroup {
             .attr('id', 'clipObj-focus')
             .append('circle')
             .attr('cx', this.radius.focus / 2 + this.radius.focus / 2)
-            .attr('cy', this.radius.focus / 2)
+            .attr('cy', this.radius.focus / 2 )
             .attr('r', this.radius.focus / 2);
 
         this.imageAttrs = {
@@ -21,14 +21,27 @@ class ImageNodes extends NodesGroup {
             alt: d => d.name,
             opacity: d => this.opacity(d),
             class: 'item-circle',
-            // border: '10px solid #000',
             display: d => this.chart.getTimeSelection() && this.chart.isSelected(d.year) ? 'block' : 'none',
-            'clip-path': d => this.chart.getTimeSelection() && this.chart.isSelected(d.year) ? 'url(#clipObj-focus)' : 'none'
+            'clip-path': d => 'url(#clipObj-focus)'
+        }
+
+        this.imageBorderAttrs = {
+            r: d => d.r / 2,
+            cx: d => d.r / 2 + d.r / 2,
+            cy: d => d.r / 2,
+            opacity: d => this.opacity(d),
+            stroke: "#fff",
+            'stroke-width': 3,
+            class: 'image-border',
+            display: d => this.chart.getTimeSelection() && this.chart.isSelected(d.year) ? 'block' : 'none',
+            fill: 'none'
         }
 
         this.circleAttrs.display = d => !this.chart.isSelected(d.year) ? 'block' : 'none'
 
         this.forceSimulation.force("collide", d3.forceCollide().radius(d => this.chart.isSelected(d.year) ? d.r / 2 : d.r).iterations(32))
+            .on("tick", () => this.group.selectAll('.doc')
+                .attr('transform', d => `translate(${this.chart.isSelected(d.year) ? d.x - this.chart.xAxis.scale(d.year) * .1 : d.x}, ${d.y})` ))
     }
 
     async computeRadius() {
@@ -72,14 +85,20 @@ class ImageNodes extends NodesGroup {
                     .call(g => g.append('circle')
                             .attrs(this.circleAttrs) )
                     .call(g => g.append('svg:image')
-                        .attrs(this.imageAttrs)),
+                        .attrs(this.imageAttrs))
+                    .call(g => g.append('circle')
+                        .attrs(this.imageBorderAttrs)),
                 update => update.style('pointer-events', d => this.opacity(d) ? 'auto' : 'none')
-                    .call(g => g.select('circle')
+                    .call(g => g.select('circle.item-circle')
                             .attrs(this.circleAttrs) )
                     .call(g => g.select('image')
-                        .attrs(this.imageAttrs) ),
+                        .attrs(this.imageAttrs) )
+                    .call(g => g.select('circle.image-border')
+                        .attrs(this.imageBorderAttrs)),
                 exit => exit.remove()        
             )
 
     }
+
+
 }
