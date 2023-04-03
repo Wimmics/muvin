@@ -40,11 +40,6 @@ class Menu{
 
         this.div.selectAll('.menu-icon')
             .on('click', () => this.toggle())
-
-        // this.div.select("select#dataset-list")
-        //     .on('change', function() { 
-        //         _this.changeDataset(this.value)
-        //      })
              
     }
 

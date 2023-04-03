@@ -115,7 +115,7 @@ class Muvin extends HTMLElement {
         this.height = this.div.node().clientHeight
 
         this.svg.attr('width', this.width)
-            .attr('height', window.innerHeight * .8)
+            .attr('height', window.innerHeight * .9)
 
         this.visibleNodes = [...nodes]
 
@@ -360,134 +360,6 @@ class Muvin extends HTMLElement {
 
     clear() {
         this.svg.selectAll('g').remove()
-    }
-
-
-    getWasabiLink(d) {
-        if (this.data.nodes.includes(d)) return `https://wasabi.i3s.unice.fr/#/search/artist/${d}` 
-
-        return `https://wasabi.i3s.unice.fr/#/search/artist/${d.data.parent ? d.data.parent.artist.name : d.data.artist.name}/album/${d.data.parent ? d.data.parent.name : d.data.name}${d.data.parant ? '/song/' + d.data.name : '#'}`
-    }
-    /**
-     * 
-     * Function that provides a context menu according to the selected element (i.e. first or second level nodes)
-     * @param {*} d the selected item
-     * @returns a list with the menu options (required by d3-context-menu)
-     */
-    getContextMenu(d) {
-        let menu = []
-
-        if (!this.data.nodes.includes(d) || this.getAttribute('app') === "wasabi") {
-            menu.push({ title: 'Go to source', 
-            action: d => { 
-                let url = d.link || this.getWasabiLink(d);
-                window.open(url) 
-            } })
-        }
-        
-        if (this.data.nodes.includes(d)) { /// it is an author
-
-            if (this.data.nodes.length > 1) {
-                menu.push({ title: d => this.yAxis.freeze === d ? 'Release highlight' : 'Highlight collaborations', 
-                            action: d => { 
-                                if (this.yAxis.freeze === d) this.yAxis.releaseFreeze()
-                                else this.yAxis.setFreeze(d) 
-                            }
-                        })            
-            }
-
-            menu.push({
-                title: d => this.isProfileVisible(d) ? 'Hide temporal profile' : 'Show temporal profile',
-                action: d => {
-                    let index = this.removeProfile(d)
-                    if (index > -1 && this.isSelected(d)) this.yAxis.setDistortion(d)
-                    if (index === -1) this.displayProfile(d)
-
-                    this.profiles.draw()
-                }
-            })
-
-            menu.push({
-                title: d => this.areItemsVisible(d) ? 'Hide items' : 'Show items',
-                action: d => {
-                    let index = this.removeItems(d)
-                    if (index === -1) this.displayItems(d)
-
-                    this.nodes.draw()
-                }
-            })
-
-            if (this.data.nodes.length > 1)
-                menu.push({
-                    title: 'Remove node',
-                    action: d => {
-                        let focus;
-                        if (this.yAxis.focus) {
-                            if (this.yAxis.focus === d) {
-                                let index = this.data.nodes.indexOf(d)
-                                focus = index === 0 ? this.data.nodes[index + 1] : this.data.nodes[index - 1]
-                            } else if (this.visibleItems.includes(d)) this.updateVisibleNodes() 
-                        }
-
-                        this.data.remove(d, focus)
-                    } 
-                })
-
-            menu.push({
-                title: 'Move',
-                children: [
-                    {title: 'Up', 
-                    action: d => {
-                        let index = this.data.nodes.indexOf(d)
-                        if (index === 0) return;
-                        let indexB = index - 1;
-                        this.data.nodes[index] = this.data.nodes[indexB];
-                        this.data.nodes[indexB] = d;
-                        
-                        if (this.yAxis.focus === d) { // if moving the node on focus, change the focus
-                            this.yAxis.setDistortion(this.yAxis.focus)
-                            this.update(this.data.nodes, this.data.nodes[indexB])
-                        } else { // if moving a non-focus node, update the visible nodes and redraw without changing the focus
-                            this.updateVisibleNodes() 
-                            this.update(this.data.nodes)
-                        }
-                    } }, 
-                    {title: 'Down', 
-                    action: d => {
-                        let index = this.data.nodes.indexOf(d)
-                        if (index === this.data.nodes.length - 1) return;
-                        let indexB = index + 1;
-                        this.data.nodes[index] = this.data.nodes[indexB];
-                        this.data.nodes[indexB] = d;
-
-                        if (this.yAxis.focus === d) { 
-                            this.update(this.data.nodes, this.data.nodes[index])
-                        } else {
-                            this.updateVisibleNodes() 
-                            this.update(this.data.nodes)
-                        }
-                    }} ]
-            })
-
-            if (this.data.artists[d].collaborators.length) { /// the author has one or more co-authors
-                let collab = { title: 'Explore collaborations' }
-
-                collab.children = this.data.artists[d].collaborators.map(e => { 
-                    return { 
-                        title: e.name,
-                        action: () => {
-                            if (this.data.nodes.includes(e.name)) return
-                            this.data.add(e.name)
-                        },
-                        disabled: !e.enabled
-                    }; 
-                })
-
-                menu.push(collab)
-            }
-        }
-
-        return menu
     }
 
     toggleBestOf(display_all){

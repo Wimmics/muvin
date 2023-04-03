@@ -19,6 +19,8 @@ class NodesAxis {
         this.shift = 0;
 
         this.color = {focus: '#2C3E50', normal: '#dcdcdc'}
+
+        this.contextmenu = new ContextMenu()
     }
 
     setDistortionSize(val) {
@@ -190,14 +192,16 @@ class NodesAxis {
                         .attr('x', rectwidth)
                         .attr('y', rectheight / 2 - iconsize / 2)
                         .style('display', d => this.chart.areItemsVisible(d) ? 'block' : 'none')
-                        .on('click', d3.contextMenu(d => this.chart.getContextMenu(d)))
+                        .on('click', d3.contextMenu(d => this.contextmenu.getNetworkMenu(d)))
+                        .on('contextmenu', d3.contextMenu(d => this.contextmenu.getNodeMenu()))
                         .call(image => image.append('title').text('Click to get more options'))) 
                         ,
 
                 update => update.call(g => g.select('text.title').text(d => d))
                     .call(g => g.select('.circle-plus')
                         .style('display', d => this.chart.areItemsVisible(d) ? 'block' : 'none')
-                        .on('click', d3.contextMenu(d => this.chart.getContextMenu(d))))
+                        .on('click', d3.contextMenu(d => this.contextmenu.getNetworkMenu(d))))
+                        .on('contextmenu', d3.contextMenu(d => this.contextmenu.getNodeMenu()))
                     .call(g => g.select('rect').transition().duration(500)
                         .attr('fill', d => this.focus === d ? this.color.focus : this.color.normal)
                         .style('display', d => this.chart.areItemsVisible(d) ? 'block' : 'none'))
