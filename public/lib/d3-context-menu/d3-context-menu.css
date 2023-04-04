@@ -139,6 +139,18 @@
 	width: 100%;
 }
 
+.d3-context-menu-theme ul.multi-column {
+	width: auto !important; /* changed from 100% to acomodate multiple columns */
+	columns: 6; /* multiple columns to reduce sub-menu height */
+}
+
+.d3-context-menu-theme input {
+	padding: 5px;
+    margin-left: 10px;
+    border: none;
+    position: relative;
+}
+
 .d3-context-menu-theme li.is-parent:hover > ul.is-children {
 	display: block;
 }

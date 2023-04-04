@@ -198,6 +198,7 @@
 
 
 				function createNestedMenu(parent, root, depth = 0) {
+					
 					var resolve = function (value) {
 						return utils.toFactory(value).call(root, data, eventOrIndex);
 					};
@@ -217,6 +218,7 @@
 							var hasAction = !!d.action;
 							var hasCls = !!d.className;
 							var text = isDivider ? '<hr>' : resolve(d.title);
+							var multiColumn = hasChildren && d.children.length > 10
 
 							var listItem = d3.select(this)
 								.classed('is-divider', isDivider)
@@ -235,10 +237,37 @@
 
 							if (hasChildren) {
 								// create children(`next parent`) and call recursive
-								var children = listItem.append('ul').classed('is-children', true);
+								var children = listItem.append('ul').classed('is-children', true)
+									.classed('multi-column', multiColumn)
+									.attr('id', multiColumn ? 'ul-multi' : '');
+
+								if (multiColumn) 
+									children.append('input')
+										.attr('type', 'text')
+										.attr('placeholder', 'Search for')
+										.attr('id', 'ul-search')
+										.on('keyup', search)
+								
 								createNestedMenu(children, root, ++depth)
 							}
 						});
+				}
+
+				function search() {
+					var input, filter, ul, li, a, i, txtValue;
+					input = document.getElementById("ul-search");
+					filter = input.value.toUpperCase();
+					ul = document.getElementById("ul-multi");
+					li = ul.getElementsByTagName("li");
+					for (i = 0; i < li.length; i++) {
+						
+						txtValue = li[i].textContent || li[i].innerText;
+						if (txtValue.toUpperCase().indexOf(filter) > -1) {
+							li[i].style.display = "";
+						} else {
+							li[i].style.display = "none";
+						}
+					}
 				}
 			};
 		};

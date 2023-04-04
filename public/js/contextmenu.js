@@ -1,6 +1,7 @@
 class ContextMenu {
     constructor() {
         this.chart = document.querySelector('#muvin')
+
     }
 
     getItemMenu() {
@@ -125,6 +126,16 @@ class ContextMenu {
         }
 
         return menu
+    }
+
+    // todo: a function that changes the width and columns of ul.is-children after returning the menu
+
+    rescaleMenu() {
+        console.log('rescale')
+        console.log(d3.selectAll('ul.is-children'))
+        d3.selectAll('ul.is-children')
+            .style("width", "auto")
+            .style("columns", 5)
     }
 
     getWasabiLink(d) {
