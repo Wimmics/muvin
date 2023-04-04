@@ -23,6 +23,8 @@ class Muvin extends HTMLElement {
     async connectedCallback() {
         this.shadowRoot.appendChild(template.content.cloneNode(true));
         this.app = this.getAttribute("app")
+        let values = this.getAttribute("values")
+        values = values ? values.split(',').map(d => d.trim()) : []
 
         this.div = d3.select(this.shadowRoot.querySelector('div.timeline'))
         this.svg = this.div.select('svg#chart')
@@ -64,10 +66,12 @@ class Muvin extends HTMLElement {
 
         this.menu = new Menu()
         this.menu.init()
-        this.menu.open()
 
-        await this.data.getNodesLabels(this.app)
-        this.test()
+        await this.data.fetchNodesLabels(this.app)
+
+        if (values.length)
+            values.forEach(async (d) => await this.data.add(d))
+        else this.test()
 
     }
 
@@ -84,57 +88,62 @@ class Muvin extends HTMLElement {
      */
     async test() {
         let values = [];
-        console.log('app =', this.app)
+        
         switch(this.app) {
             case 'crobora':
-                values = ['Angela Merkel', 'Nicolas Sarkozy']
+                values = [{value: 'Angela Merkel', type: 'celebrity'}, 
+                    {value: 'Nicolas Sarkozy', type: 'celebrity'}, 
+                    {value: 'Europe', type: 'event'}, 
+                    {value: 'Charles Michel', type: 'celebrity'}]
                 break;
             case 'hal':
-                values = ['Aline Menin', 'Marco Winckler']
+                values = [{value: 'Aline Menin'}, {value: 'Marco Winckler'}]
                 // values = ['Marco Winckler', 'Philippe Palanque', 'Thiago Rocha Silva', 'Lucile Sassatelli', 'Célia Martinie', 'Aline Menin']
                 break;
             case 'wasabi':
-                values = ['Queen', 'Freddie Mercury', 'David Bowie']
+                values = [{value: 'Queen'}, {value: 'Freddie Mercury'}, {value: 'David Bowie'}]
                 break;
         }
         values.forEach(async (d) => await this.data.add(d))
     }
 
-    async update(nodes, focus){
+    /**
+     * Update the view when adding or removing a node from the network
+     * @param {} focus An object defining the node on focus 
+     */
+    async update(focus){
 
-        if (!focus && nodes.length > 5) {
-            focus = nodes[nodes.length / 2]
-        }
-        
+        this.shadowRoot.querySelector('.welcome-text').style.display = 'none'
         this.hideLoading()
-        this.menu.close()
         this.menu.displayViewSettings()
-
-        d3.selectAll(this.shadowRoot.querySelectorAll('.search-bar')).style('display', 'flex')
 
         this.height = this.div.node().clientHeight
 
         this.svg.attr('width', this.width)
             .attr('height', window.innerHeight * .9)
 
-        this.visibleNodes = [...nodes]
+        d3.select(this.shadowRoot.querySelector('#nodes-group'))
+            .selectAll('g.artist')
+            .data(this.data.getNodesKeys())
+            .join(
+                enter => enter.append('g')
+                    .classed('artist', true)
+                    .attr('opacity', 1),
+                update => update,
+                exit => exit.remove()
+            )
+        
+        this.visibleNodes = [...this.data.getNodesKeys()]
+        this.visibleProfile = [...this.visibleNodes]
+        this.visibleItems = [...this.visibleNodes]
 
-        this.data.updateNodes(nodes)
-        this.data.updateTime()
-
-        this.legend.update()
-
-        this.menu.updateItemsSearch(this.data.getItems().filter(d => nodes.includes(d.artist.name)))
+        this.menu.updateItemsSearch()
 
         this.legend.update()
         this.xAxis.set()
         this.yAxis.set()
         await this.profiles.set()
         
-        this.setGroups()
-
-        this.visibleProfile = [...nodes]
-        this.visibleItems = [...nodes]
         this.yAxis.drawLabels()
 
         if (this.yAxis.focus && focus && this.yAxis.focus != focus) 
@@ -152,38 +161,12 @@ class Muvin extends HTMLElement {
         this.fstlinks.draw()
     }
 
-    // draw the nodes of the first level of the network (e.g., artists, authors)
-    setGroups() {
-
-        let artistGroup = d3.select(this.shadowRoot.querySelector('#nodes-group'))
-            .selectAll('g.artist')
-            .data(this.data.nodes)
-            .join(
-                enter => enter.append('g')
-                    .classed('artist', true)
-                    .attr('opacity', 1),
-                update => update,
-                exit => exit.remove()
-            )
-        
-        /// one group per artist ; it will hold the profile wave ////////
-        artistGroup.selectAll('g.profile')
-            .data(d => this.profiles.data.filter(e => e.artist === d))
-            .join(
-                enter => enter.append('g')
-                    .classed('profile', true),
-                update => update,
-                exit => exit.remove()
-            )
-        
-    }
-
     getData() {
         return this.data;
     }
 
-    areItemsVisible(d) {
-        return this.visibleItems.includes(d)
+    areItemsVisible(key) {
+        return this.visibleItems.includes(key)
     }
 
     displayItems(d) {
@@ -196,8 +179,8 @@ class Muvin extends HTMLElement {
         return index
     }
 
-    isNodeVisible(d){
-        return this.visibleNodes.includes(d)
+    isNodeVisible(key){
+        return this.visibleNodes.includes(key)
     }
 
     isNodeValid(node){
@@ -208,8 +191,8 @@ class Muvin extends HTMLElement {
         this.visibleNodes.push(d)
     }
 
-    isProfileVisible(d) {
-        return this.visibleProfile.includes(d)
+    isProfileVisible(key) {
+        return this.visibleProfile.includes(key)
     }
 
     displayProfile(d) {
@@ -223,14 +206,15 @@ class Muvin extends HTMLElement {
     }
 
     isProfileActive(d) {
-        if (!this.isNodeVisible(d.data.artist)) return 0
-        if (this.isProfileVisible(d.data.artist)) return 1;
-        if (!this.getNodeSelection() && this.isProfileVisible(d.data.artist) || (this.isProfileVisible(d.data.artist) && this.getNodeSelection() && this.isSelected(d.data.artist))) return 1
+        let key = d.data.artist.key
+        if (!this.isNodeVisible(key)) return 0
+        if (this.isProfileVisible(key)) return 1;
+        if (!this.getNodeSelection() && this.isProfileVisible(key) || (this.isProfileVisible(key) && this.getNodeSelection() && this.isSelected(key))) return 1
         return 0
     }
 
-    getColors(type) {
-        return this.data.colors[type]
+    getItemColor() {
+        return this.data.colors.item.color;
     }
 
     getTypeValue(key) {
@@ -242,7 +226,11 @@ class Muvin extends HTMLElement {
     }
 
     isUncertain(d) {
-        return this.data.getItems().filter(a => a.id === d.id && a.year === d.year).length === 1
+        let validNodes = d.contributors.filter(e => this.data.getNodesKeys().includes(e.key)) // visible contributors in this item
+        validNodes = validNodes.map(d => d.key)
+        validNodes = validNodes.filter( (e,i) => validNodes.indexOf(e) === i)
+        
+        return this.data.getItems().filter(a => a.id === d.id && a.year === d.year).length != validNodes.length
     }
 
     // return chart dimensions
@@ -255,23 +243,25 @@ class Muvin extends HTMLElement {
         return this.yAxis.focus
     }
 
+    // TODO: verify that it still works
     async updateVisibleNodes(){ // according to yAxis focus
         
-        let index = this.data.nodes.indexOf(this.yAxis.focus)
-        let nodes = index === -1 || !this.yAxis.focus ? this.data.nodes : [this.yAxis.focus]
+        let keys = this.data.getNodesKeys()
+        let index = keys.indexOf(this.yAxis.focus)
+        let nodes = index === -1 || !this.yAxis.focus ? keys : [this.yAxis.focus]
 
         if (index === 0) {
-            nodes.push(this.data.nodes[index + 1])
-            // nodes.push(this.data.nodes[index + 2])
-        } else if (index === this.data.nodes.length - 1) {
-            nodes.push(this.data.nodes[index - 1])
-            // nodes.push(this.data.nodes[index - 2])
+            nodes.push(keys[index + 1])
+            // nodes.push(keys[index + 2])
+        } else if (index === keys.length - 1) {
+            nodes.push(keys[index - 1])
+            // nodes.push(keys[index - 2])
         } else if (this.yAxis.focus) {
-            if (index === this.data.nodes.length - 2)
-                nodes.push(this.data.nodes[index - 1])
-            else nodes.push(this.data.nodes[index + 1])
+            if (index === keys.length - 2)
+                nodes.push(keys[index - 1])
+            else nodes.push(keys[index + 1])
 
-            // nodes.push(this.data.nodes[index + 1])
+            // nodes.push(keys[index + 1])
         }
 
         
@@ -302,11 +292,11 @@ class Muvin extends HTMLElement {
 
         if (!value) return
 
-        let targets = this.data.links.filter(e => e.source === value || e.target === value).map(e => e.target === value ? e.source : e.target)
+        let targets = this.data.links.filter(e => e.source.key === value || e.target.key === value).map(e => e.target.key === value ? e.source.key : e.target.key)
         targets =  targets.filter((e,i) => this.yAxis.values.includes(e) && targets.indexOf(e) === i)
 
         let nodes = this.data.getItems().filter(e => {
-            let values = e.children ? e.children.map(item => item.contnames).flat() : e.contnames
+            let values = e.contributors.map(x => x.key)
             return values.includes(value) && values.some(a => targets.includes(a)) 
         })
 
@@ -326,7 +316,7 @@ class Muvin extends HTMLElement {
      * @param {String} d selected label on the y axis
      */
     focusOnNode(d) {
-        if (!this.isSelected(d) && this.data.nodes.length > 1) {
+        if (!this.isSelected(d) && this.data.getNodesKeys().length > 1) {
             this.yAxis.setDistortion(d)
         }
     }
@@ -362,32 +352,6 @@ class Muvin extends HTMLElement {
         this.svg.selectAll('g').remove()
     }
 
-    toggleBestOf(display_all){
-        this.display_all = display_all
-        this.update(this.data.nodes)
-    }
-
-    displayBestOfs(){
-        return this.display_all
-    }
-
-    toggleProfile(value) {
-        this.profileColors = value;
-        this.draw()
-    }
-
-    displayProfileColors() {
-        return this.profileColors;
-    }
-
-    toggleItems(value) {
-        this.itemGlyphs = value;
-        this.draw()
-    }
-
-    displayItemGlyphs() {
-        return this.itemGlyphs;
-    }
 }
 
 const template = document.createElement("template");
@@ -408,17 +372,10 @@ template.innerHTML = `
     
     <div class="menu">
         
-        <h3 style="color: white;">Muvin</h3>
-        <img src="/muvin/images/open.svg" id="menu-icon" width="20" height="20" class="menu-icon"></img>
-
-        <div class='icon-container'>
-            <img src="/muvin/images/data.svg" id="data-icon" width="20"; height="20"; class="menu-icon"></img>
-            <img src="/muvin/images/search.svg" id="search-icon" width="20"; height="20"; class="menu-icon"></img>
-            <img src="/muvin/images/settings.svg" id="settings-icon" width="20"; height="20"; class="menu-icon"></img>
-        </div>
+        <h3>Muvin</h3>
 
         <div id='menu-items' class='settings'>
-            <div >
+            <div>
                 <label>Search for</label>
                 <input type="text" list='nodes-list' id="nodes-input" placeholder="Type here">
                 <datalist id='nodes-list'></datalist>
@@ -440,6 +397,10 @@ template.innerHTML = `
         <div id="loading">  
             <img width="70px" height="70px" src="/muvin/images/loading.svg"></img>
             <p>Loading data...</p>
+        </div>
+
+        <div class='welcome-text'>
+            <p>Welcome to <b>Muvin</b>. To begin the exploration, please search for a value above.</p>
         </div>
 
         <div class='legend'>  </div>

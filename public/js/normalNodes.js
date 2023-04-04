@@ -8,6 +8,7 @@ class NormalNodes extends NodesGroup{
     }
 
     set() {
+
         this.forceSimulation.on("tick", () => this.group.selectAll('.doc')
             .attr('transform', d => `translate(${d.x}, ${d.y})` ))
     }
@@ -47,7 +48,7 @@ class NormalNodes extends NodesGroup{
         // a group per item (e.g. an item == a song)
         this.group.selectAll('g.artist')
             .selectAll('.doc')            
-            .data(d => this.data.filter(e => e.artist.name === d) )
+            .data(d => this.data.filter(e => e.artist.key === d) )
             .join(
                 enter => enter.append('g')
                     .classed('doc', true)

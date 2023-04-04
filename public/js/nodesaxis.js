@@ -30,12 +30,12 @@ class NodesAxis {
     set() {
         let dimensions = this.chart.getDimensions()
 
-        let chartData = this.chart.getData()
-        this.data = chartData.artists
-        this.values = chartData.nodes
+        this.data = this.chart.data.getNodes()
+        this.values = this.chart.data.getNodesKeys()
 
         let min = this.shift,
             max = dimensions.height - dimensions.top - dimensions.bottom - this.shift;
+
         this.scale.domain(this.values)
             .range([min, max])
             .padding(.7)
@@ -151,6 +151,8 @@ class NodesAxis {
             return Math.min( (rectwidth * .8) / l, .8) * p  + "em"
         }
 
+        let iconPath = d => this.chart.app === 'crobora' ? `/muvin/images/${this.chart.app}/${this.data[d].type}-icon.svg` : ''
+
         let group = d3.select(this.chart.shadowRoot.querySelector('#labels-group'))
         group.selectAll('g.artist-label')
             .data(this.values)
@@ -171,8 +173,10 @@ class NodesAxis {
                         .on('mouseout', () => this.mouseout())
                     )
 
+                    
+
                     .call(g => g.append('text')
-                        .text(d => d)
+                        .text(d => this.data[d].name)
                         .attr('class', 'title')
                         .style('font-weight', 'bold')
                         .style('font-size', function(d) { return getFontSize(d, this.getComputedTextLength())})
@@ -181,9 +185,19 @@ class NodesAxis {
                         .attr('y', '1.2em')
                         .attr('fill', d => this.focus === d ? '#fff' : '#000')
                         .style('pointer-events', 'none')
-                        )
-                        
+                    )
 
+                    .call(g => g.append('svg:image')
+                        .attr('xlink:href', d => iconPath(d))
+                        .attr('class', 'type-icon')
+                        .attr('width', iconsize)
+                        .attr('height', iconsize)
+                        .attr('x', 2)
+                        .attr('y', rectheight / 2 - iconsize / 2)
+                        .style('display', d => this.chart.areItemsVisible(d) && this.chart.app === 'crobora' ? 'block' : 'none')
+                        .call(image => image.append('title').text(d => this.data[d].type))
+                    )
+                        
                     .call(g => g.append('svg:image')
                         .attr('xlink:href', this.PLUS)
                         .attr('class', 'circle-plus')
@@ -194,21 +208,26 @@ class NodesAxis {
                         .style('display', d => this.chart.areItemsVisible(d) ? 'block' : 'none')
                         .on('click', d3.contextMenu(d => this.contextmenu.getNetworkMenu(d)))
                         .on('contextmenu', d3.contextMenu(d => this.contextmenu.getNodeMenu()))
-                        .call(image => image.append('title').text('Click to get more options'))) 
-                        ,
+                        .call(image => image.append('title').text('Click to get more options'))
+                    ),
 
-                update => update.call(g => g.select('text.title').text(d => d))
+                update => update.call(g => g.select('text.title')
+                        .text(d => this.data[d].name)
+                        .attr('fill', d => this.focus === d ? '#fff' : '#000')
+                        .style('font-size', function(d) { return getFontSize(d, this.getComputedTextLength())})
+                    )
                     .call(g => g.select('.circle-plus')
                         .style('display', d => this.chart.areItemsVisible(d) ? 'block' : 'none')
                         .on('click', d3.contextMenu(d => this.contextmenu.getNetworkMenu(d))))
-                        .on('contextmenu', d3.contextMenu(d => this.contextmenu.getNodeMenu()))
+                        .on('contextmenu', d3.contextMenu(d => this.contextmenu.getNodeMenu())
+                    )
                     .call(g => g.select('rect').transition().duration(500)
                         .attr('fill', d => this.focus === d ? this.color.focus : this.color.normal)
-                        .style('display', d => this.chart.areItemsVisible(d) ? 'block' : 'none'))
-                    .call(g => g.select('text').transition().duration(500)  
-                        .attr('fill', d => this.focus === d ? '#fff' : '#000')
-                        .style('font-size', function(d) { return getFontSize(d, this.getComputedTextLength())})
-                        ),
+                        .style('display', d => this.chart.areItemsVisible(d) ? 'block' : 'none')
+                    )
+                    .call(g => g.select('.type-icon').attr('xlink:href', d => iconPath(d))
+                        .call(image => image.select('title').text(d => this.data[d].type))
+                    ),
 
                 exit => exit.remove()
             )
@@ -229,6 +248,7 @@ class NodesAxis {
                 
     }
 
+    // TODO create a function in the tooltip class to generate the tooltip for the node
     getTooltipContent(d) {
         let value = this.data[d]
         let type = (value.type === 'Group' ? 'Creation' : 'Birth') + ' Date:'
@@ -271,16 +291,15 @@ class NodesAxis {
                 
         let group = d3.select(this.chart.shadowRoot.querySelector('#chart-group'))
 
-        let linkElem = group.selectAll('g.link')
+        let selectedLinks = group.selectAll('g.link')
             .transition()
             .duration(500)
-            .attr('opacity', e => e.source === d || e.target === d ? 1 : 0)
+            .attr('opacity', e => e.source.key === d || e.target.key === d ? 1 : 0)
 
         group.selectAll("[class$='-ticks']")
-            .attr('opacity', e => e.source === d || e.target === d ? 1 : 0)
+            .attr('opacity', e => e.source.key === d || e.target.key === d ? 1 : 0)
 
-        linkElem.selectAll('line')
-            .attr('stroke-width', 2)
+        selectedLinks.selectAll('line').attr('stroke-width', 2)
 
         let nodes = this.chart.getConnectedNodes(d)
 
@@ -289,18 +308,14 @@ class NodesAxis {
             .duration(500)
             .attr('opacity', e => d === e || nodes.fst.includes(e) ? 1 : .1)
 
-        group.selectAll('.item-circle')
-            .filter(e => this.chart.areItemsVisible(e.artist.name))
-            .transition('focus-items')
-            .duration(500)
-            .attr('opacity', e => nodes.snd.includes(e.id) ? 1 : .1)
-            .attr('stroke-dasharray', e => nodes.snd.includes(e.id) && this.chart.isUncertain(e) ? 4 : 'none')
+        this.chart.nodes.highlightNodeItems(nodes.snd)
 
+        // TODO: verify whether it still works
         if (this.chart.getTimeSelection())
             group.selectAll('.node-link')
                 .transition('focus-links')
                 .duration(500)
-                .attr('opacity', e => e.sourceArtist === d || e.targetArtist === d ? 1 : 0)
+                .attr('opacity', e => e.source.key === d || e.target.key === d ? 1 : 0)
 
         this.chart.profiles.downplay(d)
     

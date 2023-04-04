@@ -1,7 +1,8 @@
 function wrap(text, width) {
     text.selectAll('tspan').remove()
-
-    let words = text.text().split(' ').reverse(),
+    let textContent = text.text()
+   
+    let words = textContent.split(' ').reverse(),
         word,
         line = [],
         lineNumber = 0,

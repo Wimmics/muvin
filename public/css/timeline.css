@@ -16,9 +16,22 @@ body{
 }
 
 .timeline {
-    height: calc(100vh - 200px); 
+    height: calc(100% - 200px); 
     display: flex;
+    width: 100%;
+}
+
+.welcome-text{
+    text-align: center;
     width: 100vw;
+    height: calc(100vh - 35px);
+    top: 35px;
+    position: absolute;
+}
+
+.welcome-text p {
+    top: 10%;
+    position: relative;
 }
 
 .slider-button {
@@ -30,11 +43,11 @@ body{
 .vis{
     display:flex; 
     flex-direction: column;
-    height: 100vh;
-    width: calc(100vw - 40px);
+    width: 100vw;
+    height: calc(100vh - 70px);
     overflow: hidden;
     position: absolute;
-    left: 40px;
+    top: 50px;
 }
 
 .tooltip{

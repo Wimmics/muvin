@@ -19,7 +19,7 @@ class Legend {
         this.linkLegend.append('svg')
             .attr('id', 'link-legend')
             .append('text')
-                .text('Contribution Type')
+                .text(this.chart.app === 'crobora' ? 'Broadcaster' : 'Contribution Type')
                 .attr('font-size', this.fontSize)
                 .attr('transform', `translate(0, 25)`)
 
@@ -41,7 +41,7 @@ class Legend {
 
     drawLinkLegend() {
 
-        let itemWidth = d3.max(this.data, d => d.length * 9)
+        let itemWidth = d3.max(this.data, d => d.length * 12)
 
         let svg = this.div.select('svg#link-legend')
             .attr('width', this.data.length * (itemWidth + this.itemRadius))

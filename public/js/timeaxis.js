@@ -203,11 +203,10 @@ class TimeAxis{
             .transition()
             .duration(100)
             .attr('opacity', d => {
-                let artist = d.artist.name 
                 
                 if (d.year === this.focus) return 1
-                if (!this.chart.isNodeVisible(artist)) return 0 // hide when the items of the artist are hidden
-                if (this.chart.getNodeSelection() && !this.chart.isNodeVisible(artist)) return 0 // hide when the artist is not the one with the focus on
+                if (!this.chart.isNodeVisible(d.artist.key)) return 0 // hide when the items of the artist are hidden
+                if (this.chart.getNodeSelection() && !this.chart.isNodeVisible(d.artist.key)) return 0 // hide when the artist is not the one with the focus on
                 if (d.year != value) return 0
                 return 1
             })  

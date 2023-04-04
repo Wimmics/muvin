@@ -14,10 +14,10 @@ class ImageTooltip extends Tooltip{
         let content = `${image}
                     <p>Archive: <b>${d.parent.name}</b></p>
                     <p>Broadcast date: <b>${d.parent.date}</b></p>
-                    <p><b>TV Channel:</b> ${d.artist.contribution.join(', ')}</p> 
+                    <p><b>Broadcaster:</b> ${d.artist.contribution.join(', ')}</p> 
                     <p><b>Keywords(s):</b>
                     <ul style='list-style-type: none;'>
-                    ${d.contributors.map(val => `<li title="${val.itemType}" style="display:flex; gap:10px;"> <img src="/muvin/images/${this.chart.app}/${val.itemType}-icon.svg" width="15px"></img>${capitalizeFirstLetter(val.name)}</li>` ).join('')}
+                    ${d.contributors.map(val => `<li title="${val.category}" style="display:flex; gap:10px;"> <img src="/muvin/images/${this.chart.app}/${val.category}-icon.svg" width="15px"></img>${capitalizeFirstLetter(val.name)}</li>` ).join('')}
                     </ul>
                     <br><br><p>Right-click for more</p>
                     `
@@ -29,10 +29,10 @@ class ImageTooltip extends Tooltip{
         let year = this.chart.xAxis.invert(e.pageX, 1)
 
         let data = this.chart.data.getItems()
-        let values = data.filter(e => e.artist.name === node && e.year === year && e.artist.contribution.includes(d.key))
+        let values = data.filter(e => e.artist.key === node.key && e.year === year && e.artist.contribution.includes(d.key))
         
-        let content = `<b> ${node}</b><br><br>
-        <b>TV channel:</b> ${capitalizeFirstLetter(d.key)}<br><br>
+        let content = `<img src="/muvin/images/${this.chart.app}/${node.type}-icon.svg" width="15px"></img><b> ${node.name}</b><br><br>
+        <b>Broadcaster:</b> ${capitalizeFirstLetter(d.key)}<br><br>
         <b>${year}: ${values.length}</b> image${values.length > 1 ? 's' : ''}`
 
         this.setContent(content, id)

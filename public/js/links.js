@@ -7,20 +7,22 @@ class LinksGroup {
     }
 
     getData() {
-        // change areItemsVisible to isNodeVisible to have all lines even when the artist items are hidden
         let isValid = d => this.chart.isNodeValid(d.source) && this.chart.isNodeValid(d.target) && !this.chart.isSelected(d.item.year)
-        return this.chart.data.links.filter(d => !this.chart.displayBestOfs() ? d.item.audio && isValid(d) : isValid(d) )
+        return this.chart.data.links.filter(d => isValid(d) )
     }
 
-    // draw the first level links (e.g. overal relationship between first level nodes -- authors/artists)
+    /**
+     * draw the first level links (e.g. overal relationship between first level nodes -- authors/artists)
+     */
     draw() {
 
         this.data = this.getData() 
         
         const lineAttrs = { x1: d => this.chart.xAxis.scale(d.year),
             x2: d => this.chart.xAxis.scale(d.year),
-            y1: d => this.chart.yAxis.scale(d.source),
-            y2: d => this.chart.yAxis.scale(d.target)
+            y1: d => this.chart.yAxis.scale(d.source.key),
+            y2: d => this.chart.yAxis.scale(d.target.key),
+            'stroke-dasharray': d => this.chart.isUncertain(d.item) ? 4 : 'none'
         }
 
         this.group.selectAll('g.link')
@@ -51,13 +53,13 @@ class LinksGroup {
         const ticksAttrs = { 
             x1: d => this.chart.xAxis.scale(d.year) - headLength, 
             x2: d => this.chart.xAxis.scale(d.year) + headLength , 
-            y1: d => this.chart.yAxis.scale(d[type]), 
-            y2: d => this.chart.yAxis.scale(d[type]),
+            y1: d => this.chart.yAxis.scale(d[type].key), 
+            y2: d => this.chart.yAxis.scale(d[type].key),
             'stroke-opacity': 1,
             'stroke': '#000'
          }
 
-        const textLength = d => d[type].length * 10
+        const textLength = d => d[type].name.length * 10
 
         let rectHeight = 25
         const rectAttrs = {
@@ -67,12 +69,12 @@ class LinksGroup {
             stroke: "none",
             rx: 10,
             x: d => this.chart.xAxis.scale(d.year) - textLength(d) - 15,
-            y: d => this.chart.yAxis.scale(d[type])
+            y: d => this.chart.yAxis.scale(d[type].key)
         }
         
         const textAttrs = {
             x: d => this.chart.xAxis.scale(d.year) - 20,
-            y: d => this.chart.yAxis.scale(d[type]) + rectHeight * .7
+            y: d => this.chart.yAxis.scale(d[type].key) + rectHeight * .7
         }
         
         this.group.selectAll(`g.${type}-ticks`)
@@ -111,12 +113,12 @@ class LinksGroup {
                         .style('font-weight', 'bold')
                         .style('text-anchor', 'end')
                         .attrs(textAttrs)
-                        .text(d => d[type])
+                        .text(d => d[type].name)
                     ),
 
                 update => update
                     .call(g => g.select('rect').attrs(rectAttrs))
-                    .call(g => g.select('text').attrs(textAttrs).text(d => d[type])),
+                    .call(g => g.select('text').attrs(textAttrs).text(d => d[type].name)),
 
                 exit => exit.remove()
             )

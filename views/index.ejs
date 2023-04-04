@@ -45,8 +45,9 @@
 
     <script>
         let locals = <%- JSON.stringify(locals) %>;
+        console.log(locals)
 
-        if (locals.params.value && locals.params.value.length) 
-            document.querySelector("#muvin").setAttribute("value", locals.params.value)
+        if (locals.params.values && locals.params.values.length) 
+            document.querySelector("#muvin").setAttribute("values", locals.params.values)
     </script>
 </body>

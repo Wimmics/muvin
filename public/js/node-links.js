@@ -9,7 +9,7 @@ class NodeLinksGroup{
 
     set() {
 
-        this.linkInfo = d => `${d.sourceArtist} → ${d.targetArtist}\nItem: ${d.value.name}\nContribution: ${d.types.map(e => capitalizeFirstLetter(e)).join(', ')}`
+        this.linkInfo = d => `${d.source.name} → ${d.target.name}\nItem: ${d.value.name}\nContribution: ${d.types.map(e => capitalizeFirstLetter(e)).join(', ')}`
         
         this.linkGenerator = d3.linkVertical()
             .x(d => d.x)
@@ -88,7 +88,7 @@ class NodeLinksGroup{
         this.group.selectAll('.node-link')
             .attr('opacity', function() { return this === elem ? 1 : 0 } )
 
-        let selected = e => e.id === d.value.id && e.year === d.value.year && (e.artist.name === d.sourceArtist || e.artist.name === d.targetArtist)
+        let selected = e => e.id === d.value.id && e.year === d.value.year && (e.artist.key === d.source.key || e.artist.key === d.target.key)
         this.chart.group.selectAll('.item-circle')
             .attr('opacity', e => selected(e) ? 1 : .2 )
             .attr('stroke-width', e => selected(e) ? 2 : 1 )
@@ -117,24 +117,24 @@ class NodeLinksGroup{
      */
     getData() {
         // keep one link per node
-        let links = this.chart.data.getLinks().filter(d => this.chart.areItemsVisible(d.source) && this.chart.areItemsVisible(d.target) && this.chart.isSelected(d.year))
-
-        links = links.filter( (d,i) => links.findIndex(e => ((e.source === d.source && e.target === d.target) || (e.source === d.target && e.target === d.source)) && e.item.id === d.item.id) === i)
+        let links = this.chart.data.getLinks().filter(d => this.chart.areItemsVisible(d.source.key) && this.chart.areItemsVisible(d.target.key) && this.chart.isSelected(d.year))
+        console.log("links = ", links)
+        links = links.filter( (d,i) => links.findIndex(e => ((e.source.key === d.source.key && e.target.key === d.target.key) || (e.source.key === d.target.key && e.target.key === d.source.key)) && e.item.id === d.item.id) === i)
 
         let linkedItems = links.map(d => d.item.id)
         let selection = this.chart.data.getItems().filter(e => linkedItems.includes(e.id) && this.chart.isSelected(e.year))
         let data = []
 
         links.forEach(d => {
-            let nodesData = selection.filter(e =>  [d.source, d.target].includes(e.artist.name) && e.id === d.item.id )
+            let nodesData = selection.filter(e =>  [d.source.key, d.target.key].includes(e.artist.key) && e.id === d.item.id )
             for (let j = 0; j < nodesData.length - 1; j++) {
 
-                let sourceIndex = nodesData.findIndex(e => e.artist.name === d.source)
+                let sourceIndex = nodesData.findIndex(e => e.artist.key === d.source.key)
                 let sData = nodesData[sourceIndex]
                 let source = this.chart.app === 'crobora' ? {x: sData.x - (this.chart.xAxis.scale(sData.year) * .1) + sData.r, y: sData.y + sData.r} : {x: sData.x, y: sData.y}
                 let sourceRadius = sData.r
 
-                let targetIndex = nodesData.findIndex(e => e.artist.name === d.target)
+                let targetIndex = nodesData.findIndex(e => e.artist.key === d.target.key)
                 let tData = nodesData[targetIndex]
                 let target = this.chart.app === 'crobora' ? {x: tData.x - (this.chart.xAxis.scale(tData.year) * .1) + tData.r, y: tData.y} : {x: tData.x, y: tData.y}
                 let targetRadius = tData.r
@@ -162,8 +162,8 @@ class NodeLinksGroup{
                 })
 
                 data.push({value: d.item,
-                    sourceArtist: d.source, 
-                    targetArtist: d.target, 
+                    source: d.source, 
+                    target: d.target, 
                     types: types,
                     values: values
                 })

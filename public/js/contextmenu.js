@@ -18,7 +18,7 @@ class ContextMenu {
     getNodeMenu() {
         let menu = []
 
-        if (this.chart.data.nodes.length > 1) {
+        if (this.chart.data.getNodesKeys().length > 1) {
             menu.push({ title: d => this.chart.yAxis.freeze === d ? 'Release highlight' : 'Highlight collaborations', 
                         action: d => { 
                             if (this.chart.yAxis.freeze === d) this.chart.yAxis.releaseFreeze()
@@ -55,15 +55,16 @@ class ContextMenu {
     getNetworkMenu(d) {
         let menu = []
 
-        if (this.chart.data.nodes.length > 1)
+        let keys = this.chart.data.getNodesKeys()
+        if (keys.length > 1)
             menu.push({
                 title: 'Remove node',
                 action: d => {
                     let focus;
                     if (this.chart.yAxis.focus) {
                         if (this.chart.yAxis.focus === d) {
-                            let index = this.chart.data.nodes.indexOf(d)
-                            focus = index === 0 ? this.chart.data.nodes[index + 1] : this.chart.data.nodes[index - 1]
+                            let index = keys.indexOf(d)
+                            focus = index === 0 ? keys[index + 1] : keys[index - 1]
                         } else if (this.chart.visibleItems.includes(d)) this.chart.updateVisibleNodes() 
                     }
 
@@ -76,33 +77,31 @@ class ContextMenu {
             children: [
                 {title: 'Up', 
                 action: d => {
-                    let index = this.chart.data.nodes.indexOf(d)
+                    let index = keys.indexOf(d)
                     if (index === 0) return;
                     let indexB = index - 1;
-                    this.chart.data.nodes[index] = this.chart.data.nodes[indexB];
-                    this.chart.data.nodes[indexB] = d;
+                    this.chart.data.switchNodes(index, indexB)
                     
                     if (this.chart.yAxis.focus === d) { // if moving the node on focus, change the focus
                         this.chart.yAxis.setDistortion(this.chart.yAxis.focus)
-                        this.chart.update(this.chart.data.nodes, this.chart.data.nodes[indexB])
+                        this.chart.update(keys[indexB])
                     } else { // if moving a non-focus node, update the visible nodes and redraw without changing the focus
                         this.chart.updateVisibleNodes() 
-                        this.chart.update(this.chart.data.nodes)
+                        this.chart.update()
                     }
                 } }, 
                 {title: 'Down', 
                 action: d => {
-                    let index = this.chart.data.nodes.indexOf(d)
-                    if (index === this.chart.data.nodes.length - 1) return;
+                    let index = keys.indexOf(d)
+                    if (index === keys.length - 1) return;
                     let indexB = index + 1;
-                    this.chart.data.nodes[index] = this.chart.data.nodes[indexB];
-                    this.chart.data.nodes[indexB] = d;
+                    this.chart.data.switchNodes(index, indexB)
 
                     if (this.chart.yAxis.focus === d) { 
-                        this.chart.update(this.chart.data.nodes, this.chart.data.nodes[index])
+                        this.chart.update(keys[index])
                     } else {
                         this.chart.updateVisibleNodes() 
-                        this.chart.update(this.chart.data.nodes)
+                        this.chart.update()
                     }
                 }} ]
         })
@@ -113,10 +112,10 @@ class ContextMenu {
 
             collab.children = this.chart.data.artists[d].collaborators.map(e => { 
                 return { 
-                    title: e.name,
+                    title: `${e.value} ${e.type ? '(' + e.type + ')' : ''}`,
                     action: () => {
-                        if (this.chart.data.nodes.includes(e.name)) return
-                        this.chart.data.add(e.name)
+                        if (keys.includes(e.key)) return
+                        this.chart.data.add(e)
                     },
                     disabled: !e.enabled
                 }; 

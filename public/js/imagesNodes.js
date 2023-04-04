@@ -77,7 +77,7 @@ class ImageNodes extends NodesGroup {
          // a group per item (e.g. an item == an image)
         this.group.selectAll('g.artist')
             .selectAll('.doc')            
-            .data(d => this.data.filter(e => e.artist.name === d) )
+            .data(d => this.data.filter(e => e.artist.key === d) )
             .join(
                 enter => enter.append('g')
                     .classed('doc', true)

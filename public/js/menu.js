@@ -22,7 +22,14 @@ class Menu{
                 if (eventSource === 'key') {
                     if (this.value.length > 2) 
                         _this.updateAutocomplete(this.value.toLowerCase())
-                } else _this.chart.data.add(this.value)
+                } else {
+                    
+                    let value = this.value
+                    let node = d3.select(this.list).selectAll('option').filter(function() { return this.value === value }).datum()
+                    
+                    _this.chart.data.add(node)
+                    _this.clearSearch()
+                }
             })
         
 
@@ -43,21 +50,12 @@ class Menu{
              
     }
 
-    changeDataset(value) {
-        this.hideViewSettings()
-        this.chart.shadowRoot.querySelector('#nodes-input').value = ''
-
-        d3.select(this.chart.shadowRoot.querySelector('#nodes-list'))
-            .selectAll('option')
-            .remove()
-
-        this.chart.setAttribute('app', value)
-        this.chart.data.clear()
-        this.chart.data.getNodesLabels(value)
+    clearSearch() {
+        this.div.select("#nodes-input").node().value = ''
     }
 
-    updateItemsSearch(data) {
-        this.data = data
+    updateItemsSearch() {
+        this.data = this.chart.data.getItems()
 
         let songNames = this.data.map(d => d.name)
         songNames = songNames.filter((d,i) => songNames.indexOf(d) === i)
@@ -85,7 +83,7 @@ class Menu{
                 enter => enter.append('option'),
                 update => update,
                 exit => exit.remove()
-            ).attr('value', d => d.value)
+            ).attr('value', e =>  `${e.value} ${e.type ? '(' + e.type + ')' : ''}`)
         
     }
     
@@ -95,39 +93,5 @@ class Menu{
 
     hideViewSettings() {
         this.div.select('#view-controls').style('display', 'none')
-    }
-
-    open() {
-
-        this.div.select('#menu-icon')
-            .attr('src', this.closeIcon)
-            .transition().duration(500)
-            .style('left', this.width - 30 + "px")
-
-        this.div.style('width', this.width + 'px')
-
-        this.div.select('.settings').style('display', 'flex')
-        this.div.select('.icon-container').style('display', 'none')
-
-    }
-
-    close() {
-        this.div.select('#menu-icon')
-            .attr('src', this.openIcon)
-            .transition().duration(500)
-            .style('left', "10px")
-
-        this.div.style('width', '40px')
-
-        this.div.select('.settings').style('display', 'none')
-        this.div.select('.icon-container').style('display', 'flex')
-        
-    }
-
-    toggle() {
-        this.isOpen = !this.isOpen;
-
-        if (this.isOpen) this.open();
-        else this.close()
     }
 }

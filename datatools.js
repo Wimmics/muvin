@@ -82,9 +82,10 @@ async function clean(values) {
                             hasType = true;
                             let type = parts[0].split('/'); 
                             type = type[type.length - 1]; 
-                            return { name: parts[1] === 'Queen (band)' ? 'Queen' : parts[1], type: type }
+                            let name = parts[1] === 'Queen (band)' ? 'Queen' : parts[1]
+                            return { name: name, type: type, key: name }
                         }
-                        return { name: e, type: d.type } // when there is no ?p (type) information
+                        return { name: e, type: d.type, key: e } // when there is no ?p (type) information
                     })
                     if (hasType) d.contribution = d[key].filter(e => e.name === d.artist).map(e => e.type)
                     return;
@@ -99,14 +100,18 @@ async function clean(values) {
 
 async function cleanCroboraResults(values, node) {
     let cleanValues = values.map(d => d.records).flat()
+    let channels = ['france 2', 'arte', 'tf1', 'rai uno', 'rai due', 'canale 5']
 
     let categories = ['event', 'location', 'illustration', 'celebrity']
     cleanValues = cleanValues.map(d => {
-        
+       
         let getContributors = () => {
             let vals = []
             categories.forEach(key => {
-                if (d[key]) d[key].forEach( x => vals.push({ name: x, type: d.channel, itemType: key } ))
+                if (d[key]) d[key].forEach( x => vals.push({ name: x, 
+                                                            type: channels.includes(d.channel.toLowerCase()) ? d.channel : "Web", 
+                                                            category: key, 
+                                                            key: [x, key].join('-') } ))
             })
             return vals
         }
@@ -114,9 +119,10 @@ async function cleanCroboraResults(values, node) {
         return {
             id: d._id,
             artist: node.value,
+            artistType: node.type,
             name: d.image_title,
             date: d.day_airing,
-            type: node.type,
+            type: 'image',
             contributors: getContributors(),
             link: `http://dataviz.i3s.unice.fr/crobora/document/${d.ID_document}`,
             parentId: d.ID_document,
@@ -135,7 +141,6 @@ async function getLinkTypes(values) {
 
 async function transform(values) {
 
-    let groupedItems = {}
     let items = {}
     let links = {}
     let linkTypes = await getLinkTypes(values)
@@ -149,7 +154,9 @@ async function transform(values) {
                                                 name: item.parentName, 
                                                 date: item.parentDate, 
                                                 year: year, 
-                                                artist: { name: item.parentArtistName || item.artist, id: item.parentArtistId } }
+                                                artist: { name: item.parentArtistName || item.artist, 
+                                                    id: item.parentArtistId, 
+                                                    type: item.parentArtistType || item.artistType } }
 
         let contributions = {}
         for (let type of linkTypes){ 
@@ -162,6 +169,8 @@ async function transform(values) {
         let value = {
             artist: {
                 name: item.artist,
+                type: item.artistType,
+                key: item.artistType ? [item.artist, item.artistType].join('-') : item.artist,
                 contribution: item.contributors.filter(d => d.name === item.artist).map(d => d.type)
             },
             id: item.id,
@@ -176,25 +185,27 @@ async function transform(values) {
             link: item.link  
         }
 
-        let key = `${item.id}-${item.artist}`
+        let key = [item.id, item.artist, item.artistType].join('-')
+
         if (items[key]) {
             value.contnames.forEach( d => { if (!items[key].contnames.includes(d)) items[key].contnames.push(d) })
-            // Object.keys(value.conttypes).forEach(d => {
-            //     value.conttypes[d].forEach(e => {
-            //         if (!items[key].conttypes[d].includes(e))
-            //             items[key].conttypes[d].push(e)
-            //     })  
-            // })
         } else items[key] = {...value}
 
         for (let c of item.contributors) {
-            if (item.artist === c.name) continue
+            if (item.artist === c.name && item.artistType === c.category) continue
 
-            let target = item.parentArtistName ? item.parentArtistName : item.artist;
-            let key = `${c.name}-${target}-${year}-${item.id}`    
+            let target = item.parentArtistName ? { name: item.parentArtistName, 
+                                                    type: item.parentArtistType, 
+                                                    key: item.parentArtistType ? [item.parentArtistName, item.parentArtistType].join('-') : item.parentArtistName} : 
+                
+                { name: item.artist, type: item.artistType, key: item.artistType ? [item.artist, item.artistType].join('-') : item.artist }
+
+            let source = { name: c.name, type: c.category, key: c.category ? [c.name, c.category].join('-') : c.name }
+
+            let key = [item.id, year, source.name, source.type, target.name, target.type].join('-')
             if (!links[key]) 
                 links[key] = {
-                    source: c.name,
+                    source: source,
                     target: target,
                     year: year,
                     type: [],
@@ -206,24 +217,7 @@ async function transform(values) {
 
     }
 
-    for (let item of Object.values(items)) {
-
-        if (!item.parent || (item.parent.artist && item.parent.artist.name != item.artist.name)) {// singles or songs where the artist contributed but that do not belong to them
-            groupedItems[item.id] = {...item}
-        } else {
-
-            if (item.parent.id && !groupedItems[item.parent.id]) { // albums
-                groupedItems[item.parent.id] =  {...item.parent}
-                groupedItems[item.parent.id].children = []
-            }
-            
-            groupedItems[item.parent.id].children.push({...item})
-        }
-                
-    }
-
     return { items: Object.values(items), 
-        clusters: Object.values(groupedItems), 
         links: Object.values(links), 
         linkTypes: linkTypes }
      
@@ -233,6 +227,8 @@ async function transform(values) {
 
 async function fetchData(db, node) {
     let values = await fetchItems(db, node) 
+
+    // fs.writeFileSync(path.join(__dirname, `/data/${db}/raw_beforeclean.json`), JSON.stringify(values, null, 4))
 
     if (datasets[db].type === "sparql")
         values = await clean(values)
@@ -264,15 +260,18 @@ async function fetchData(db, node) {
                 id: res.id.value,
                 type: res.type.value.split('--'),
                 members: members || "Not Available",
-                lifespan: { from: res.from ? res.from.value : 'Not Available', to: res.to ? res.to.value : 'Not Available'}
+                lifespan: { from: res.from ? res.from.value : 'Not Available', to: res.to ? res.to.value : 'Not Available'},
+                key: res.artist.value
             }
         }
 
         // data.artists = features
     } else {
-        data.artists[node.value] = {
+        let key =  [node.value, node.type].join('-')
+        data.artists[key] = {
             name: node.value,
-            type: node.type
+            type: node.type,
+            key: key
         }
     }
 
@@ -283,4 +282,5 @@ async function fetchData(db, node) {
 }
 
 // fetchData('crobora', {value: 'Angela Merkel', type: 'celebrity'} )
+// fetchData('hal', {value: 'Aline Menin', type: null } )
 module.exports = { fetchData, fetchNodes }

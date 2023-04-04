@@ -9,9 +9,11 @@ class NodesGroup {
             .force("x", d3.forceX()
                 .strength(d => this.chart.getTimeSelection() && this.chart.isSelected(d.year) ? .4 : .9)
                 .x(d => this.chart.xAxis.scale(d.year)))
+            
             .force("y", d3.forceY()
                 .strength(d => this.chart.getTimeSelection() && this.chart.isSelected(d.year) ? .8 : .2)
-                .y(d => this.chart.yAxis.scale(d.artist.name ))) 
+                .y(d => this.chart.yAxis.scale(d.artist.key))) 
+
             .force("collide", d3.forceCollide().radius(d => d.r).iterations(32)) // Force that avoids circle overlapping
             .tick(10)
                 
@@ -22,13 +24,15 @@ class NodesGroup {
 
         this.circleAttrs = {
             r: d => d.r,
-            fill: () => this.chart.getColors('item').color,
+            fill: () => this.chart.getItemColor(),
             stroke: '#000',
             opacity: d => this.opacity(d),
             class: 'item-circle'
         }
 
         this.contextmenu = new ContextMenu()
+
+        this.setUncertainPattern()
     }
 
     set() {}
@@ -68,15 +72,15 @@ class NodesGroup {
      * @returns opacity (0, 1)
      */
      opacity(d) {
-        let artist = d.artist.name
+        let key = d.artist.key
         
         
-        if (this.chart.getNodeSelection() && !this.chart.isNodeVisible(artist)) return 0
+        if (this.chart.getNodeSelection() && !this.chart.isNodeVisible(key)) return 0
 
-        if (this.chart.areItemsVisible(artist)) return 1
-        if (this.chart.getTimeSelection() && this.chart.isSelected(artist)) return 1
-        if (this.chart.areItemsVisible(artist) && this.chart.getTimeSelection() && this.chart.isSelected(d.year)) return 1
-        if (!this.chart.getTimeSelection() && this.chart.getNodeSelection() && this.chart.isSelected(artist)) return 1
+        if (this.chart.areItemsVisible(key)) return 1
+        if (this.chart.getTimeSelection() && this.chart.isSelected(key)) return 1
+        if (this.chart.areItemsVisible(key) && this.chart.getTimeSelection() && this.chart.isSelected(d.year)) return 1
+        if (!this.chart.getTimeSelection() && this.chart.getNodeSelection() && this.chart.isSelected(key)) return 1
 
         return 0
     }
@@ -90,13 +94,14 @@ class NodesGroup {
 
         if (this.chart.isFreezeActive()) return
 
+        // TODO: use contributors instead of contnames
         let collab = d.contnames ? d.contnames.filter( (e,i) => e != d.artist.name && this.chart.areItemsVisible(e)) : []
 
         this.group.selectAll('.item-circle')
             .transition()
             .duration(100)
             .attr('opacity', e => {
-                if (!this.chart.isNodeVisible(e.artist.name)) return 0
+                if (!this.chart.isNodeVisible(e.artist.key)) return 0
                 if (collab.length && e.artist.name != d.artist.name && !collab.includes(e.artist.name)) return 0
                 if (e.id === d.id) return 1 // show selected item
                 if (d.parent && e.parent && e.parent.id === d.parent.id) return 1 // show siblings (items from same cluster)
@@ -114,7 +119,7 @@ class NodesGroup {
         }
 
         this.chart.fstlinks.highlight(d)
-        this.chart.profiles.downplay(d)
+        this.chart.profiles.downplay(d.artist.key)
     }
 
     mouseout() {
@@ -139,8 +144,18 @@ class NodesGroup {
             .duration(100)
             .attr('opacity', d => this.opacity(d) )
             .attr('stroke-width', 1)
+            .attr('fill', this.chart.getItemColor())
 
         this.chart.group.selectAll('.image-border').attr('stroke', '#fff')
+    }
+
+    highlightNodeItems(nodes) {
+        this.group.selectAll('.item-circle')
+            .filter(e => this.chart.areItemsVisible(e.artist.key))
+            .transition('focus-items')
+            .duration(500)
+            .attr('opacity', e => nodes.includes(e.id) ? 1 : .1)
+            .attr('fill', e => nodes.includes(e.id) && this.chart.isUncertain(e) ? this.getPatternUrl() : this.chart.getItemColor())
     }
 
     highlightItem(name){
@@ -180,5 +195,35 @@ class NodesGroup {
     clearHighlight() {
         this.chart.shadowRoot.querySelector('#items-input').value = '';
         this.highlightItem('')
+    }
+
+    setUncertainPattern() {
+        const defs = this.group
+            .append("defs");
+
+        let pattern = defs.append('pattern')
+            .attr('id', 'diagonalStripes')
+            .attr('patternUnits', 'userSpaceOnUse')
+            .attr('patternTransform', 'rotate(45)')
+            .attr('width', 4)
+            .attr('height', 4);
+        
+        pattern
+            .append("rect")
+            .attr("height", "100%")
+            .attr("width", "100%")
+            .attr("fill", this.chart.getItemColor())
+
+        pattern
+            .append("rect")
+            .attr("x", 3)
+            .attr("y", 0)
+            .attr("height", "100%")
+            .attr("width", "10%")
+            .attr("fill", "white");
+    }
+
+    getPatternUrl() {
+        return `url('${window.location.pathname}${window.location.search}#diagonalStripes')`
     }
 }
