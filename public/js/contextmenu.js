@@ -107,10 +107,12 @@ class ContextMenu {
         })
 
 
-        if (this.chart.data.artists[d].collaborators.length) { /// the author has one or more co-authors
+        let collaborators = this.chart.data.artists[d].collaborators
+        console.log(d, collaborators.filter(e => e.enabled).length, "collaborators")
+        if (collaborators.length) { /// the author has one or more co-authors
             let collab = { title: 'Explore collaborations' }
 
-            collab.children = this.chart.data.artists[d].collaborators.map(e => { 
+            collab.children = collaborators.map(e => { 
                 return { 
                     title: `${e.value} ${e.type ? '(' + e.type + ')' : ''}`,
                     action: () => {
@@ -121,20 +123,29 @@ class ContextMenu {
                 }; 
             })
 
+            collab.children.splice(0, 0, {
+                title: 'All',
+                action: async () => {
+                    for (let e of collaborators)
+                        if (e.enabled) 
+                            await this.chart.data.add(e) 
+                }
+            })
+
+            collab.children.splice(1, 0, {
+                title: 'First 25 collaborators',
+                action: async () => {
+                    for (let i = 0; i < 25; i++) 
+                        if (collaborators[i].enabled) 
+                            await this.chart.data.add(collaborators[i])
+                    
+                }
+            })
+
             menu.push(collab)
         }
 
         return menu
-    }
-
-    // todo: a function that changes the width and columns of ul.is-children after returning the menu
-
-    rescaleMenu() {
-        console.log('rescale')
-        console.log(d3.selectAll('ul.is-children'))
-        d3.selectAll('ul.is-children')
-            .style("width", "auto")
-            .style("columns", 5)
     }
 
     getWasabiLink(d) {

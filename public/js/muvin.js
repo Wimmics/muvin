@@ -23,8 +23,20 @@ class Muvin extends HTMLElement {
     async connectedCallback() {
         this.shadowRoot.appendChild(template.content.cloneNode(true));
         this.app = this.getAttribute("app")
-        let values = this.getAttribute("values")
-        values = values ? values.split(',').map(d => d.trim()) : []
+
+        let value = this.getAttribute("value")
+        let type = this.getAttribute("type")
+        console.log(value, type)
+        let values = []
+        if (value) {
+            value = value.split('--')
+            type = type.split('--')
+            console.log(value)
+            value.forEach( (d,i) => {
+                values.push({value: d.trim(), type: type[i].trim()})
+            })
+        }
+        console.log(values)
 
         this.div = d3.select(this.shadowRoot.querySelector('div.timeline'))
         this.svg = this.div.select('svg#chart')
@@ -71,7 +83,7 @@ class Muvin extends HTMLElement {
 
         if (values.length)
             values.forEach(async (d) => await this.data.add(d))
-        else this.test()
+        else this.test() 
 
     }
 
@@ -97,7 +109,7 @@ class Muvin extends HTMLElement {
                     {value: 'Charles Michel', type: 'celebrity'}]
                 break;
             case 'hal':
-                values = [{value: 'Aline Menin'}, {value: 'Marco Winckler'}]
+                values = [{value: 'Marco Winckler'}]
                 // values = ['Marco Winckler', 'Philippe Palanque', 'Thiago Rocha Silva', 'Lucile Sassatelli', 'Célia Martinie', 'Aline Menin']
                 break;
             case 'wasabi':

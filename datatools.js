@@ -276,7 +276,15 @@ async function fetchData(db, node) {
     }
 
     let filename = `data/${db}/${node.value}${node.type ? '-' + node.type : ''}-data_vis.json`
-    fs.writeFileSync(path.join(__dirname, filename), JSON.stringify(data, null, 4)) 
+    try {
+        data_to_write = JSON.stringify(data, null, 4)
+        fs.writeFileSync(path.join(__dirname, filename), data_to_write) 
+    } catch(e) {
+        console.log(e)
+        console.log(data)
+    }
+
+   
 
     return data
 }

@@ -68,13 +68,16 @@ class DataModel {
         
         this.updateTime()
         this.updateColors()
-        this.updateCollaborations()
+        await this.updateCollaborations()
         this.chart.update(node)
     }
 
     // updates
 
     async update(data) {
+        
+        if (!Object.keys(data).includes('items')) return
+        
         this.items = this.items.concat(data.items)
         this.links = this.links.concat(data.links)
         
@@ -85,7 +88,9 @@ class DataModel {
 
         Object.keys(data.artists).forEach(d => {
             this.artists[d] = data.artists[d]
-        })  
+        })
+        
+        console.log(this)
 
     }
 
@@ -95,13 +100,13 @@ class DataModel {
         this.chart.update()
     }
 
-    updateTime() {
+    async updateTime() {
         this.dates = this.items.map(d => d.year)
         this.dates = this.dates.filter((d,i) => this.dates.indexOf(d) === i)
         this.dates.sort()
     }
 
-    updateCollaborations() {
+    async updateCollaborations() {
         Object.keys(this.artists).forEach(key => {
             let collaborators = this.items.filter(d => d.artist.key === key).map(d => d.contributors).flat()
     
@@ -119,7 +124,7 @@ class DataModel {
         })
     }
 
-    updateColors() {
+    async updateColors() {
 
         let nb = this.linkTypes.length < 3 ? 3 : this.linkTypes.length
         let colors = d3.schemeGreens[nb]
@@ -141,7 +146,7 @@ class DataModel {
 
 
     isNodeExplorable(node){
-        return this.nodeLabels.some(d => d.value === node.name && d.type === node.category)
+        return this.nodeLabels.some(d => d.type ? d.value === node.name && d.type === node.category : d.value === node.name)
     }
 
     // getters 
