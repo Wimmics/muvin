@@ -26,12 +26,11 @@ class Muvin extends HTMLElement {
 
         let value = this.getAttribute("value")
         let type = this.getAttribute("type")
-        console.log(value, type)
+        
         let values = []
         if (value) {
             value = value.split('--')
             type = type.split('--')
-            console.log(value)
             value.forEach( (d,i) => {
                 values.push({value: d.trim(), type: type[i].trim()})
             })
@@ -83,7 +82,7 @@ class Muvin extends HTMLElement {
 
         if (values.length)
             values.forEach(async (d) => await this.data.add(d))
-        else this.test() 
+        //else this.test() 
 
     }
 

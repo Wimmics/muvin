@@ -89,8 +89,6 @@ class DataModel {
         Object.keys(data.artists).forEach(d => {
             this.artists[d] = data.artists[d]
         })
-        
-        console.log(this)
 
     }
 
