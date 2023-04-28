@@ -104,18 +104,19 @@ class NodesAxis {
             .attr('xlink:href', this.UP)
             .attr('transform', `translate(${x}, ${-shift - iconsize / 2})`)
             .on('click', () => {
-                let index = this.chart.data.nodes.indexOf(this.chart.getNodeSelection());
+                
+                let index = this.values.indexOf(this.chart.getNodeSelection());
                 if (index === 0) return;
-                this.setDistortion(this.chart.data.nodes[index - 1])
+                this.setDistortion(this.values[index - 1])
             })
 
         this.slider.select('#slider-down')
             .attr('xlink:href', this.DOWN)
             .attr('transform', `translate(${x}, ${dimensions.height - dimensions.bottom - dimensions.top - shift})`)
             .on('click', () => {
-                let index = this.chart.data.nodes.indexOf(this.chart.getNodeSelection());
-                if (index === this.chart.data.nodes.length - 1) return;
-                this.setDistortion(this.chart.data.nodes[index + 1])
+                let index = this.values.indexOf(this.chart.getNodeSelection());
+                if (index === this.values.length - 1) return;
+                this.setDistortion(this.values[index + 1])
             })
 
     }

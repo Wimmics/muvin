@@ -47,8 +47,11 @@
         let locals = <%- JSON.stringify(locals) %>;
         console.log(locals)
 
-        if (locals.params.value && locals.params.value.length) 
-            document.querySelector("#muvin").setAttribute("type", locals.params.type.join('--'))
-            document.querySelector("#muvin").setAttribute("value", locals.params.value.join('--'))
+        if (locals.params.value && locals.params.value.length) {
+            let value = typeof(locals.params.value) === "string" ? locals.params.value : locals.params.value.join('--')
+            let type = typeof(locals.params.type) === "string" ? locals.params.type : locals.params.type.join('--')
+            document.querySelector("#muvin").setAttribute("type", type)
+            document.querySelector("#muvin").setAttribute("value", value)
+        }
     </script>
 </body>

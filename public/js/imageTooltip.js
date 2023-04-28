@@ -8,7 +8,7 @@ class ImageTooltip extends Tooltip{
 
         const image = `<div style="width: 100%; margin:auto; text-align:center;">
                 <a href="${d.link}" target="_blank" style="pointer-events: ${d.link ? 'auto' : 'none'};">
-                    <img class="main-image" src=${getImageLink(d.name)} width="350px" title="Click to explore the archive metadata in the CROBORA platform" ></img> </a>
+                    <img class="main-image" src=${getImageLink(d.name)} width="250px" title="Click to explore the archive metadata in the CROBORA platform" ></img> </a>
                 <br></div>`
 
         let content = `${image}
