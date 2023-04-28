@@ -35,7 +35,6 @@ class Muvin extends HTMLElement {
                 values.push({value: d.trim(), type: type[i].trim()})
             })
         }
-        console.log(values)
 
         this.div = d3.select(this.shadowRoot.querySelector('div.timeline'))
         this.svg = this.div.select('svg#chart')
@@ -80,8 +79,10 @@ class Muvin extends HTMLElement {
 
         await this.data.fetchNodesLabels(this.app)
 
-        if (values.length)
+        if (values.length) {
+            this.shadowRoot.querySelector('#search-for').style.display = 'none';
             values.forEach(async (d) => await this.data.add(d))
+        }
         //else this.test() 
 
     }
@@ -386,7 +387,7 @@ template.innerHTML = `
         <h3>Muvin</h3>
 
         <div id='menu-items' class='settings'>
-            <div>
+            <div id="search-for">
                 <label>Search for</label>
                 <input type="text" list='nodes-list' id="nodes-input" placeholder="Type here">
                 <datalist id='nodes-list'></datalist>
