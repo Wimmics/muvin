@@ -2,7 +2,7 @@ class ImageNodes extends NodesGroup {
     constructor() {
         super()
 
-        this.radius = {normal: 7, focus: 50}
+        this.radius = {normal: 5, focus: 50}
 
     }
 
@@ -16,7 +16,7 @@ class ImageNodes extends NodesGroup {
             .attr('r', this.radius.focus / 2);
 
         this.imageAttrs = {
-            width: d => d.r * 2,
+            width: d => d.r * 2, 
             'xlink:href': d => getImageLink(d.name),
             alt: d => d.name,
             opacity: d => this.opacity(d),
@@ -39,12 +39,12 @@ class ImageNodes extends NodesGroup {
 
         this.circleAttrs.display = d => !this.chart.isSelected(d.year) ? 'block' : 'none'
 
-        this.forceSimulation.force("collide", d3.forceCollide().radius(d => this.chart.isSelected(d.year) ? d.r / 2 : d.r).iterations(32))
-            .on("tick", () => this.group.selectAll('.doc')
-                .attr('transform', d => `translate(${this.chart.isSelected(d.year) ? d.x - this.chart.xAxis.scale(d.year) * .1 : d.x}, ${d.y})` ))
+        // this.forceSimulation.force("collide", d3.forceCollide().radius(d => this.chart.isSelected(d.year) ? d.r / 2 : (d.cluster ? d.r * 1.2 : d.r) ).iterations(32))
+        //     .on("tick", () => this.group.selectAll('.doc')
+        //         .attr('transform', d => `translate(${this.chart.isSelected(d.year) ? d.x - this.chart.xAxis.scale(d.year) * .1 : (d.cluster ? d.x - d.r : d.x)}, ${d.cluster ? d.y - d.r : d.y})` ))
     }
 
-    async computeRadius() {
+    computeRadius(year) {
 
         let values = this.chart.xAxis.values
         let index = values.indexOf(this.chart.getTimeSelection())
@@ -55,48 +55,42 @@ class ImageNodes extends NodesGroup {
         let leftScale = d3.scaleQuantize().domain([leftmostPos, focusPos]).range(d3.range(0.04, 0.4, 0.1))
         let rightScale = d3.scaleQuantize().domain([focusPos, rightmostPos]).range(d3.range(0.4, 0.04, -0.1))
 
-        this.data.forEach(d => {
+        //this.data.forEach(d => {
             if (this.chart.getTimeSelection()) {
-                if (this.chart.isSelected(d.year)) 
-                    d.r = this.radius.focus
+                if (this.chart.isSelected(year)) 
+                    return this.radius.focus
                 
                 else {
-                    let curPos = this.chart.xAxis.scale(d.year)
+                    let curPos = this.chart.xAxis.scale(year)
                     
                     let scale = curPos > focusPos ? rightScale(curPos) : leftScale(curPos)
                    
-                    d.r = this.radius.focus * scale
+                    return this.radius.focus * scale
                 }
-            } else d.r = this.radius.normal
+            } else return this.radius.normal
 
-        })
+        //})
     }
 
     async appendNodes() {
 
-         // a group per item (e.g. an item == an image)
-        this.group.selectAll('g.artist')
-            .selectAll('.doc')            
-            .data(d => this.data.filter(e => e.artist.key === d) )
-            .join(
-                enter => enter.append('g')
-                    .classed('doc', true)
-                    .style('pointer-events', d => this.opacity(d) ? 'auto' : 'none')
-                    .call(g => g.append('circle')
-                            .attrs(this.circleAttrs) )
-                    .call(g => g.append('svg:image')
-                        .attrs(this.imageAttrs))
-                    .call(g => g.append('circle')
-                        .attrs(this.imageBorderAttrs)),
-                update => update.style('pointer-events', d => this.opacity(d) ? 'auto' : 'none')
-                    .call(g => g.select('circle.item-circle')
-                            .attrs(this.circleAttrs) )
-                    .call(g => g.select('image')
-                        .attrs(this.imageAttrs) )
-                    .call(g => g.select('circle.image-border')
-                        .attrs(this.imageBorderAttrs)),
-                exit => exit.remove()        
-            )
+        await this.appendClusters()
+        await this.appendSingles()
+        
+
+        //this.group.selectAll('.doc').selectAll('circle').remove()
+
+        // let imageData = this.data.filter(d => this.chart.getTimeSelection() === d.year )
+        // imageData = imageData.map(d => d.cluster ? d.values : d).flat()
+        // console.log(imageData)
+        // let group = this.group.selectAll('.doc')
+        //     .filter(d => this.chart.getTimeSelection() === d.year)
+
+        // console.log(group)
+            
+        // group.selectAll('image')
+            
+            
 
     }
 

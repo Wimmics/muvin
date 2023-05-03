@@ -32,6 +32,7 @@ class NodesAxis {
 
         this.data = this.chart.data.getNodes()
         this.values = this.chart.data.getNodesKeys()
+        console.log("yAxis values = ", this.values)
 
         let min = this.shift,
             max = dimensions.height - dimensions.top - dimensions.bottom - this.shift;

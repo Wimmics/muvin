@@ -83,7 +83,7 @@ class Muvin extends HTMLElement {
             this.shadowRoot.querySelector('#search-for').style.display = 'none';
             values.forEach(async (d) => await this.data.add(d))
         }
-        //else this.test() 
+        else this.test() 
 
     }
 
@@ -105,7 +105,8 @@ class Muvin extends HTMLElement {
             case 'crobora':
                 values = [{value: 'Angela Merkel', type: 'celebrity'}, 
                     {value: 'Nicolas Sarkozy', type: 'celebrity'}, 
-                    {value: 'Europe', type: 'event'}, 
+                    {value: 'boat', type: 'illustration'},
+                    {value: 'migrant', type: 'illustration'}, 
                     {value: 'Charles Michel', type: 'celebrity'}]
                 break;
             case 'hal':

@@ -13,7 +13,7 @@ class NormalNodes extends NodesGroup{
             .attr('transform', d => `translate(${d.x}, ${d.y})` ))
     }
 
-    async computeRadius() {
+    computeRadius() {
         this.radiusScale.domain(d3.extent(this.data, d => d.contCount))
 
         let values = this.chart.xAxis.values
