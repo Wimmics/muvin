@@ -40,6 +40,7 @@ class MusicTooltip extends Tooltip{
         let value = this.chart.data.artists[d]
         
         let group = value.type === 'Artist_Group'
+        console.log(value)
 
         let type = (group ? 'Creation' : 'Birth') + ' Date:'
         let deathInfo = value.lifespan.to ? `<b>${group ? 'Dissolution' : 'Death'} Date:</b> ${value.lifespan.to}\n` : ''
@@ -49,7 +50,8 @@ class MusicTooltip extends Tooltip{
             <b>${type}</b> ${value.lifespan.from}<br>
             ${deathInfo}<br>
             ${groupInfo}<br><br>
-            Has collaborated with <b>${value.collaborators.length}</b> artists or groups`
+            <b>${value.collaborators.length}</b> co-authors in total<br>
+            <b>${this.getVisibleCollaborators(value).length}</b> co-authors in this network<br><br>`
 
         this.setContent(content, id)
     }

@@ -65,7 +65,7 @@ class Muvin extends HTMLElement {
         this.sndlinks = new NodeLinksGroup()
         this.sndlinks.set()
 
-        this.profiles = new ProfilesGroup()
+        this.profiles = new AreaGraph()
 
         if (this.app === 'hal')
             this.tooltip = new PublicationsTooltip()
@@ -111,7 +111,8 @@ class Muvin extends HTMLElement {
                     // {value: 'Charles Michel', type: 'celebrity'}]
                 break;
             case 'hal':
-                values = [{value: 'Aline Menin'}]
+                //values = [{value: 'Aline Menin'}]
+                values = [{value: 'Aline Menin'}, {value: 'Marco Winckler'}, {value: 'Alain Giboin'}, {value: 'Philippe Palanque'}]
                 // values = ['Marco Winckler', 'Philippe Palanque', 'Thiago Rocha Silva', 'Lucile Sassatelli', 'Célia Martinie', 'Aline Menin']
                 break;
             case 'wasabi':

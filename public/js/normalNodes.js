@@ -10,15 +10,7 @@ class NormalNodes extends NodesGroup{
     set() {
 
         this.forceSimulation.on("tick", () => this.group.selectAll('.doc')
-            .attr('transform', d => {
-                let prev = this.chart.yAxis.getPrevPos(d.artist.key)
-                let next = this.chart.yAxis.getNextPos(d.artist.key)
-                
-                let y = d.y + d.r > next ? next - d.r : d.y
-                y = d.y - d.r < prev ? prev + d.r : d.y
-                
-                return `translate(${d.x}, ${y})` 
-            }) )
+            .attr('transform', d => `translate(${d.x}, ${d.y})` ))
     }
 
     async computeRadius() {

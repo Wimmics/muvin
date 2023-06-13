@@ -110,6 +110,7 @@ class NodesGroup {
             })
             .attr('stroke-width', e => d.id === e.id ? 3 : 1)
 
+
         if (this.chart.getTimeSelection() && this.chart.isSelected(d.year)) {
             this.chart.group.selectAll('.node-link')
                 .attr('opacity', function(e) { return d3.select(this).datum().value.id === d.id ? 1 : 0 })    
@@ -130,9 +131,9 @@ class NodesGroup {
         this.chart.tooltip.hide(this.tooltipId)
         this.tooltipId = null;
         
-        this.chart.profiles.reverseDownplay()
-
         if (this.chart.isFreezeActive()) return;
+
+        this.chart.profiles.reverseDownplay()
 
         this.reverse()     
 

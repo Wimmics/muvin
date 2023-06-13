@@ -125,7 +125,7 @@ const datasets = {
         `,
 
         nodeFeatures: `
-            select distinct ?uri ?name ?topic ?memberOf  where {
+            select distinct ?uri ?name ?topic  where {
                 bind ("$author" as ?name)
                 
                 ?p a hsc:Author ;
@@ -134,7 +134,7 @@ const datasets = {
                 ?uri foaf:name ?name .
                 
                 optional { ?uri foaf:interest [ skos:prefLabel ?topic ] . filter langMatches(lang(?topic), 'en') }
-                optional { ?p hsc:structure [ skos:prefLabel ?memberOf ] }
+    
             }
         `,
 

@@ -1,4 +1,4 @@
-class ProfilesGroup {
+class Profile {
     constructor() {
         this.chart = document.querySelector('#muvin')
 
@@ -14,7 +14,7 @@ class ProfilesGroup {
         let dates = this.chart.data.getDates()
         let items = this.chart.data.getItems()
        
-        this.itemsByYear = []
+        let itemsByYear = []
         nodes.forEach(node => { // each node is an object containing name, type and a contributions array
             dates.forEach(year => {       
                 
@@ -32,11 +32,23 @@ class ProfilesGroup {
                     item[type] = resType.length
                 })
 
-                this.itemsByYear.push(item)
+                itemsByYear.push(item)
             })
         })
 
-        await this.setData()
+        this.stack = d3.stack()
+            .keys(types)
+
+        await this.setStack()
+        
+        this.data = nodes.map(node => {
+            const artistData = itemsByYear.filter(e => e.artist.key === node.key && dates.includes(e.year))
+            
+            return {
+                'artist': node,
+                'data' : this.stack(artistData)
+            }
+        })
 
         /// one group per artist ; it will hold the profile wave ////////
         this.group = d3.select(this.chart.shadowRoot.querySelector('#nodes-group')).selectAll('g.artist')
@@ -49,45 +61,59 @@ class ProfilesGroup {
                 exit => exit.remove()
             )
 
+
+        this.heightScale = d3.scaleLinear()
+            .domain(this.getExtent())
+
+        this.area = d3.area()
+            .x(d => this.chart.xAxis.scale(d.data.year))
+            .y0(d => this.chart.yAxis.scale(d.data.artist.key) + (this.chart.isProfileActive(d) ? this.heightScale(d[1]) : 0))
+            .y1(d => this.chart.yAxis.scale(d.data.artist.key) + (this.chart.isProfileActive(d) ? this.heightScale(d[0]) : 0))
+            .curve(d3.curveBasis) 
+
     }
 
-    async setData() {
-        let types = this.chart.data.getLinkTypes()
+    async setStack() {}
 
-        let stack = d3.stack()
-            .offset(d3.stackOffsetSilhouette)
-            .order(d3.stackOrderNone)
-            .keys(types)
+    getHeight() {}
 
-        let dates = this.chart.data.getDates()
-        let nodes = this.chart.data.getNodesList()
-    
-        this.data = nodes.map(node => {
-            const artistData = this.itemsByYear.filter(e => e.artist.key === node.key && dates.includes(e.year))
+    getExtent() {}
+
+    setArea() {}
+
+    draw() {
+        const _this = this;
+
+        this.group.selectAll('path')
+            .data(d => this.chart.isProfileVisible(d.artist.key) ? d.data : [])
+            .join(
+                enter => enter.append('path'),
+                update => update,
+                exit => exit.remove() 
+            )
+            .attr('d', function(d) { return _this.setArea(d, d3.select(this.parentNode).datum().artist.key) })
+            .attr('fill', d => this.chart.getTypeColor(d.key))
+            .attr('stroke', d => d3.rgb(this.chart.getTypeColor(d.key)).darker())
+            .attr('opacity', '1')
+            .on('mouseenter', d => {let e = d3.event; this.mouseover(e, d); })
+            .on('mousemove', d => {let e = d3.event; this.mouseover(e, d); })
+            .on('mouseleave', () => this.mouseout())
+            .on('click', d => {let e = d3.event; this.select(e, d); })
+
+        let dimensions = this.chart.getDimensions()
+        this.group.selectAll('line')
+            .data(d => !this.chart.isProfileVisible(d.artist.key) ? [d.artist.key] : [])
+            .join(
+                enter => enter.append('line'),
+                update => update,
+                exit => exit.remove()
+            )
+            .attr('x1', dimensions.left)
+            .attr('x2', dimensions.width - dimensions.right)
+            .attr('y1', d => this.chart.yAxis.scale(d))
+            .attr('y2', d => this.chart.yAxis.scale(d))
+            .attr('stroke', '#000')
             
-            return {
-                'artist': node,
-                'data' : stack(artistData)
-            }
-        })
-
-    }
-
-    getExtent(){
-        // compute min and max height of waves
-        let min = 1000, max = -1000;
-        this.data.forEach(d => {
-            d.data.forEach(item => {
-                item.forEach(e => {
-                    let min_e = d3.min(e),
-                        max_e = d3.max(e);
-                    if (min > min_e) min = min_e;
-                    if (max < max_e) max = max_e;
-                })
-            })
-        })
-
-        return [min, max]
     }
 
     /**
@@ -116,68 +142,6 @@ class ProfilesGroup {
             .transition()
             .duration(500)
             .attr('opacity', 1)
-    }
-
-    getHeight(d) {
-        let height = this.chart.yAxis.getStep(d) // reference height for the wave
-        if (!this.chart.getNodeSelection()) 
-            return height * .6
-
-        if (this.chart.isSelected(d) && this.chart.data.getNodesKeys().indexOf(d) === 0) 
-            return height * .5
-
-        if (this.chart.data.getNodesKeys().indexOf(d) === 0) 
-            return height * .8
-        
-        return height
-    }
-
-    draw() {
-        const _this = this;
-
-        let scale = d3.scaleLinear()
-            .domain(this.getExtent())
-
-        let area = d3.area()
-            .x(d => this.chart.xAxis.scale(d.data.year))
-            .y0(d => this.chart.yAxis.scale(d.data.artist.key) + (this.chart.isProfileActive(d) ? scale(d[1]) : 0))
-            .y1(d => this.chart.yAxis.scale(d.data.artist.key) + (this.chart.isProfileActive(d) ? scale(d[0]) : 0))
-            .curve(d3.curveBasis) 
-
-        this.group.selectAll('path')
-            .data(d => this.chart.isProfileVisible(d.artist.key) ? d.data : [])
-            .join(
-                enter => enter.append('path'),
-                update => update,
-                exit => exit.remove() 
-            )
-            .attr('d', function(d) {
-                let height = _this.getHeight(d3.select(this.parentNode).datum().artist.key)
-                scale.range([-height, height]) // changes for each node
-                return area(d)
-            })
-            .attr('fill', d => this.chart.getTypeColor(d.key))
-            .attr('stroke', d => d3.rgb(this.chart.getTypeColor(d.key)).darker())
-            .attr('opacity', '1')
-            .on('mouseenter', d => {let e = d3.event; this.mouseover(e, d); })
-            .on('mousemove', d => {let e = d3.event; this.mouseover(e, d); })
-            .on('mouseleave', () => this.mouseout())
-            .on('click', d => {let e = d3.event; this.select(e, d); })
-
-        let dimensions = this.chart.getDimensions()
-        this.group.selectAll('line')
-            .data(d => !this.chart.isProfileVisible(d.artist.key) ? [d.artist.key] : [])
-            .join(
-                enter => enter.append('line'),
-                update => update,
-                exit => exit.remove()
-            )
-            .attr('x1', dimensions.left)
-            .attr('x2', dimensions.width - dimensions.right)
-            .attr('y1', d => this.chart.yAxis.scale(d))
-            .attr('y2', d => this.chart.yAxis.scale(d))
-            .attr('stroke', '#000')
-            
     }
 
     select(e, d) {

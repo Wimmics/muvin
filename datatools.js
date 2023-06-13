@@ -246,16 +246,12 @@ async function getNodeData(db, node) {
         case "hal":
             let topics = res.filter(d => d.topic).map(d => d.topic.value)
             topics = topics.filter( (d,i) => topics.indexOf(d) === i)
-
-            let structures = res.filter(d => d.memberOf).map(d => d.memberOf.value)
-            structures = structures.filter( (d,i) => structures.indexOf(d) === i)
             
             data[node.value] = {
                 key: node.value,
                 name: res[0].name.value,
                 id: res[0].uri.value,
-                topics: topics,
-                memberOf: structures 
+                topics: topics
             }
             break;
         case "crobora":

@@ -31,14 +31,14 @@ class PublicationsTooltip extends Tooltip{
 
     setNodeContent(d, id) {
         let value = this.chart.data.artists[d]
-        
-        let topic = `<b>Topic (${value.topics.length}):</b><br> <ul> ${value.topics.map(d => `<li>${d}</li>`).join('')}</ul>`
-        let memberOf = `<b>Member of ${value.memberOf.length} institutions over their carreer:</b><br> <ul> ${value.memberOf.map(d => `<li>${d}</li>`).join('')}</ul>`
+       
+        let topic = value.topics ? `<b>Research topics (${value.topics.length}):</b><br> <ul> ${value.topics.map(d => `<li>${d}</li>`).join('')}</ul>` : ''
         
         let content = `<b>${value.name}</b><br>
-            ${topic}<br>
-            ${memberOf}<br><br>
-            Has collaborated with <b>${value.collaborators.length}</b> people.`
+        <b>${value.collaborators.length}</b> co-authors in total<br>
+        <b>${this.getVisibleCollaborators(value).length}</b> co-authors in this network<br><br>
+            ${topic}
+            `
 
         this.setContent(content, id)
     }

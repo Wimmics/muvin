@@ -41,4 +41,9 @@ class Tooltip {
                 'max-width': width + 'px'
             })
     }
+
+    getVisibleCollaborators(d) {
+        let nodes = Object.keys(this.chart.data.getNodes())
+        return d.collaborators.filter(e => e.key !== d.key && nodes.includes(e.key))
+    } 
 }

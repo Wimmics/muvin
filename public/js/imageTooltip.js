@@ -43,7 +43,8 @@ class ImageTooltip extends Tooltip{
         
         let content = `<b>${value.name}</b><br><br>
             Category: <b>${value.type}</b><br>
-            Co-occurs with <b>${value.collaborators.length}</b> other keywords`
+            <b>${value.collaborators.length}</b> co-occurrences in total<br>
+            <b>${this.getVisibleCollaborators(value).length}</b> co-occurrences in this network<br><br>`
 
         this.setContent(content, id)
     }

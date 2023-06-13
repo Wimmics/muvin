@@ -42,7 +42,12 @@ class NodesAxis {
         
         this.defaultScale = d3.scalePoint().domain(this.values).range([this.min, this.max]).padding(.7)
 
-        this.slider.style('display', 'block')
+        this.chart.group.append('text')
+            .attr('id', 'node-count')
+            .attr('transform', `translate(${dimensions.left / 2}, -15)`)
+            .style('text-anchor', 'middle')
+            
+        
         this.setSlider()
         
     }
@@ -94,6 +99,7 @@ class NodesAxis {
             x = -dimensions.left/2 - iconsize / 2;
 
         this.slider.attr('transform', `translate(${dimensions.left - shift}, 0)`)
+            .style('display', 'none')
 
         this.slider.selectAll('image')
             .attr('width', iconsize)
@@ -133,6 +139,11 @@ class NodesAxis {
 
     drawLabels() {
         const _this = this;
+
+        this.chart.group.select('#node-count').text(`${this.values.length} nodes`)
+
+        this.slider.style('display', this.focus ? 'block' : 'none')
+
         let dimensions = this.chart.getDimensions()
         
         let rectwidth = dimensions.left * .7
@@ -141,7 +152,7 @@ class NodesAxis {
 
         let getFontSize = (d, l) => { // font size changes according to whether the node is focused on or not
             
-            if (!this.focus || (this.focus && this.chart.areItemsVisible(d))) return '1em'
+            if (!this.focus || (this.focus && this.chart.areItemsVisible(d))) return '.8em'
             else if (this.focus && this.focus != d) return '.5em'
 
             let direction = this.values.indexOf(d) - this.values.indexOf(this.focus)
@@ -161,6 +172,7 @@ class NodesAxis {
                 enter => enter.append('g')
                     .classed('artist-label', true)
                     .style('cursor', 'pointer')
+                    .attr('opacity', 1)
 
                     .call(g => g.append('rect')
                         .attr('fill', d => this.focus === d ? this.color.focus : this.color.normal)
@@ -295,6 +307,11 @@ class NodesAxis {
             .duration(500)
             .attr('opacity', e => d === e || nodes.fst.includes(e) ? 1 : .1)
 
+        group.selectAll('.artist-label')
+            .transition('focus-node')
+            .duration(500)
+            .attr('opacity', e => d === e || nodes.fst.includes(e) ? 1 : .1)
+
         this.chart.nodes.highlightNodeItems(nodes.snd)
 
         // TODO: verify whether it still works
@@ -324,6 +341,11 @@ class NodesAxis {
 
         group.selectAll('.node-link')
             .attr('opacity', this.chart.getTimeSelection() ? 1 : 0)
+
+        group.selectAll('.artist-label')
+            .transition('unfocus-node')
+            .duration(500)
+            .attr('opacity', 1)
 
         this.chart.profiles.reverseDownplay()
     }
