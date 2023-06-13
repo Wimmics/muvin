@@ -37,4 +37,14 @@ class ImageTooltip extends Tooltip{
 
         this.setContent(content, id)
     }
+
+    setNodeContent(d, id) {
+        let value = this.chart.data.artists[d]
+        
+        let content = `<b>${value.name}</b><br><br>
+            Category: <b>${value.type}</b><br>
+            Co-occurs with <b>${value.collaborators.length}</b> other keywords`
+
+        this.setContent(content, id)
+    }
 }

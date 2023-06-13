@@ -37,9 +37,11 @@ class Muvin extends HTMLElement {
         }
 
         this.div = d3.select(this.shadowRoot.querySelector('div.timeline'))
-        this.svg = this.div.select('svg#chart')
+        this.width = this.div.node().clientWidth
 
-        this.width = this.div.node().clientWidth - this.margin.right
+        this.svg = this.div.select('svg#chart')
+            .attr('width', this.width)
+            .attr('height', this.height)
 
         this.group = this.svg.select('g#chart-group')
             .attr('transform', `translate(0, ${this.margin.top})`)
@@ -83,7 +85,7 @@ class Muvin extends HTMLElement {
             this.shadowRoot.querySelector('#search-for').style.display = 'none';
             values.forEach(async (d) => await this.data.add(d))
         }
-        //else this.test() 
+        else this.test() 
 
     }
 
@@ -103,17 +105,18 @@ class Muvin extends HTMLElement {
         
         switch(this.app) {
             case 'crobora':
-                values = [{value: 'Angela Merkel', type: 'celebrity'}, 
-                    {value: 'Nicolas Sarkozy', type: 'celebrity'}, 
-                    {value: 'Europe', type: 'event'}, 
-                    {value: 'Charles Michel', type: 'celebrity'}]
+                values = [{value: 'Angela Merkel', type: 'celebrity'}]
+                    // {value: 'Nicolas Sarkozy', type: 'celebrity'}, 
+                    // {value: 'Europe', type: 'event'}, 
+                    // {value: 'Charles Michel', type: 'celebrity'}]
                 break;
             case 'hal':
-                values = [{value: 'Marco Winckler'}]
+                values = [{value: 'Aline Menin'}]
                 // values = ['Marco Winckler', 'Philippe Palanque', 'Thiago Rocha Silva', 'Lucile Sassatelli', 'Célia Martinie', 'Aline Menin']
                 break;
             case 'wasabi':
-                values = [{value: 'Queen'}, {value: 'Freddie Mercury'}, {value: 'David Bowie'}]
+                //values = [{value: 'Queen'}, {value: 'Freddie Mercury'}, {value: 'David Bowie'}]
+                values = [{value: 'Queen'}]
                 break;
         }
         values.forEach(async (d) => await this.data.add(d))
@@ -129,10 +132,8 @@ class Muvin extends HTMLElement {
         this.hideLoading()
         this.menu.displayViewSettings()
 
-        this.height = this.div.node().clientHeight
-
-        this.svg.attr('width', this.width)
-            .attr('height', window.innerHeight * .9)
+        this.height = this.shadowRoot.querySelector('.timeline').clientHeight
+        this.svg.attr('height', this.height)
 
         d3.select(this.shadowRoot.querySelector('#nodes-group'))
             .selectAll('g.artist')

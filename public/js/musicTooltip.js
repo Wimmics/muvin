@@ -34,4 +34,23 @@ class MusicTooltip extends Tooltip{
 
         this.setContent(content, id)
     }
+
+    setNodeContent(d, id) {
+        
+        let value = this.chart.data.artists[d]
+        
+        let group = value.type === 'Artist_Group'
+
+        let type = (group ? 'Creation' : 'Birth') + ' Date:'
+        let deathInfo = value.lifespan.to ? `<b>${group ? 'Dissolution' : 'Death'} Date:</b> ${value.lifespan.to}\n` : ''
+        let groupInfo = `<b>${group ? 'Members' : 'Member Of'}:</b><br> <ul> ${value.memberOf.map(d => `<li><i>${d.name}</i> from ${d.from} to ${d.to}</li>`).join('')}</ul>`
+        
+        let content = `<b>${value.name}</b><br>
+            <b>${type}</b> ${value.lifespan.from}<br>
+            ${deathInfo}<br>
+            ${groupInfo}<br><br>
+            Has collaborated with <b>${value.collaborators.length}</b> artists or groups`
+
+        this.setContent(content, id)
+    }
 }

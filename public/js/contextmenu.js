@@ -72,43 +72,45 @@ class ContextMenu {
                 } 
             })
 
-        menu.push({
-            title: 'Move',
-            children: [
-                {title: 'Up', 
-                action: d => {
-                    let index = keys.indexOf(d)
-                    if (index === 0) return;
-                    let indexB = index - 1;
-                    this.chart.data.switchNodes(index, indexB)
-                    
-                    if (this.chart.yAxis.focus === d) { // if moving the node on focus, change the focus
-                        this.chart.yAxis.setDistortion(this.chart.yAxis.focus)
-                        this.chart.update(keys[indexB])
-                    } else { // if moving a non-focus node, update the visible nodes and redraw without changing the focus
-                        this.chart.updateVisibleNodes() 
-                        this.chart.update()
-                    }
-                } }, 
-                {title: 'Down', 
-                action: d => {
-                    let index = keys.indexOf(d)
-                    if (index === keys.length - 1) return;
-                    let indexB = index + 1;
-                    this.chart.data.switchNodes(index, indexB)
+        if (keys.length > 1) {
+            menu.push({
+                title: 'Move',
+                children: [
+                    {title: 'Up', 
+                    action: d => {
+                        let index = keys.indexOf(d)
+                        if (index === 0) return;
+                        let indexB = index - 1;
+                        this.chart.data.switchNodes(index, indexB)
+                        
+                        if (this.chart.yAxis.focus === d) { // if moving the node on focus, change the focus
+                            this.chart.yAxis.setDistortion(this.chart.yAxis.focus)
+                            this.chart.update(keys[indexB])
+                        } else { // if moving a non-focus node, update the visible nodes and redraw without changing the focus
+                            this.chart.updateVisibleNodes() 
+                            this.chart.update()
+                        }
+                    } }, 
+                    {title: 'Down', 
+                    action: d => {
+                        let index = keys.indexOf(d)
+                        if (index === keys.length - 1) return;
+                        let indexB = index + 1;
+                        this.chart.data.switchNodes(index, indexB)
 
-                    if (this.chart.yAxis.focus === d) { 
-                        this.chart.update(keys[index])
-                    } else {
-                        this.chart.updateVisibleNodes() 
-                        this.chart.update()
-                    }
-                }} ]
-        })
+                        if (this.chart.yAxis.focus === d) { 
+                            this.chart.update(keys[index])
+                        } else {
+                            this.chart.updateVisibleNodes() 
+                            this.chart.update()
+                        }
+                    }} ]
+                })
+        }
 
 
         let collaborators = this.chart.data.artists[d].collaborators
-        console.log(d, collaborators.filter(e => e.enabled).length, "collaborators")
+    
         if (collaborators.length) { /// the author has one or more co-authors
             let collab = { title: 'Explore collaborations' }
 
@@ -124,7 +126,7 @@ class ContextMenu {
             })
 
             collab.children.splice(0, 0, {
-                title: 'All',
+                title: 'All (' + collaborators.length + ')' ,
                 action: async () => {
                     for (let e of collaborators)
                         if (e.enabled) 
@@ -133,9 +135,9 @@ class ContextMenu {
             })
 
             collab.children.splice(1, 0, {
-                title: 'First 25 collaborators',
+                title: 'First 10 collaborators',
                 action: async () => {
-                    for (let i = 0; i < 25; i++) 
+                    for (let i = 0; i < 10; i++) 
                         if (collaborators[i].enabled) 
                             await this.chart.data.add(collaborators[i])
                     

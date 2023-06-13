@@ -26,7 +26,7 @@ async function fetchNodeData(db, node) {
     let bindings;
     try{
         result = JSON.parse(result)
-		bindings = result.results.bindings[0]
+		bindings = result.results.bindings
     } catch(e) {
         console.log(e)
     }
@@ -100,7 +100,8 @@ async function clean(values) {
 
 async function cleanCroboraResults(values, node) {
     let cleanValues = values.map(d => d.records).flat()
-    let channels = ['france 2', 'arte', 'tf1', 'rai uno', 'rai due', 'canale 5']
+    //let channels = ['france 2', 'arte', 'tf1', 'rai uno', 'rai due', 'canale 5']
+    let channels = datasets.crobora.categories
 
     let categories = ['event', 'location', 'illustration', 'celebrity']
     cleanValues = cleanValues.map(d => {
@@ -134,16 +135,12 @@ async function cleanCroboraResults(values, node) {
     return cleanValues
 }
 
-async function getLinkTypes(values) {
-    let types = values.map(d => d.contributors.map(e => e.type)).flat()
-    return types.filter( (d,i) => d && types.indexOf(d) === i)
-}
-
-async function transform(values) {
+async function transform(db, values) {
 
     let items = {}
     let links = {}
-    let linkTypes = await getLinkTypes(values)
+    // let linkTypes = await getLinkTypes(values)
+    let linkTypes = datasets[db].categories
 
     for (let item of values) {
         let year = item.parentDate ? item.parentDate.split('-')[0] : item.date.split('-')[0]
@@ -223,6 +220,57 @@ async function transform(values) {
      
 }
 
+async function getNodeData(db, node) {
+    let data = {}
+    let sparql = datasets[db].type === "sparql" 
+    let res = sparql  ? await fetchNodeData(db, node) : null
+
+    if (sparql && !res.length) return data
+
+    switch(db) {
+        case "wasabi" :
+            let members = res.map(d => ({ name: d.memberOf.value, from: d.memberFrom ? d.memberFrom.value : 'Not Available', to: d.memberTo ? d.memberTo.value : 'Not Available' }))
+
+            let birth = res[0].birthDate
+            let death = res[0].deathDate
+
+            data[node.value] = {
+                key: node.value,
+                name: res[0].name.value,
+                id: res[0].uri.value,
+                type: res[0].type.value,
+                lifespan: {from: birth ? birth.value : 'Not Available',  to: death ? death.value : 'Not Available' },
+                memberOf: members
+            }
+            break;
+        case "hal":
+            let topics = res.filter(d => d.topic).map(d => d.topic.value)
+            topics = topics.filter( (d,i) => topics.indexOf(d) === i)
+
+            let structures = res.filter(d => d.memberOf).map(d => d.memberOf.value)
+            structures = structures.filter( (d,i) => structures.indexOf(d) === i)
+            
+            data[node.value] = {
+                key: node.value,
+                name: res[0].name.value,
+                id: res[0].uri.value,
+                topics: topics,
+                memberOf: structures 
+            }
+            break;
+        case "crobora":
+            let key =  [node.value, node.type].join('-')
+            data[key] = {
+                name: node.value,
+                type: node.type,
+                key: key
+            }
+            break;
+    }
+
+    return data
+}
+
 /// for testing the class
 
 async function fetchData(db, node) {
@@ -236,44 +284,11 @@ async function fetchData(db, node) {
 
     // fs.writeFileSync(path.join(__dirname, `/data/${db}/raw.json`), JSON.stringify(values, null, 4))
 
-    let data = await transform(values)
+    let data = await transform(db, values)
 
-    data.artists = {}
-    if (datasets[db].type === "sparql") {
-        let res = await fetchNodeData(db, node)
-        if (res) {
-            let members = null;
-            if (res.members) {
-                members = res.members.value.split('--')
-                    .map(d => {
-                        let parts = d.split('&&') 
-                        return {
-                            name: parts[0],
-                            startDate: parts[1] === "NA" ? 'Not Available' : parts[1],
-                            endDate: parts[2] === "NA" ? 'Not Available' : parts[2]
-                        }
-                    })
-            }
+    data.artists = await getNodeData(db, node)
 
-            data.artists[res.artist.value] = {
-                name: res.artist.value,
-                id: res.id.value,
-                type: res.type.value.split('--'),
-                members: members || "Not Available",
-                lifespan: { from: res.from ? res.from.value : 'Not Available', to: res.to ? res.to.value : 'Not Available'},
-                key: res.artist.value
-            }
-        }
-
-        // data.artists = features
-    } else {
-        let key =  [node.value, node.type].join('-')
-        data.artists[key] = {
-            name: node.value,
-            type: node.type,
-            key: key
-        }
-    }
+    console.log(data.artists)
 
     let filename = `data/${db}/${node.value}${node.type ? '-' + node.type : ''}-data_vis.json`
     try {
@@ -283,8 +298,6 @@ async function fetchData(db, node) {
         console.log(e)
         console.log(data)
     }
-
-   
 
     return data
 }

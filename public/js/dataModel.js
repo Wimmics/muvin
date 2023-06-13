@@ -18,9 +18,10 @@ class DataModel {
                 gradient: ['#ffffff', '#f5f5f5', '#ececec', '#e2e2e2'] // used by the audio player
             },
             item: {
-                color: '#ab418f',
+                color: '#ccc',
                 gradient: ['#9e2e09', '#c36846', '#e3a084', '#ffd8c8']
-            }
+            },
+            typeScale: d3.scaleOrdinal(d3.schemeSet2)
         }
     }
 
@@ -54,7 +55,6 @@ class DataModel {
         this.items = this.items.filter(d => d.artist.key !== node)
 
         this.updateTime()
-        this.updateColors()
         this.updateCollaborations()
         this.chart.update(focus)
     }
@@ -67,7 +67,7 @@ class DataModel {
         await this.update(data)
         
         this.updateTime()
-        this.updateColors()
+        
         await this.updateCollaborations()
         this.chart.update(node)
     }
@@ -81,14 +81,15 @@ class DataModel {
         this.items = this.items.concat(data.items)
         this.links = this.links.concat(data.links)
         
-        data.linkTypes.forEach(d => {
-            if (!this.linkTypes.includes(d)) this.linkTypes.push(d)
-        })
-        this.linkTypes.sort( (a,b) => a.localeCompare(b))
-
         Object.keys(data.artists).forEach(d => {
             this.artists[d] = data.artists[d]
         })
+
+        // update linkTypes only once 
+        if (!this.linkTypes.length) {
+            this.linkTypes = data.linkTypes
+            this.colors.typeScale.domain(this.linkTypes)
+        }
 
     }
 
@@ -120,20 +121,6 @@ class DataModel {
 
             this.artists[key].collaborators = collaborators
         })
-    }
-
-    async updateColors() {
-
-        let nb = this.linkTypes.length < 3 ? 3 : this.linkTypes.length
-        let colors = d3.schemeGreens[nb]
-      
-        this.colors.discography = {
-                color: colors ? colors[0] : '#000',
-                gradient: colors
-            }
-
-        this.colors.typeScale = d3.scaleOrdinal(colors).domain(this.linkTypes)
-
     }
 
     // checkers

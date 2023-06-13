@@ -8,7 +8,9 @@ class LinksGroup {
 
     getData() {
         let isValid = d => this.chart.isNodeValid(d.source) && this.chart.isNodeValid(d.target) && !this.chart.isSelected(d.item.year)
-        return this.chart.data.links.filter(d => isValid(d) )
+        let data = this.chart.data.links.filter(d => isValid(d) )
+        data = data.filter( (d,i) => data.some(x => x.source.key === d.target.key && x.target.key === d.source.key) )
+        return data
     }
 
     /**
@@ -17,12 +19,17 @@ class LinksGroup {
     draw() {
 
         this.data = this.getData() 
+
+        console.log(this.data)
         
         const lineAttrs = { x1: d => this.chart.xAxis.scale(d.year),
             x2: d => this.chart.xAxis.scale(d.year),
             y1: d => this.chart.yAxis.scale(d.source.key),
             y2: d => this.chart.yAxis.scale(d.target.key),
-            'stroke-dasharray': d => this.chart.isUncertain(d.item) ? 4 : 'none'
+            'stroke-dasharray': d => this.chart.isUncertain(d.item) ? 4 : 'none',
+            'stroke': '#000',
+            'stroke-opacity': 1,
+            'stroke-width': 1
         }
 
         this.group.selectAll('g.link')
@@ -32,8 +39,6 @@ class LinksGroup {
                     .classed('link', true)
                     .call(g => g.append('line')
                         .classed('link-line', true)
-                        .attr('stroke', '#000')
-                        .attr('stroke-opacity', 1)
                         .attrs(lineAttrs)
                     ),
                     update => update

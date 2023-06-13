@@ -16,7 +16,7 @@ body{
 }
 
 .timeline {
-    height: calc(100% - 200px); 
+    height: calc(100% - 70px);
     display: flex;
     width: 100%;
 }

@@ -16,12 +16,23 @@ class Legend {
         this.linkLegend = this.div.append('div')
             .classed('link-legend', true)
 
-        this.linkLegend.append('svg')
+        this.svg = this.linkLegend.append('svg')
             .attr('id', 'link-legend')
-            .append('text')
-                .text(this.chart.app === 'crobora' ? 'Broadcaster' : 'Contribution Type')
-                .attr('font-size', this.fontSize)
-                .attr('transform', `translate(0, 25)`)
+            
+        this.svg.append('text')
+            .text(this.chart.app === 'crobora' ? 'Broadcaster' : 'Contribution Type')
+            .attr('font-size', this.fontSize)
+            .attr('transform', `translate(0, 25)`)
+
+        this.svg.append('svg:image')
+            .attr('xlink:href', '/muvin/images/question.svg')
+            .attr('width', 15)
+            .attr('height', 15)
+            .attr('x', 110)
+            .attr('y', 12)
+            .style('cursor', 'pointer')
+            .append('title')
+            .text(`Click on the circles to show/hide items in each ${this.chart.app === 'crobora' ? 'channel' : 'category'}`)
 
         this.hide()
         
@@ -43,9 +54,9 @@ class Legend {
 
         let itemWidth = d3.max(this.data, d => d.length * 12)
 
-        let svg = this.div.select('svg#link-legend')
+        let svg = this.svg
             .attr('width', this.data.length * (itemWidth + this.itemRadius))
-            .attr('height', this.div.node().clientHeight)
+            .attr('height', 70)
 
         this.group = svg.selectAll('g')
             .data(this.data)
@@ -62,7 +73,7 @@ class Legend {
                         .style('cursor', 'pointer')
                         .on('click', d => this.handleClick(d))
                             .call(circle => circle.append('title')
-                                .text(e => `Click to ${this.selected.includes(e) ? 'display' : 'hide'} items of this ${this.chart.app === 'crobora' ? 'channel' : 'type'}`))
+                                .text(e => `Click to display/hide items in this ${this.chart.app === 'crobora' ? 'channel' : 'category'}`))
                         )
                     
                     .call(g => g.append('text')

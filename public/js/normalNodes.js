@@ -4,13 +4,21 @@ class NormalNodes extends NodesGroup{
 
         this.radius = {min: 3, max: 15, minFocus: 12, maxFocus: 45}
 
-        this.radiusScale = d3.scaleLinear().range([this.radius.min, this.radius.max])
+        this.radiusScale = d3.scaleLog().range([this.radius.min, this.radius.max])
     }
 
     set() {
 
         this.forceSimulation.on("tick", () => this.group.selectAll('.doc')
-            .attr('transform', d => `translate(${d.x}, ${d.y})` ))
+            .attr('transform', d => {
+                let prev = this.chart.yAxis.getPrevPos(d.artist.key)
+                let next = this.chart.yAxis.getNextPos(d.artist.key)
+                
+                let y = d.y + d.r > next ? next - d.r : d.y
+                y = d.y - d.r < prev ? prev + d.r : d.y
+                
+                return `translate(${d.x}, ${y})` 
+            }) )
     }
 
     async computeRadius() {

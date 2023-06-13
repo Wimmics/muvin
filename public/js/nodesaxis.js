@@ -33,14 +33,14 @@ class NodesAxis {
         this.data = this.chart.data.getNodes()
         this.values = this.chart.data.getNodesKeys()
 
-        let min = this.shift,
-            max = dimensions.height - dimensions.top - dimensions.bottom - this.shift;
+        this.min = this.shift
+        this.max = dimensions.height - dimensions.top - dimensions.bottom - this.shift;
 
         this.scale.domain(this.values)
-            .range([min, max])
+            .range([this.min, this.max])
             .padding(.7)
         
-        this.defaultScale = d3.scalePoint().domain(this.values).range([min, max]).padding(.7)
+        this.defaultScale = d3.scalePoint().domain(this.values).range([this.min, this.max]).padding(.7)
 
         this.slider.style('display', 'block')
         this.setSlider()
@@ -249,18 +249,6 @@ class NodesAxis {
                 
     }
 
-    // TODO create a function in the tooltip class to generate the tooltip for the node
-    getTooltipContent(d) {
-        let value = this.data[d]
-        let type = (value.type === 'Group' ? 'Creation' : 'Birth') + ' Date:'
-        let deathInfo = value.lifespan.to ? `<b>${value.type === 'Group' ? 'Dissolution' : 'Death'} Date:</b> ${value.lifespan.to}\n` : ''
-        let groupInfo = value.type === 'Group' ? `<b>Members:</b><br> ${value.members.map(e => e.name).join('<br>')}` : ''
-        
-        return `<b>${value.name}</b><br>
-            <b>${type}</b> ${value.lifespan.from}<br>
-            ${deathInfo}${groupInfo}`
-    }
-
     setFreeze(d) {
         this.freeze = null
         this.setHighlight(d)
@@ -268,10 +256,8 @@ class NodesAxis {
     }
 
     mouseover(e, d) {
-        if (this.chart.app === 'wasabi') {
-            this.chart.tooltip.setContent(this.getTooltipContent(d), this.tooltipId)
-            this.chart.tooltip.show(e, this.tooltipId)
-        }
+        this.chart.tooltip.setNodeContent(d, this.tooltipId)
+        this.chart.tooltip.show(e, this.tooltipId, 400)
 
         this.setHighlight(d)
     }
@@ -344,5 +330,17 @@ class NodesAxis {
 
     getStep(value) {
         return this.tickDistances ? this.tickDistances[this.values.indexOf(value)] : this.scale.step()
+    }
+
+    getNextPos(d) {
+        if (this.values.length === 1 || this.values.indexOf(d) === this.values.length - 1) return this.max;
+        let index = this.values.indexOf(d)
+        return this.scale(this.values[index + 1])
+    }
+
+    getPrevPos(d) {
+        if (this.values.length === 1 || this.values.indexOf(d) === 0) return this.min;
+        let index = this.values.indexOf(d)
+        return this.scale(this.values[index - 1])
     }
 }

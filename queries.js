@@ -4,6 +4,7 @@ const datasets = {
     wasabi: { 
         type: 'sparql',
         url: "http://wasabi.inria.fr/sparql",
+        categories: ["performer", "producer", "author"],
 
         prefixes: `
         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -44,27 +45,25 @@ const datasets = {
         } limit 10000 offset $offset `,
 
         nodeFeatures: `
-        select distinct ?artist ?id (replace(str(?type), "http://ns.inria.fr/wasabi/ontology/", "") as ?type) ?from ?to ?members where {
-            bind ("$author" as ?artist)
+        select distinct ?name ?uri (replace(str(?type), "http://ns.inria.fr/wasabi/ontology/", "") as ?type) ?birthDate ?deathDate ?memberOf ?memberFrom ?memberTo where {
+            bind ("$author" as ?name)
 
-            { ?uri a wsb:Artist_Person . ?uri foaf:name ?artist }
+            { ?uri a wsb:Artist_Person . ?uri foaf:name ?name }
             union
-            { ?uri a wsb:Artist_Group . ?uri foaf:name ?artist }
+            { ?uri a wsb:Artist_Group . ?uri foaf:name ?name }
             union
-  			{ ?uri a mo:MusicArtist . ?uri foaf:name ?artist }
+            { ?uri a mo:MusicArtist . ?uri foaf:name ?name }
 
-            ?uri mo:uuid ?id ; a ?type.
+            ?uri a ?type.
 
-            optional { { ?uri schema:foundingDate ?from } union { ?uri schema:birthDate ?from } }
-  
-  	        optional { {?uri schema:dissolutionDate ?to } union { ?uri schema:deathDate ?to } }
+            optional { { ?uri schema:foundingDate ?birthDate } union { ?uri schema:birthDate ?birthDate } }
 
-            { select ?uri  group_concat(distinct ?n ;  separator = '--') as ?members where {
-                optional { ?uri schema:members ?member . ?member foaf:name ?name }
-                optional { ?member schema:startDate ?startDate }
-                optional{ ?member schema:endDate ?endDate }
-                bind( concat(?name, '&&', if (bound(?startDate), ?startDate, 'NA'), '&&', if (bound(?endDate), ?endDate, 'NA') ) as ?n )                 
-            } }
+            optional { {?uri schema:dissolutionDate ?deathDate } union { ?uri schema:deathDate ?deathDate } }
+
+            optional { ?uri schema:members ?member . 
+                    ?member foaf:name ?memberOf . 
+                            optional { ?member schema:startDate ?memberFrom ; 
+                                    schema:endDate ?memberTo } }
 
         } `,
 
@@ -80,6 +79,7 @@ const datasets = {
     hal: {
         type: 'sparql',
         url: "http://sparql.archives-ouvertes.fr/sparql",
+        categories: ["Conference Paper", "Journal Article", "Diploma", "Artwork", "Book / Book Section", "Gray Knowledge"],
 
         prefixes: `
         PREFIX dcterms: <http://purl.org/dc/terms/>
@@ -125,14 +125,16 @@ const datasets = {
         `,
 
         nodeFeatures: `
-            select distinct (?uri as ?id) ?artist ?type where {
-                bind ("$author" as ?artist)
-       
-                ?uri a foaf:Person . ?uri foaf:name ?artist .
+            select distinct ?uri ?name ?topic ?memberOf  where {
+                bind ("$author" as ?name)
                 
-                { select ?uri  group_concat(distinct ?n ;  separator = '--') as ?type where {
-                        optional { ?uri foaf:interest [ skos:prefLabel ?n ] . filter langMatches(lang(?n), "en") }                 
-                } }
+                ?p a hsc:Author ;
+                    hsc:person ?uri .
+                
+                ?uri foaf:name ?name .
+                
+                optional { ?uri foaf:interest [ skos:prefLabel ?topic ] . filter langMatches(lang(?topic), 'en') }
+                optional { ?p hsc:structure [ skos:prefLabel ?memberOf ] }
             }
         `,
 
@@ -146,6 +148,8 @@ const datasets = {
     crobora: {
         type: 'api',
         url: "http://dataviz.i3s.unice.fr/crobora-api/",
+        categories: ['france 2', 'arte', 'tf1', 'rai uno', 'rai due', 'canale 5', 'Web'],
+
         nodeNames: ['http://dataviz.i3s.unice.fr/crobora-api/cluster/names', 'http://dataviz.i3s.unice.fr/crobora-api/cluster/names2'],
         items: 'http://dataviz.i3s.unice.fr/crobora-api/search/imagesOR?categories=$category&keywords=$value&options=illustration&options=location&options=celebrity&options=event'
     }   

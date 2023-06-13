@@ -13,7 +13,7 @@ class ProfilesGroup {
         let nodes = this.chart.data.getNodesList()
         let dates = this.chart.data.getDates()
         let items = this.chart.data.getItems()
-
+       
         this.itemsByYear = []
         nodes.forEach(node => { // each node is an object containing name, type and a contributions array
             dates.forEach(year => {       
@@ -56,7 +56,7 @@ class ProfilesGroup {
 
         let stack = d3.stack()
             .offset(d3.stackOffsetSilhouette)
-            .order(d3.stackOrderInsideOut)
+            .order(d3.stackOrderNone)
             .keys(types)
 
         let dates = this.chart.data.getDates()

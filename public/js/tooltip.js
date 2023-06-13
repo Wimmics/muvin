@@ -21,7 +21,7 @@ class Tooltip {
         d3.select(this.chart.shadowRoot.querySelector(`#${id}-tooltip`)).html(htmlContent)
     }
 
-    show(event, id) {
+    show(event, id, width = 250) {
         let tooltip = this.chart.shadowRoot.querySelector(`#${id}-tooltip`)
         tooltip.style.display = 'block';
         
@@ -37,7 +37,8 @@ class Tooltip {
             .styles({
                 left: x + 'px',
                 top: y +'px',
-                'pointer-events': 'none'
+                'pointer-events': 'none',
+                'max-width': width + 'px'
             })
     }
 }
