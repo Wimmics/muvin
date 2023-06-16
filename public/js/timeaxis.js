@@ -1,59 +1,90 @@
 class TimeAxis{
     constructor() {
-        this.scale = fisheye.scale(d3.scalePoint)
+        //this.scale = fisheye.scale(d3.scalePoint)
+
+        this.timeScale = new TimeScale()
         this.tickDistances;
         this.chart = document.querySelector('#muvin')
 
         this.slider = d3.select(this.chart.shadowRoot.querySelector('#x-slider'))
 
         this.distortion = 20
+
+        this.focus = []
     }
 
-    set() {
+    async set() {
       
         this.values = this.chart.getData().dates
 
         let dimensions = this.chart.getDimensions()
 
-        this.scale.domain(this.values)
-            .range([dimensions.left, dimensions.width - dimensions.right])
-            .padding(.5)
+        let step = (dimensions.width - dimensions.left) / this.values.length
+       
+        this.timeScale.setDomain(this.values)
+        this.timeScale.setStep(step)
+        this.timeScale.setFocusLength(step * 5)
+        this.timeScale.setStartingPos(dimensions.left)
+        await this.timeScale.setMapping()
+    }
 
-        this.bottomAxis = d3.axisBottom()
-            .ticks(this.values.length)
-            .tickFormat(d => d.toString())
-            .scale(this.scale)
+    drawLabels() {
+        let dimensions = this.chart.getDimensions()
+
+        this.timeScale.toString()
         
-        this.topAxis = d3.axisTop()
-            .ticks(this.values.length)
-            .tickFormat(d => d.toString())
-            .scale(this.scale)
-
-        d3.select(this.chart.shadowRoot.querySelector('#bottom-axis'))
-            .attr('transform', `translate(0, ${dimensions.height - dimensions.bottom - dimensions.top})`)
+        let top = d3.select(this.chart.shadowRoot.querySelector('#top-axis'))
             .style('cursor', 'pointer')
-            .call(this.bottomAxis)
-            .selectAll(".tick text")
-            .on('click', d => this.setDistortion(d))
+            
+        top.selectAll('text')
+            .data(this.values)
+            .join(
+                enter => enter.append('text')
+                    .style('text-anchor', 'middle'),
+                update => update,
+                exit => exit.remove()                            
+            )
+            .text(d => d)
+            .attr('x', d => this.scale(d) + this.step(d) / 2)
 
-        d3.select(this.chart.shadowRoot.querySelector('#top-axis'))
+        top.select('line')
+            .attr('x1', dimensions.left)
+            .attr('x2', this.range()[1])
+            .attr('y1', 12)
+            .attr('y2', 12)
+            .attr('stroke', '#000')
+
+        let bottom = d3.select(this.chart.shadowRoot.querySelector('#bottom-axis'))
             .style('cursor', 'pointer')
-            .call(this.topAxis)       
-            .selectAll(".tick text")
-            .on('click', d => this.setDistortion(d))
+            
+        bottom.selectAll('text')
+            .data(this.values)
+            .join(
+                enter => enter.append('text')
+                    .style('text-anchor', 'middle'),
+                update => update,
+                exit => exit.remove()                            
+            )
+            .text(d => d)
+            .attr('x', d => this.scale(d) + this.step(d) / 2)
+            .attr('y', dimensions.height - dimensions.bottom)
+            
+        bottom.select('line')
+            .attr('x1', dimensions.left)
+            .attr('x2', this.range()[1])
+            .attr('y1', dimensions.height - dimensions.bottom - 20)
+            .attr('y2', dimensions.height - dimensions.bottom - 20)
+            .attr('stroke', '#000')
 
-        this.tickDistances = getTicksDistance(this.scale, this.values)
-        this.setRange();
-
-        this.defaultScale = d3.scalePoint().domain(this.values).range([dimensions.left, dimensions.width - dimensions.right]).padding(.5)
-
-        this.setSlider()
+        this.chart.group.selectAll('g.timeaxis')
+            .selectAll('text')
+            .on('click', async (d) => {
+                await this.computeDistortion(d)
+                this.setDistortion()
+            })    
     }
 
-    getStep(value) {
-        return this.tickDistances ? this.tickDistances[this.values.indexOf(value)] : this.scale.step()
-    }
-
+   
     getItemsByTime(value) {
         let itemsPerYear = this.chart.profiles.data.map(e => e.data[0].map(x => x.data)).flat()
 
@@ -62,69 +93,61 @@ class TimeAxis{
             .entries(itemsPerYear)
 
         return itemsPerYear.find(e => e.key === value)
-        
     }
 
-    async setDistortion(d) {
-
+    async computeDistortion(d) {
+       
         let res = this.getItemsByTime(d)
         let values = res ? res.values : []
-
+       
         if (d3.sum(values.filter(e => this.chart.getNodeSelection() ? this.chart.isSelected(e.artist) && e.year === d : e.year === d), e => e.values.length) === 0) return;
 
-        d3.select(this.chart.shadowRoot.querySelector("#group-chart")).selectAll('.node-link').attr('opacity', 0)
-        this.chart.sndlinks.hide()
+        let index = this.focus.indexOf(d)
+        if (index !== -1) this.focus.splice(index, 1)
+        else this.focus.push(d)
         
-        this.scale.distortion(this.focus === d ? 0 : this.distortion).focus(this.defaultScale(d))
-    
-        d3.select(this.chart.shadowRoot.querySelector("g#bottom-axis"))
-            .transition()
-            .duration(500)
-            .call(this.bottomAxis);
+        await this.timeScale.setDistortion(d)
+        this.timeScale.toString()
+    }
 
-        d3.select(this.chart.shadowRoot.querySelector("g#top-axis"))
-            .transition().duration(500)
-            .call(this.topAxis);
+    setDistortion() {
 
-        this.tickDistances = getTicksDistance(this.scale, this.values)
-        this.focus = this.focus === d ? null : d
-
-        this.setRange()
-
-        //this.setSliderPosition(this.defaultScale(d) - this.getStep(d) / 2, d)
+        this.chart.sndlinks.hide()        
+        
+        this.drawLabels()
 
         this.chart.draw()
     }
 
-    setRange() {
-        let point = this.scale.range()[0]
-        this.rangePoints = this.tickDistances.map(d => { let v = point; point += d; return v; })
+
+    clearFocus() {
+        this.focus = []
     }
 
     setSliderPosition(pos, year) {
         if (!year) return;
        
-        let width = d3.max([this.getStep(year), 20])
+        let width = d3.max([this.step(year), 20])
         let slider = this.slider.selectAll('rect.move')
-
-        this.slider.select('text').text(year).attr('transform', `translate(${pos + width/2}, 7)`)
 
         slider.attr('x', pos).attr('width', width)
     }
 
-    setSlider() {
+    drawSlider() {
 
         let dimensions = this.chart.getDimensions()
 
         let selectedYear, xPos;
 
-        const dragBehavior = (year) => {
+        const dragBehavior = async (year) => {
             if (year === selectedYear) return;
             selectedYear = year // update the current year on focus
 
             this.chart.sndlinks.hide()
-            if (this.focus && this.focus != selectedYear) 
-                this.setDistortion(selectedYear)
+            if (!this.focus.includes(selectedYear)) {
+                await this.computeDistortion(selectedYear)
+                this.setDistortion()
+            }
             else if (d3.event.type == 'drag') // to avoid change the position on click (start)
                 this.setSliderPosition(xPos, selectedYear)
 
@@ -137,59 +160,48 @@ class TimeAxis{
                 let direction = xPos - d3.event.x
                 xPos = d3.event.x
 
-                let lastIndex = this.tickDistances.length - 1
-                let rightmostpos = dimensions.width - dimensions.right - this.tickDistances[lastIndex]
+                let rightmostpos = this.scale(this.values[this.values.length - 1]) //dimensions.width - dimensions.right - this.tickDistances[lastIndex]
                 xPos = xPos <= dimensions.left ? dimensions.left : xPos
                 xPos = xPos >= rightmostpos ? rightmostpos : xPos
 
-                let year = this.invert(xPos, direction)
+                let year = this.invert(xPos)
 
-                dragBehavior(year)
+                //dragBehavior(year)
+                this.setSliderPosition(xPos, year)
+                this.setSliderAnimation(year) 
             }).on('end', () => {
                 
-                this.setSliderPosition(this.scale(selectedYear) - this.getStep(selectedYear)/ 2, selectedYear)
+                this.setSliderPosition(this.scale(selectedYear) - this.step(selectedYear)/ 2, selectedYear)
                 
                 this.clearSliderAnimation()
             })
 
         this.slider.select('.marker')
-            .attr('width', this.scale.step())
+            .attr('width', this.step())
             .attr('height', dimensions.height - 10 - dimensions.bottom - dimensions.top)
-            .attr('y', 0)
             .attr('x', dimensions.left)
+            .attr('y', 8)
             .attr('fill', 'none')
             .attr('stroke', '#ccc')
             
         this.slider.selectAll('.slider-button')
-            .attr('width', this.scale.step())
+            .attr('width', this.step())
             .style('display', 'block')        
 
         this.slider.select('#top-button')
             .attr('height', 15)
+            .attr('y', 8)
             .attr('x', dimensions.left)
-            .attr('y', -5)
             .call(drag)
 
         this.slider.select('#bottom-button')
             .attr('height', 15)
             .attr('x', dimensions.left)
-            .attr('y', dimensions.height - 10 - dimensions.bottom - dimensions.top)
+            .attr('y', dimensions.height - 2 - dimensions.bottom - dimensions.top)
             .call(drag)
 
-        this.slider.select('text')
-            .attr('font-weight', 'bold')
-            .attr('font-size', '12px')
-            .attr('text-anchor', 'middle')
-            .style('pointer-events', 'none')
-            .text('')
     }
 
-    invert(pos, dir){
-        
-        let index = d3.bisect(this.rangePoints, pos) - (Math.sign(dir) > 0 ? 1 : 0)
-                
-        return index >= this.values.length ? this.values[this.values.length - 1] : this.values[index] 
-    }
 
     clearSliderAnimation() {
         this.chart.nodes.reverse()
@@ -200,11 +212,8 @@ class TimeAxis{
         if (this.chart.isFreezeActive()) return
 
         this.chart.group.selectAll('.item-circle')
-            .transition()
-            .duration(100)
             .attr('opacity', d => {
-                
-                if (d.year === this.focus) return 1
+                if (this.focus.includes(d.year)) return 1
                 if (!this.chart.isNodeVisible(d.artist.key)) return 0 // hide when the items of the artist are hidden
                 if (this.chart.getNodeSelection() && !this.chart.isNodeVisible(d.artist.key)) return 0 // hide when the artist is not the one with the focus on
                 if (d.year != value) return 0
@@ -214,5 +223,23 @@ class TimeAxis{
         this.chart.fstlinks.hideLabels()
     }
 
+    
+
+    // The methods below create a facade to TimeScale through common methods of d3 scales
+    scale(d) {
+        return this.timeScale.getPos(d)
+    }
+
+    step(d) {
+        return this.timeScale.getStep(d)
+    }
+
+    invert(pos) {
+        return this.timeScale.getValue(pos)
+    }
+
+    range() {
+        return this.timeScale.getRange()
+    }
 
 }

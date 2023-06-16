@@ -40,8 +40,6 @@ class Muvin extends HTMLElement {
         this.width = this.div.node().clientWidth
 
         this.svg = this.div.select('svg#chart')
-            .attr('width', this.width)
-            .attr('height', this.height)
 
         this.group = this.svg.select('g#chart-group')
             .attr('transform', `translate(0, ${this.margin.top})`)
@@ -133,9 +131,6 @@ class Muvin extends HTMLElement {
         this.hideLoading()
         this.menu.displayViewSettings()
 
-        this.height = this.shadowRoot.querySelector('.timeline').clientHeight
-        this.svg.attr('height', this.height)
-
         d3.select(this.shadowRoot.querySelector('#nodes-group'))
             .selectAll('g.artist')
             .data(this.data.getNodesKeys())
@@ -159,20 +154,34 @@ class Muvin extends HTMLElement {
         await this.profiles.set()
         
         this.yAxis.drawLabels()
+        this.xAxis.drawLabels()
+
+        this.height = this.shadowRoot.querySelector('.timeline').clientHeight
+
+        this.xAxis.drawSlider()
 
         if (this.yAxis.focus && focus && this.yAxis.focus != focus) 
             this.yAxis.setDistortion(focus)
-        else if (this.getTimeSelection()) {
-            this.xAxis.setDistortion(this.xAxis.focus)
-        } else {
-            this.draw()
+        else if (this.getTimeSelection()){
+            let previousFocus = [...this.xAxis.focus]
+            this.xAxis.clearFocus()
+            previousFocus.forEach(async (d) => await this.xAxis.computeDistortion(d))
+            this.xAxis.setDistortion()
         }
+        else 
+            this.draw()
     }
 
     draw() {
+
+        this.width = this.xAxis.range()[1]
+        this.svg.attr('height', this.height).attr('width', this.width)
+
         this.profiles.draw()
         this.nodes.draw()
         this.fstlinks.draw()
+
+        
     }
 
     getData() {
@@ -244,17 +253,12 @@ class Muvin extends HTMLElement {
      * @param {*} d a link between two nodes 
      * @returns a boolean indicating whether that link is uncertain or not
      */
-    isUncertain(d) {
-        // let validNodes = d.item.contributors.filter(e => this.data.getNodesKeys().includes(e.key)) // visible contributors in this item
-        // validNodes = validNodes.map(d => d.key)
-        // validNodes = validNodes.filter( (e,i) => validNodes.indexOf(e) === i)
-        // console.log('visible nodes = ', validNodes)
-        
+    isUncertain(d) {        
         let items = this.data.getItems().filter(a => a.id === d.item.id && a.year === d.year)
         let foundInSource = items.some(a => a.artist.key === d.source)
         let foundIntarget = items.some(a => a.artist.key === d.target)
 
-        return foundInSource && foundIntarget
+        return !(foundInSource && foundIntarget)
     }
 
     // return chart dimensions
@@ -267,7 +271,6 @@ class Muvin extends HTMLElement {
         return this.yAxis.focus
     }
 
-    // TODO: verify that it still works
     async updateVisibleNodes(){ // according to yAxis focus
         
         let keys = this.data.getNodesKeys()
@@ -285,18 +288,16 @@ class Muvin extends HTMLElement {
             nodes.push(keys[index + 1])
         }
 
-        
         this.visibleItems = [...nodes]
         this.visibleProfile = [...nodes]
-
     }
 
     getTimeSelection() {
-        return this.xAxis.focus;
+        return this.xAxis.focus.length;
     }
 
     isSelected(d) {
-        return this.yAxis.focus === d || this.xAxis.focus === d;
+        return this.yAxis.focus === d || this.xAxis.focus.includes(d)
     }
 
     isFreezeActive() {
@@ -349,7 +350,7 @@ class Muvin extends HTMLElement {
     focusOnTime(value) {
         if (this.getTimeSelection()) this.xAxis.setDistortion(value)
         
-        else this.xAxis.setSliderPosition(this.xAxis.scale(value) - this.xAxis.getStep(value) / 2, value)
+        else this.xAxis.setSliderPosition(this.xAxis.timeScale(value) - this.xAxis.getStep(value) / 2, value)
     }
 
     releaseTimeFocus(d) {
@@ -427,11 +428,22 @@ template.innerHTML = `
         <div class='legend'>  </div>
 
         <div class='timeline'>
+            <div class='nodes-panel'>
+                <svg>
+                    <text id='node-count'></text>
+                    <g id='labels-group'></g>
+                </svg>
+            </div>
+
             <svg id="chart">
                 <g id ='chart-group'>
-                    <g id='top-axis'></g>
-                    <g id='bottom-axis'></g>
-                    <g id='left-axis'></g>
+                    <g id='top-axis' class='timeaxis' >
+                        <line></line>
+                    </g>
+                    <g id='bottom-axis' class='timeaxis' >
+                        <line></line>
+                    </g>
+                    
                     <g id="membership-links-group"></g>
                     <g id='link-group'></g>
                     <g id='nodes-group'></g>
@@ -447,7 +459,7 @@ template.innerHTML = `
                         <image id="slider-down" ></image>
                     </g>
 
-                    <g id='labels-group'></g>
+                   
                     <g id='nodeLinks-group'> 
                         
                     </g>

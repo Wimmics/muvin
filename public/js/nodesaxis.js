@@ -3,6 +3,9 @@ class NodesAxis {
         this.scale = fisheye.scale(d3.scalePoint) 
         this.tickDistances;
         this.chart = document.querySelector('#muvin')
+        this.div = d3.select(this.chart.shadowRoot.querySelector('.nodes-panel'))
+        console.log(this.div)
+
         this.freeze = false
 
         this.PLUS = '/muvin/images/plus.svg'
@@ -23,10 +26,6 @@ class NodesAxis {
         this.contextmenu = new ContextMenu()
     }
 
-    setDistortionSize(val) {
-        this.distortion = val; 
-    }
-
     set() {
         let dimensions = this.chart.getDimensions()
 
@@ -36,18 +35,19 @@ class NodesAxis {
         this.min = this.shift
         this.max = dimensions.height - dimensions.top - dimensions.bottom - this.shift;
 
+        this.svg = this.div.select('svg')
+            .attr('width', dimensions.left)
+            .attr('height', dimensions.height)
+
         this.scale.domain(this.values)
             .range([this.min, this.max])
             .padding(.7)
         
         this.defaultScale = d3.scalePoint().domain(this.values).range([this.min, this.max]).padding(.7)
 
-        this.chart.group.append('text')
-            .attr('id', 'node-count')
-            .attr('transform', `translate(${dimensions.left / 2}, -15)`)
-            .style('text-anchor', 'middle')
+        this.svg.select('text')
+            .attr('transform', `translate(10, 28)`)
             
-        
         this.setSlider()
         
     }
@@ -140,7 +140,7 @@ class NodesAxis {
     drawLabels() {
         const _this = this;
 
-        this.chart.group.select('#node-count').text(`${this.values.length} nodes`)
+        this.svg.select('#node-count').text(`Nodes: ${this.values.length}`)
 
         this.slider.style('display', this.focus ? 'block' : 'none')
 
@@ -152,7 +152,7 @@ class NodesAxis {
 
         let getFontSize = (d, l) => { // font size changes according to whether the node is focused on or not
             
-            if (!this.focus || (this.focus && this.chart.areItemsVisible(d))) return '.8em'
+            if (!this.focus || (this.focus && this.chart.areItemsVisible(d))) return '1em'
             else if (this.focus && this.focus != d) return '.5em'
 
             let direction = this.values.indexOf(d) - this.values.indexOf(this.focus)
@@ -290,15 +290,13 @@ class NodesAxis {
                 
         let group = d3.select(this.chart.shadowRoot.querySelector('#chart-group'))
 
-        let selectedLinks = group.selectAll('g.link')
+        group.selectAll('g.link')
             .transition()
             .duration(500)
-            .attr('opacity', e => e.source.key === d || e.target.key === d ? 1 : 0)
+            .attr('opacity', e => e.source === d || e.target === d ? 1 : 0)
 
-        group.selectAll("[class$='-ticks']")
-            .attr('opacity', e => e.source.key === d || e.target.key === d ? 1 : 0)
-
-        selectedLinks.selectAll('line').attr('stroke-width', 2)
+        // group.selectAll("[class$='-ticks']")
+        //     .attr('opacity', e => e.source === d || e.target === d ? 1 : 0)
 
         let nodes = this.chart.getConnectedNodes(d)
 

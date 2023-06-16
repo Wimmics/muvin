@@ -94,4 +94,8 @@ class Menu{
     hideViewSettings() {
         this.div.select('#view-controls').style('display', 'none')
     }
+
+    setWidth(val) {
+        this.div.style('width', val + 'px')
+    }
 }

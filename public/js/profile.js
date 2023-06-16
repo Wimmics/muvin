@@ -66,7 +66,7 @@ class Profile {
             .domain(this.getExtent())
 
         this.area = d3.area()
-            .x(d => this.chart.xAxis.scale(d.data.year))
+            .x(d => this.chart.xAxis.scale(d.data.year) + this.chart.xAxis.step(d.data.year) / 2)
             .y0(d => this.chart.yAxis.scale(d.data.artist.key) + (this.chart.isProfileActive(d) ? this.heightScale(d[1]) : 0))
             .y1(d => this.chart.yAxis.scale(d.data.artist.key) + (this.chart.isProfileActive(d) ? this.heightScale(d[0]) : 0))
             .curve(d3.curveBasis) 

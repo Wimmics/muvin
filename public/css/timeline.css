@@ -16,9 +16,11 @@ body{
 }
 
 .timeline {
-    height: calc(100% - 70px);
+    height: calc(100% - 100px);
     display: flex;
     width: 100%;
+    position: relative;
+    top: 100px;
 }
 
 .welcome-text{
@@ -43,9 +45,9 @@ body{
 .vis{
     display:flex; 
     flex-direction: column;
-    width: 100vw;
     height: calc(100vh - 70px);
-    overflow: hidden;
+    overflow-y: hidden;
+    overflow-x: auto;
     position: absolute;
     top: 50px;
 }
@@ -89,4 +91,10 @@ body{
     position: relative;
     top: 55%;
     text-align: center;
+}
+
+.nodes-panel{
+    position: fixed;
+    background-color: white;
+    left: 0;
 }
