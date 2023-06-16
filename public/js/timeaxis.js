@@ -91,7 +91,7 @@ class TimeAxis{
 
         this.setRange()
 
-        this.setSliderPosition(this.defaultScale(d) - this.getStep(d) / 2, d)
+        //this.setSliderPosition(this.defaultScale(d) - this.getStep(d) / 2, d)
 
         this.chart.draw()
     }

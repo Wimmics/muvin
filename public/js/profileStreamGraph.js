@@ -11,16 +11,16 @@ class StreamGraph extends Profile {
 
     getHeight(d) {
         let height = this.chart.yAxis.getStep(d) // reference height for the wave
-        if (!this.chart.getNodeSelection()) 
+        if (!this.chart.getNodeSelection()) // no selected node
             return height * .6
 
-        if (this.chart.isSelected(d) && this.chart.data.getNodesKeys().indexOf(d) === 0) 
+        if (this.chart.isSelected(d) && this.chart.data.getNodesKeys().indexOf(d) === 0) // the given node is selected and it is the first one in the list
             return height * .5
 
-        if (this.chart.data.getNodesKeys().indexOf(d) === 0) 
-            return height * .8
+        // if (this.chart.data.getNodesKeys().indexOf(d) === 0) 
+        //     return height * .8
         
-        return height
+        return height * .5
     }
 
     getExtent(){

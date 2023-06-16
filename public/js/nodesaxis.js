@@ -15,7 +15,7 @@ class NodesAxis {
 
         this.slider = d3.select(this.chart.shadowRoot.querySelector('#y-slider'))
 
-        this.distortion = 5;
+        this.distortion = 4;
         this.shift = 0;
 
         this.color = {focus: '#2C3E50', normal: '#dcdcdc'}
@@ -98,7 +98,7 @@ class NodesAxis {
             iconsize = 40,
             x = -dimensions.left/2 - iconsize / 2;
 
-        this.slider.attr('transform', `translate(${dimensions.left - shift}, 0)`)
+        this.slider.attr('transform', `translate(${dimensions.left - shift}, 10)`)
             .style('display', 'none')
 
         this.slider.selectAll('image')
@@ -118,7 +118,7 @@ class NodesAxis {
 
         this.slider.select('#slider-down')
             .attr('xlink:href', this.DOWN)
-            .attr('transform', `translate(${x}, ${dimensions.height - dimensions.bottom - dimensions.top - shift})`)
+            .attr('transform', `translate(${x}, ${dimensions.height - dimensions.bottom - dimensions.top - shift - 10})`)
             .on('click', () => {
                 let index = this.values.indexOf(this.chart.getNodeSelection());
                 if (index === this.values.length - 1) return;

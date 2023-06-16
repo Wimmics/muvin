@@ -7,11 +7,11 @@ class NodesGroup {
         this.forceSimulation = d3.forceSimulation()
             .alphaMin(.1)
             .force("x", d3.forceX()
-                .strength(d => this.chart.getTimeSelection() && this.chart.isSelected(d.year) ? .4 : .9)
+                .strength(d => this.chart.getTimeSelection() && this.chart.isSelected(d.year) ? 0 : .5)
                 .x(d => this.chart.xAxis.scale(d.year)))
             
             .force("y", d3.forceY()
-                .strength(d => this.chart.getTimeSelection() && this.chart.isSelected(d.year) ? .8 : .2)
+                .strength(d => this.chart.getTimeSelection() && this.chart.isSelected(d.year) ? 1 : .5)
                 .y(d => this.chart.yAxis.scale(d.artist.key))) 
 
             .force("collide", d3.forceCollide().radius(d => d.r).iterations(32)) // Force that avoids circle overlapping
@@ -32,7 +32,7 @@ class NodesGroup {
 
         this.contextmenu = new ContextMenu()
 
-        this.setUncertainPattern()
+        // this.setUncertainPattern()
     }
 
     set() {}
@@ -51,7 +51,7 @@ class NodesGroup {
         await this.appendNodes()
 
         this.group.selectAll('.doc')
-            .on('contextmenu', d3.contextMenu(d => this.contextmenu.getItemMenu()))
+            .on('click', d3.contextMenu(d => this.contextmenu.getItemMenu()))
             .on('mouseenter', d => { let e = d3.event; this.mouseover(e, d, 'item') })
             .on('mouseleave', () => this.mouseout()) // set a timeout to ensure that mouseout is not triggered while rapidly changing the hover
 
@@ -156,7 +156,7 @@ class NodesGroup {
             .transition('focus-items')
             .duration(500)
             .attr('opacity', e => nodes.includes(e.id) ? 1 : .1)
-            .attr('fill', e => nodes.includes(e.id) && this.chart.isUncertain(e) ? this.getPatternUrl() : this.chart.getItemColor())
+            .attr('fill', this.chart.getItemColor())
     }
 
     highlightItem(name){

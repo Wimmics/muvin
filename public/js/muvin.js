@@ -65,7 +65,7 @@ class Muvin extends HTMLElement {
         this.sndlinks = new NodeLinksGroup()
         this.sndlinks.set()
 
-        this.profiles = new AreaGraph()
+        this.profiles = new StreamGraph()
 
         if (this.app === 'hal')
             this.tooltip = new PublicationsTooltip()
@@ -239,12 +239,22 @@ class Muvin extends HTMLElement {
         return this.data.colors.typeScale(key)
     }
 
+    /**
+     * 
+     * @param {*} d a link between two nodes 
+     * @returns a boolean indicating whether that link is uncertain or not
+     */
     isUncertain(d) {
-        let validNodes = d.contributors.filter(e => this.data.getNodesKeys().includes(e.key)) // visible contributors in this item
-        validNodes = validNodes.map(d => d.key)
-        validNodes = validNodes.filter( (e,i) => validNodes.indexOf(e) === i)
+        // let validNodes = d.item.contributors.filter(e => this.data.getNodesKeys().includes(e.key)) // visible contributors in this item
+        // validNodes = validNodes.map(d => d.key)
+        // validNodes = validNodes.filter( (e,i) => validNodes.indexOf(e) === i)
+        // console.log('visible nodes = ', validNodes)
         
-        return this.data.getItems().filter(a => a.id === d.id && a.year === d.year).length != validNodes.length
+        let items = this.data.getItems().filter(a => a.id === d.item.id && a.year === d.year)
+        let foundInSource = items.some(a => a.artist.key === d.source)
+        let foundIntarget = items.some(a => a.artist.key === d.target)
+
+        return foundInSource && foundIntarget
     }
 
     // return chart dimensions
@@ -266,16 +276,13 @@ class Muvin extends HTMLElement {
 
         if (index === 0) {
             nodes.push(keys[index + 1])
-            // nodes.push(keys[index + 2])
+            nodes.push(keys[index + 2])
         } else if (index === keys.length - 1) {
             nodes.push(keys[index - 1])
-            // nodes.push(keys[index - 2])
-        } else if (this.yAxis.focus) {
-            if (index === keys.length - 2)
-                nodes.push(keys[index - 1])
-            else nodes.push(keys[index + 1])
-
-            // nodes.push(keys[index + 1])
+            nodes.push(keys[index - 2])
+        } else {
+            nodes.push(keys[index - 1])
+            nodes.push(keys[index + 1])
         }
 
         

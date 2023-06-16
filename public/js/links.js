@@ -19,14 +19,12 @@ class LinksGroup {
     draw() {
 
         this.data = this.getData() 
-
-        console.log(this.data)
         
         const lineAttrs = { x1: d => this.chart.xAxis.scale(d.year),
             x2: d => this.chart.xAxis.scale(d.year),
             y1: d => this.chart.yAxis.scale(d.source.key),
             y2: d => this.chart.yAxis.scale(d.target.key),
-            'stroke-dasharray': d => this.chart.isUncertain(d.item) ? 4 : 'none',
+            'stroke-dasharray': d => this.chart.isUncertain(d) ? 4 : 'none',
             'stroke': '#000',
             'stroke-opacity': 1,
             'stroke-width': 1
