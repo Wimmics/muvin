@@ -27,8 +27,6 @@ class LinksGroup {
             .key(d => d.year)
             .key(d => d.source.key + '-' + d.target.key)
             .entries(this.data)
-
-        console.log(nestedData)
             
         let max = d3.max(nestedData, d => d3.max(d.values, e => e.values.length))
         let strokeScale = d3.scaleLinear()
@@ -46,8 +44,6 @@ class LinksGroup {
             'stroke-linecap': 'round'
         }
 
-        console.log(this.group)
-
         let timeGroup = this.group.selectAll('g.link-year')
             .data(nestedData)
             .join(
@@ -57,6 +53,7 @@ class LinksGroup {
                 exit => exit.remove()
             )
             .attr('transform', d => `translate(${this.chart.xAxis.scale(d.key) + this.chart.xAxis.step(d.key) / 2}, 0)`)
+            .style('display', d => this.chart.isSelected(d.key) ? 'none' : 'block' )
             
         timeGroup.selectAll('.link')
             .data(d => d.values.map(e => ({key: e.key, values: e.values, source: e.key.split('-')[0], target: e.key.split('-')[1], year: d.key }) ))
@@ -173,8 +170,9 @@ class LinksGroup {
 
     highlight(d) {
         
+
         this.group.selectAll('.link')
-            .attr('opacity', e => (e.source === d.artist.key || e.target === d.artist.key) && e.values.some(x => x.item.id === d.id) && e.year === d.year ? 1 : 0)
+            .attr('opacity', e => (e.source === d.artist.key || e.target === d.artist.key) && e.values.some(x => x.item.id === d.id) && +e.year === d.year ? 1 : 0)
           
         this.chart.group.selectAll("[class$='-labels']")
             .style('display', e => e.item.id === d.id && e.year === d.year ? 'block' : 'none')

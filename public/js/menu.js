@@ -86,13 +86,57 @@ class Menu{
             ).attr('value', e =>  `${e.value} ${e.type ? '(' + e.type + ')' : ''}`)
         
     }
+
+    updateTimeFilter() {
+
+        const _this = this;
+
+        let values = this.chart.data.getAllDates()
+
+        d3.select(this.chart.shadowRoot.querySelector('#period-from'))
+            .selectAll('option')
+            .data(values)
+            .join(
+                enter => enter.append('option'),
+                update => update,
+                exit => exit.remove()
+            )
+            .attr('value', e => e)
+            .text(e => e)
+            .property('selected', d => d === this.chart.data.getFiltersByType('timeFrom'))
+            
+        d3.select(this.chart.shadowRoot.querySelector('#period-from'))
+            .on('change', function() {
+                let selectedOption = this.options[this.selectedIndex]
+                _this.chart.data.updateFilters('timeFrom', +selectedOption.value)
+            })
+            
+        d3.select(this.chart.shadowRoot.querySelector('#period-to'))
+            .selectAll('option')
+            .data(values)
+            .join(
+                enter => enter.append('option'),
+                update => update,
+                exit => exit.remove()
+            )
+            .attr('value', e => e)
+            .text(e => e)
+            .property('selected', d => d === this.chart.data.getFiltersByType('timeTo'))
+
+        d3.select(this.chart.shadowRoot.querySelector('#period-to'))
+            .on('change', function() {
+                let selectedOption = this.options[this.selectedIndex]
+                _this.chart.data.updateFilters('timeTo', +selectedOption.value)
+            })
+            
+    }
     
     displayViewSettings() {
-        this.div.select('#view-controls').style('display', 'block')
+        this.div.select('#view-options').style('display', 'flex')
     }
 
     hideViewSettings() {
-        this.div.select('#view-controls').style('display', 'none')
+        this.div.select('#view-options').style('display', 'none')
     }
 
     setWidth(val) {

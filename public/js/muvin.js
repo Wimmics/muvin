@@ -16,8 +16,6 @@ class Muvin extends HTMLElement {
         this.visibleNodes = null
         this.visibleItems = null
         this.visibleProfile = null
-
-        this.mouseover = {} // information about the hovered node
     }
 
     async connectedCallback() {
@@ -147,6 +145,7 @@ class Muvin extends HTMLElement {
         this.visibleItems = [...this.visibleNodes]
 
         this.menu.updateItemsSearch()
+        this.menu.updateTimeFilter()
 
         this.legend.update()
         this.xAxis.set()
@@ -297,7 +296,7 @@ class Muvin extends HTMLElement {
     }
 
     isSelected(d) {
-        return this.yAxis.focus === d || this.xAxis.focus.includes(d)
+        return this.yAxis.focus === d || this.xAxis.focus.includes(+d)
     }
 
     isFreezeActive() {
@@ -356,18 +355,6 @@ class Muvin extends HTMLElement {
     releaseTimeFocus(d) {
         this.xAxis.setDistortion(d)
     }
-
-    getMouseover() {
-        return this.mouseover;
-    }
-
-    isMouseover(d) {
-        return this.mouseover.id === d.id
-    }
-
-    isChildrenMouseover(d) {
-        return this.mouseover.parendId === d.id
-    }
    
 
     clear() {
@@ -402,14 +389,18 @@ template.innerHTML = `
                 <input type="text" list='nodes-list' id="nodes-input" placeholder="Type here">
                 <datalist id='nodes-list'></datalist>
             </div>
-            <div id="view-options">
-                <div id='view-controls' style='display: none;'>    
-                    <div >
-                        <label>Search items</label>
-                        <input type="text" list='items-list' id="items-input" placeholder="Type here">
-                        <datalist id='items-list'></datalist>
-                        <button id='items-input-clear'>Clear</button>
-                    </div>
+            <div id="view-options" style='display: none;'>
+                <div >
+                    <label>Search items</label>
+                    <input type="text" list='items-list' id="items-input" placeholder="Type here">
+                    <datalist id='items-list'></datalist>
+                    <button id='items-input-clear'>Clear</button>
+                </div>
+
+                <div>
+                    <label>Timeline</label>
+                    <label>From</label><select id="period-from"></select>
+                    <label>To</label><select id="period-to"></select> 
                 </div>
             </div>
         </div>

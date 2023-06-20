@@ -107,3 +107,8 @@
     position: relative;
     top: 10px;
 }
+
+#view-options{
+    justify-content: space-between;
+    width: 85%;
+}

@@ -25,6 +25,7 @@ class TimeScale {
     }
 
     async setMapping() {
+        this.map = {}
         this.domain.forEach( (d,i) => {
             this.map[d] = {}
             this.map[d].value = d

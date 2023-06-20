@@ -15,23 +15,23 @@ class TimeAxis{
 
     async set() {
       
-        this.values = this.chart.getData().dates
+        this.values = this.chart.data.getDates()
 
         let dimensions = this.chart.getDimensions()
 
         let step = (dimensions.width - dimensions.left) / this.values.length
-       
+        
+        let focusStep = Math.min(step * 5, 500)
+
         this.timeScale.setDomain(this.values)
         this.timeScale.setStep(step)
-        this.timeScale.setFocusLength(step * 5)
+        this.timeScale.setFocusLength(focusStep)
         this.timeScale.setStartingPos(dimensions.left)
         await this.timeScale.setMapping()
     }
 
     drawLabels() {
         let dimensions = this.chart.getDimensions()
-
-        this.timeScale.toString()
         
         let top = d3.select(this.chart.shadowRoot.querySelector('#top-axis'))
             .style('cursor', 'pointer')
@@ -86,17 +86,17 @@ class TimeAxis{
 
    
     getItemsByTime(value) {
-        let itemsPerYear = this.chart.profiles.data.map(e => e.data[0].map(x => x.data)).flat()
+        let itemsPerYear = this.chart.profiles.data.map(e => e.data[0].map(x => x.data)).flat() // review this !
 
         itemsPerYear = d3.nest()
             .key(e => e.year)
             .entries(itemsPerYear)
 
-        return itemsPerYear.find(e => e.key === value)
+        return itemsPerYear.find(e => +e.key === value)
     }
 
     async computeDistortion(d) {
-       
+        
         let res = this.getItemsByTime(d)
         let values = res ? res.values : []
        
@@ -107,7 +107,6 @@ class TimeAxis{
         else this.focus.push(d)
         
         await this.timeScale.setDistortion(d)
-        this.timeScale.toString()
     }
 
     setDistortion() {

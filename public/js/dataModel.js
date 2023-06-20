@@ -9,7 +9,9 @@ class DataModel {
         this.linkTypes = []
 
         this.filters = {
-            linkTypes: []
+            linkTypes: [],
+            timeFrom: null,
+            timeTo: null
         }
 
         this.colors = { // TODO - find a more direct way of selecting the colors (like colors.song)
@@ -78,6 +80,10 @@ class DataModel {
         
         if (!Object.keys(data).includes('items')) return
         
+        data.items.forEach(d => { d.year = +d.year })
+
+        data.links.forEach(d => { d.year = +d.year })
+
         this.items = this.items.concat(data.items)
         this.links = this.links.concat(data.links)
         
@@ -99,10 +105,19 @@ class DataModel {
         this.chart.update()
     }
 
+    getFiltersByType(type){
+        return this.filters[type];
+    }
+
+    
+
     async updateTime() {
         this.dates = this.items.map(d => d.year)
         this.dates = this.dates.filter((d,i) => this.dates.indexOf(d) === i)
         this.dates.sort()
+
+        this.filters.timeFrom = this.dates[0]
+        this.filters.timeTo = this.dates[this.dates.length - 1]
     }
 
     async updateCollaborations() {
@@ -137,11 +152,15 @@ class DataModel {
     // getters 
 
     getItems() {
-        return this.items.filter(d => !d.artist.contribution.every(e => this.filters.linkTypes.includes(e)) )
+        let items = this.items.filter(d => !d.artist.contribution.every(e => this.filters.linkTypes.includes(e)) )
+        items = items.filter(d => d.year >= this.filters.timeFrom && d.year <= this.filters.timeTo)
+        return items
     }
 
     getLinks() {
-        return this.links.filter(d => !d.type.every(e => this.filters.linkTypes.includes(e)) )
+        let links = this.links.filter(d => !d.type.every(e => this.filters.linkTypes.includes(e)) )
+        links = links.filter(d => +d.year >= this.filters.timeFrom && +d.year <= this.filters.timeTo)
+        return links
     }
 
     getLinkTypes() {
@@ -173,10 +192,16 @@ class DataModel {
     }
 
     getDates() {
-        let dates = this.items.map(d => d.year)
-        dates = dates.filter( (d,i) => dates.indexOf(d) === i)
+        let dates = this.dates.filter(d => d >= this.filters.timeFrom && d <= this.filters.timeTo)
         dates.sort()
         return dates;
+    }
+
+    getAllDates() {
+        let values = this.items.map(d => +d.year)
+        values = values.filter( (d,i) => values.indexOf(d) === i)
+        values.sort()
+        return values;
     }
 
     getMatchingLabels(value) {

@@ -117,8 +117,8 @@ class NodeLinksGroup{
      */
     getData() {
         // keep one link per node
-        let links = this.chart.data.getLinks().filter(d => this.chart.areItemsVisible(d.source.key) && this.chart.areItemsVisible(d.target.key) && this.chart.isSelected(d.year))
-        console.log("links = ", links)
+        let links = this.chart.data.getLinks().filter(d => this.chart.areItemsVisible(d.source.key) && this.chart.areItemsVisible(d.target.key) && this.chart.isSelected(+d.year))
+        
         links = links.filter( (d,i) => links.findIndex(e => ((e.source.key === d.source.key && e.target.key === d.target.key) || (e.source.key === d.target.key && e.target.key === d.source.key)) && e.item.id === d.item.id) === i)
 
         let linkedItems = links.map(d => d.item.id)
