@@ -1,7 +1,7 @@
 {
-  "name": "sonification",
+  "name": "muvin",
   "version": "1.0.0",
-  "description": "",
+  "description": "## To run the visualization on your machine  - Clone the repertory  - Open the folder on a terminal  - Install the necessary packages with **npm install**  - Run the server with **npm start**",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -9,20 +9,21 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/amenin/Sonification.git"
+    "url": "git+https://github.com/Wimmics/muvin.git"
   },
-  "author": "",
+  "author": "Aline Menin",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/amenin/Sonification/issues"
+    "url": "https://github.com/Wimmics/muvin/issues"
   },
-  "homepage": "https://github.com/amenin/Sonification#readme",
+  "homepage": "https://github.com/Wimmics/muvin#readme",
   "dependencies": {
-    "body-parser": "^1.19.1",
-    "d3": "^5.15.0",
-    "ejs": "^3.1.6",
-    "express": "^4.17.2",
-    "fs": "0.0.1-security",
+    "body-parser": "^1.20.2",
+    "crypto": "^1.0.1",
+    "d3-node": "^0.2.0",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "fs": "^0.0.1-security",
     "node-fetch": "^2.6.7",
     "path": "^0.12.7"
   }

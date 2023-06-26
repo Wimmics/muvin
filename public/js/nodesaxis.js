@@ -34,6 +34,7 @@ class NodesAxis {
 
         this.min = this.shift
         this.max = dimensions.height - dimensions.top - dimensions.bottom - this.shift;
+        console.log(dimensions)
 
         this.svg = this.div.select('svg')
             .attr('width', dimensions.left)
@@ -185,8 +186,7 @@ class NodesAxis {
                         .on('mouseover', d => { let e = d3.event; this.mouseover(e, d) })
                         .on('mouseout', () => this.mouseout())
                     )
-
-                    
+   
 
                     .call(g => g.append('text')
                         .text(d => this.data[d].name)
@@ -294,9 +294,6 @@ class NodesAxis {
             .transition()
             .duration(500)
             .attr('opacity', e => e.source === d || e.target === d ? 1 : 0)
-
-        // group.selectAll("[class$='-ticks']")
-        //     .attr('opacity', e => e.source === d || e.target === d ? 1 : 0)
 
         let nodes = this.chart.getConnectedNodes(d)
 

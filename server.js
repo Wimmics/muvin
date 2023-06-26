@@ -4,7 +4,14 @@ const fs = require('fs');
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
-const datatools = require('./datatools')
+
+
+const { WasabiTransform } = require('./datatools/wasabiTransform')
+const { CroboraTransform } = require('./datatools/croboraTransform')
+const { HALTransform } = require('./datatools/halTransform')
+
+let transform;
+
 
 /**
  * HTTP node server
@@ -43,6 +50,18 @@ app.get(prefix, function (req, res) {
 
 // index page 
 app.get(prefix + '/:app', function (req, res) {
+    switch(req.params.app) {
+        case 'hal':
+            transform = new HALTransform()
+            break;
+        case 'wasabi':
+            transform = new WasabiTransform()
+            break;
+        case 'crobora':
+            transform = new CroboraTransform()
+            break;
+    }
+
     res.render('index', { app: req.params.app, params: req.query } );
 })
 
@@ -62,7 +81,7 @@ app.get(prefix + '/data/:app/nodes', async function(req, res) {
         
     if (fs.existsSync(datafile)) {
         res.sendFile(datafile)
-    } else res.send(JSON.stringify(await datatools.fetchNodes(req.params.app)))
+    } else res.send(JSON.stringify(await transform.fetchNodeLabels()))
 })
 
 app.get(prefix + '/data/:app', async function(req, res) {
@@ -74,8 +93,9 @@ app.get(prefix + '/data/:app', async function(req, res) {
     if (fs.existsSync(datafile))
         res.sendFile(datafile);
     else {
-        res.send(JSON.stringify(await datatools.fetchData(req.params.app, node)))
+        res.send(JSON.stringify(await transform.getData(node)))
     }
+   
 })
 
 // About page 

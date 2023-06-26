@@ -4,9 +4,9 @@ class PublicationsTooltip extends Tooltip{
     }
 
     setItemContent(d, id) {
-        const itemName = `<b>${d.name} (${d.year})</b><br>`
+        const itemName = `<b>${d.title} (${d.year})</b><br>`
         const type = `<b>Document type:</b> ${d.type}`
-        const more = `<br><br>Right-click for more`
+        const more = `<br><br>Click for more`
         
         const contributors = e => `<b>${e.contnames.length} author(s):</b> ${e.contnames.map(val => capitalizeFirstLetter(val)).join(', ')}`
 
@@ -14,14 +14,14 @@ class PublicationsTooltip extends Tooltip{
     }
 
     setProfileContent(e, d, id) {
-        let artist = d[0].data.artist
+        let node = d[0].data.node
         let year = this.chart.xAxis.invert(e.pageX, 1)
 
         let data = this.chart.data.getItems()
-        let values = data.filter(e => e.artist.key === artist.key && e.year === year && e.artist.contribution.includes(d.key))
+        let values = data.filter(e => e.node.key === node.key && e.year === year && e.node.contribution.includes(d.key))
         
 
-        let content = `<b> ${artist.name}</b><br><br>
+        let content = `<b> ${node.name}</b><br><br>
         <b>Publication Type:</b> ${capitalizeFirstLetter(d.key)}<br><br>
         <b>${year}: ${values.length}</b> item${values.length > 1 ? 's' : ''} <br><br>
         Click to keep it highlighted`
@@ -30,7 +30,7 @@ class PublicationsTooltip extends Tooltip{
     }
 
     setNodeContent(d, id) {
-        let value = this.chart.data.artists[d]
+        let value = this.chart.data.getNodeById(d)
        
         let topic = value.topics ? `<b>Research topics (${value.topics.length}):</b><br> <ul> ${value.topics.map(d => `<li>${d}</li>`).join('')}</ul>` : ''
         

@@ -19,7 +19,7 @@ class AreaGraph extends Profile {
 
     getExtent() {
         let nestedItems = d3.nest()
-            .key(d => d.artist.key)
+            .key(d => d.node.key)
             .key(d => d.year)
             .key(d => d.type)
             .entries(this.chart.data.getItems())

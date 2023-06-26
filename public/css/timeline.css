@@ -50,6 +50,7 @@ body{
     overflow-x: auto;
     position: absolute;
     top: 50px;
+    min-width: 100%;
 }
 
 .tooltip{

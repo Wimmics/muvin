@@ -8,38 +8,39 @@ class ImageTooltip extends Tooltip{
 
         const image = `<div style="width: 100%; margin:auto; text-align:center;">
                 <a href="${d.link}" target="_blank" style="pointer-events: ${d.link ? 'auto' : 'none'};">
-                    <img class="main-image" src=${getImageLink(d.name)} width="250px" title="Click to explore the archive metadata in the CROBORA platform" ></img> </a>
+                    <img class="main-image" src=${getImageLink(d.title)} width="250px" title="Click to explore the archive metadata in the CROBORA platform" ></img> </a>
                 <br></div>`
 
         let content = `${image}
-                    <p>Archive: <b>${d.parent.name}</b></p>
+                    <p>Archive: <b>${d.parent.title}</b></p>
                     <p>Broadcast date: <b>${d.parent.date}</b></p>
-                    <p><b>Broadcaster:</b> ${d.artist.contribution.join(', ')}</p> 
+                    <p><b>Broadcaster:</b> ${d.node.contribution.join(', ')}</p> 
                     <p><b>Keywords(s):</b>
                     <ul style='list-style-type: none;'>
                     ${d.contributors.map(val => `<li title="${val.category}" style="display:flex; gap:10px;"> <img src="/muvin/images/${this.chart.app}/${val.category}-icon.svg" width="15px"></img>${capitalizeFirstLetter(val.name)}</li>` ).join('')}
                     </ul>
-                    <br><br><p>Right-click for more</p>
+                    <br><br><p>Click for more</p>
                     `
         this.setContent(content, id); 
     }
 
     setProfileContent(e, d, id) { 
-        let node = d[0].data.artist
+        let node = d[0].data.node
         let year = this.chart.xAxis.invert(e.pageX, 1)
 
         let data = this.chart.data.getItems()
-        let values = data.filter(e => e.artist.key === node.key && e.year === year && e.artist.contribution.includes(d.key))
+        let values = data.filter(e => e.node.key === node.key && e.year === year && e.node.contribution.includes(d.key))
         
         let content = `<img src="/muvin/images/${this.chart.app}/${node.type}-icon.svg" width="15px"></img><b> ${node.name}</b><br><br>
         <b>Broadcaster:</b> ${capitalizeFirstLetter(d.key)}<br><br>
-        <b>${year}: ${values.length}</b> image${values.length > 1 ? 's' : ''}`
+        <b>${year}: ${values.length}</b> image${values.length > 1 ? 's' : ''} <br><br>
+        Click to keep it highlighted`
 
         this.setContent(content, id)
     }
 
     setNodeContent(d, id) {
-        let value = this.chart.data.artists[d]
+        let value = this.chart.data.getNodeById(d)
         
         let content = `<b>${value.name}</b><br><br>
             Category: <b>${value.type}</b><br>

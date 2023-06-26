@@ -14,7 +14,7 @@ class NormalNodes extends NodesGroup{
     }
 
     async computeRadius() {
-        this.radiusScale.domain(d3.extent(this.data, d => d.contCount))
+        this.radiusScale.domain(d3.extent(this.data, d => d.contributors.length))
 
         // let values = this.chart.xAxis.values
         // let index = values.indexOf(this.chart.getTimeSelection())
@@ -40,7 +40,7 @@ class NormalNodes extends NodesGroup{
                 // }
             } else this.radiusScale.range([this.radius.min, this.radius.max])
 
-            d.r = this.radiusScale(d.contCount)
+            d.r = this.radiusScale(d.contributors.length)
         })
     }
 
@@ -48,7 +48,7 @@ class NormalNodes extends NodesGroup{
         // a group per item (e.g. an item == a song)
         this.group.selectAll('g.artist')
             .selectAll('.doc')            
-            .data(d => this.data.filter(e => e.artist.key === d) )
+            .data(d => this.data.filter(e => e.node.key === d) )
             .join(
                 enter => enter.append('g')
                     .classed('doc', true)

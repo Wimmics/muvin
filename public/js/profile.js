@@ -19,16 +19,16 @@ class Profile {
         nodes.forEach(node => { // each node is an object containing name, type and a contributions array
             dates.forEach(year => {       
                 
-                let res = items.filter(d => d.artist.key === node.key && d.year === year)
+                let res = items.filter(d => d.node.key === node.key && d.year === year)
 
                 let item = {
                     year: year,
-                    artist: node,
+                    node: node,
                     values: [...res]
                 }
 
                 types.forEach(type => {
-                    let resType = items.filter(d => d.artist.key === node.key && d.year === year && d.artist.contribution.includes(type))
+                    let resType = items.filter(d => d.node.key === node.key && d.year === year && d.node.contribution.includes(type))
                 
                     item[type] = resType.length
                 })
@@ -43,18 +43,18 @@ class Profile {
         await this.setStack()
         
         this.data = nodes.map(node => {
-            const artistData = itemsByYear.filter(e => e.artist.key === node.key && dates.includes(e.year))
+            const nodeData = itemsByYear.filter(e => e.node.key === node.key && dates.includes(e.year))
             
             return {
-                'artist': node,
-                'data' : this.stack(artistData)
+                'node': node,
+                'data' : this.stack(nodeData)
             }
         })
 
         /// one group per artist ; it will hold the profile wave ////////
         this.group = d3.select(this.chart.shadowRoot.querySelector('#nodes-group')).selectAll('g.artist')
             .selectAll('g.profile')
-            .data(d => this.data.filter(e => e.artist.key === d) )
+            .data(d => this.data.filter(e => e.node.key === d) )
             .join(
                 enter => enter.append('g')
                     .classed('profile', true),
@@ -68,8 +68,8 @@ class Profile {
 
         this.area = d3.area()
             .x(d => this.chart.xAxis.scale(d.data.year) + this.chart.xAxis.step(d.data.year) / 2)
-            .y0(d => this.chart.yAxis.scale(d.data.artist.key) + (this.chart.isProfileActive(d) ? this.heightScale(d[1]) : 0))
-            .y1(d => this.chart.yAxis.scale(d.data.artist.key) + (this.chart.isProfileActive(d) ? this.heightScale(d[0]) : 0))
+            .y0(d => this.chart.yAxis.scale(d.data.node.key) + (this.chart.isProfileActive(d) ? this.heightScale(d[1]) : 0))
+            .y1(d => this.chart.yAxis.scale(d.data.node.key) + (this.chart.isProfileActive(d) ? this.heightScale(d[0]) : 0))
             .curve(d3.curveBasis) 
 
     }
@@ -86,13 +86,13 @@ class Profile {
         const _this = this;
 
         this.group.selectAll('path')
-            .data(d => this.chart.isProfileVisible(d.artist.key) ? d.data : [])
+            .data(d => this.chart.isProfileVisible(d.node.key) ? d.data : [])
             .join(
                 enter => enter.append('path'),
                 update => update,
                 exit => exit.remove() 
             )
-            .attr('d', function(d) { return _this.setArea(d, d3.select(this.parentNode).datum().artist.key) })
+            .attr('d', function(d) { return _this.setArea(d, d3.select(this.parentNode).datum().node.key) })
             .attr('fill', d => this.chart.getTypeColor(d.key))
             .attr('stroke', d => d3.rgb(this.chart.getTypeColor(d.key)).darker())
             .attr('opacity', '1')
@@ -103,7 +103,7 @@ class Profile {
 
         let dimensions = this.chart.getDimensions()
         this.group.selectAll('line')
-            .data(d => !this.chart.isProfileVisible(d.artist.key) ? [d.artist.key] : [])
+            .data(d => !this.chart.isProfileVisible(d.node.key) ? [d.node.key] : [])
             .join(
                 enter => enter.append('line'),
                 update => update,
@@ -128,11 +128,11 @@ class Profile {
             .attr('opacity', e => {
                 if (!d) return .1
 
-                if (this.chart.data.artists[d]) 
-                    return this.chart.data.artists[d].collaborators.some(x => x.key === e.artist.key) || e.artist.key === d ? .3 : 0
+                if (this.chart.data.getNodeById(d)) 
+                    return this.chart.data.getNodeById(d).collaborators.some(x => x.key === e.node.key) || e.node.key === d ? .3 : 0
                 
                 if (d.contributors.some(x => this.chart.isNodeValid(x) && x.key !== d))
-                    return d.contributors.some(x => x.key === e.artist.key) || d === e.artist.key ? .1 : 0
+                    return d.contributors.some(x => x.key === e.node.key) || d === e.node.key ? .1 : 0
                 
                 return .1
             })
@@ -146,10 +146,10 @@ class Profile {
     }
 
     select(e, d) {
-        let index = this.selected.findIndex(s => s.node.key === d[0].data.artist.key && s.key === d.key)
+        let index = this.selected.findIndex(s => s.node.key === d[0].data.node.key && s.key === d.key)
 
         if (index >= 0) this.selected.splice(index, 1) // if path is already selected, remove it from the list
-        else this.selected.push({ node: d[0].data.artist, key: d.key }) // otherwise, include it in the list of selected paths
+        else this.selected.push({ node: d[0].data.node, key: d.key }) // otherwise, include it in the list of selected paths
 
         this.mouseout()
         
@@ -161,12 +161,12 @@ class Profile {
         this.chart.tooltip.setProfileContent(e, d, this.tooltipId)
         this.chart.tooltip.show(e, this.tooltipId)
        
-        let node = d[0].data.artist
+        let node = d[0].data.node
         this.group.selectAll('path')
-            .attr('opacity', x => node.key != x[0].data.artist.key ? 1 : (d.key === x.key ? 1 : .1))
+            .attr('opacity', x => node.key != x[0].data.node.key ? 1 : (d.key === x.key ? 1 : .1))
 
         this.chart.group.selectAll('.doc')
-            .attr('opacity', x => x.artist.key != node.key ? 1 : ( x.artist.key === node.key && x.artist.contribution.includes(d.key) ? 1 : .1))
+            .attr('opacity', x => x.node.key != node.key ? 1 : ( x.node.key === node.key && x.node.contribution.includes(d.key) ? 1 : .1))
 
         this.chart.fstlinks.reverse()
     }
@@ -175,10 +175,10 @@ class Profile {
         this.chart.tooltip.hide(this.tooltipId)
 
         this.group.selectAll('path') // update opacity of paths
-            .attr('opacity', x => !this.selected.some(s => s.node.key === x[0].data.artist.key) ? 1 : (this.selected.some(s => s.node.key === x[0].data.artist.key && s.key === x.key) ? 1 : .1))
+            .attr('opacity', x => !this.selected.some(s => s.node.key === x[0].data.node.key) ? 1 : (this.selected.some(s => s.node.key === x[0].data.node.key && s.key === x.key) ? 1 : .1))
 
         this.chart.group.selectAll('.doc')
-            .attr('opacity', x => !this.selected.some(s => s.node.key === x.artist.key) ? 1 : (this.selected.some(s => s.node.key === x.artist.key && x.artist.contribution.includes(s.key)) ? 1 : .1))
+            .attr('opacity', x => !this.selected.some(s => s.node.key === x.node.key) ? 1 : (this.selected.some(s => s.node.key === x.node.key && x.node.contribution.includes(s.key)) ? 1 : .1))
 
         this.chart.fstlinks.reverse()
     }  

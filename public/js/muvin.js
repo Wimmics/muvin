@@ -35,6 +35,7 @@ class Muvin extends HTMLElement {
         }
 
         this.div = d3.select(this.shadowRoot.querySelector('div.timeline'))
+     
         this.width = this.div.node().clientWidth
 
         this.svg = this.div.select('svg#chart')
@@ -81,7 +82,7 @@ class Muvin extends HTMLElement {
             this.shadowRoot.querySelector('#search-for').style.display = 'none';
             values.forEach(async (d) => await this.data.add(d))
         }
-        else this.test() 
+        //else this.test() 
 
     }
 
@@ -108,7 +109,13 @@ class Muvin extends HTMLElement {
                 break;
             case 'hal':
                 //values = [{value: 'Aline Menin'}]
-                values = [{value: 'Aline Menin'}, {value: 'Marco Winckler'}, {value: 'Alain Giboin'}, {value: 'Philippe Palanque'}]
+                values = [
+                    // {value: 'Aline Menin'}, 
+                    {value: 'Marco Winckler'}, 
+                    // {value: 'Alain Giboin'}, 
+                    // {value: 'Philippe Palanque'},
+                    {value: "Anne-Marie Déry-Pinna"}
+                ]
                 // values = ['Marco Winckler', 'Philippe Palanque', 'Thiago Rocha Silva', 'Lucile Sassatelli', 'Célia Martinie', 'Aline Menin']
                 break;
             case 'wasabi':
@@ -147,6 +154,8 @@ class Muvin extends HTMLElement {
         this.menu.updateItemsSearch()
         this.menu.updateTimeFilter()
 
+        this.height = this.shadowRoot.querySelector('.timeline').clientHeight
+
         this.legend.update()
         this.xAxis.set()
         this.yAxis.set()
@@ -155,7 +164,7 @@ class Muvin extends HTMLElement {
         this.yAxis.drawLabels()
         this.xAxis.drawLabels()
 
-        this.height = this.shadowRoot.querySelector('.timeline').clientHeight
+        
 
         this.xAxis.drawSlider()
 
@@ -228,7 +237,7 @@ class Muvin extends HTMLElement {
     }
 
     isProfileActive(d) {
-        let key = d.data.artist.key
+        let key = d.data.node.key
         if (!this.isNodeVisible(key)) return 0
         if (this.isProfileVisible(key)) return 1;
         if (!this.getNodeSelection() && this.isProfileVisible(key) || (this.isProfileVisible(key) && this.getNodeSelection() && this.isSelected(key))) return 1
@@ -254,8 +263,8 @@ class Muvin extends HTMLElement {
      */
     isUncertain(d) {        
         let items = this.data.getItems().filter(a => a.id === d.item.id && a.year === d.year)
-        let foundInSource = items.some(a => a.artist.key === d.source)
-        let foundIntarget = items.some(a => a.artist.key === d.target)
+        let foundInSource = items.some(a => a.node.key === d.source)
+        let foundIntarget = items.some(a => a.node.key === d.target)
 
         return !(foundInSource && foundIntarget)
     }
@@ -329,7 +338,7 @@ class Muvin extends HTMLElement {
     }
 
     isPlayable(d){
-        return this.data.artists[d].audio
+        return this.data.nodes[d].audio
     }
 
     /**

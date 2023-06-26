@@ -7,11 +7,10 @@ class LinksGroup {
     }
 
     getData() {
-        let isValid = d => this.chart.isNodeValid(d.source) && this.chart.isNodeValid(d.target) && !this.chart.isSelected(d.item.year)
+        let isValid = d => this.chart.isNodeValid(d.source) && this.chart.isNodeValid(d.target) && !this.chart.isSelected(d.year)
         let data = this.chart.data.links.filter(d => isValid(d) )
-        //data = data.filter( (d,i) => data.some(x => x.source.key === d.target.key && x.target.key === d.source.key) )
 
-        data = data.filter( (d,i) => data.findIndex(e => e.item.id === d.item.id && (e.source.key === d.source.key && e.target.key === d.target.key) || (e.source.key === d.target.key && e.target.key === d.source.key) ) === i)
+        data = data.filter( (d,i) => data.findIndex(e => e.item === d.item && (e.source.key === d.source.key && e.target.key === d.target.key) || (e.source.key === d.target.key && e.target.key === d.source.key) ) === i)
 
         return data
     }
@@ -84,15 +83,6 @@ class LinksGroup {
     }
 
     drawTicks(type) {
-        // let headLength = 3
-        // const ticksAttrs = { 
-        //     x1: d => this.chart.xAxis.scale(d.year) + this.chart.xAxis.step(d.year) / 2 - headLength, 
-        //     x2: d => this.chart.xAxis.scale(d.year) + this.chart.xAxis.step(d.year) / 2 + headLength , 
-        //     y1: d => this.chart.yAxis.scale(d[type].key), 
-        //     y2: d => this.chart.yAxis.scale(d[type].key),
-        //     'stroke-opacity': 1,
-        //     'stroke': '#000'
-        //  }
 
         const textLength = d => d[type].name.length * 10
 
@@ -111,23 +101,6 @@ class LinksGroup {
             x: d => this.chart.xAxis.scale(d.year) - 20,
             y: d => this.chart.yAxis.scale(d[type].key) + rectHeight * .7
         }
-        
-        // this.group.selectAll(`g.${type}-ticks`)
-        //     .data(this.data)
-        //     .join(
-        //         enter => enter.append('g')
-        //             .classed(`${type}-ticks`, true)
-        //             .call(g => g.append('line')
-        //                 .classed('tick', true)
-        //                 .attr('stroke', '#000')
-        //                 .attr('stroke-opacity', 1)
-        //                 .attrs(ticksAttrs)),
-
-        //         update => update
-        //             .call(g => g.select('line').attrs(ticksAttrs)),
-
-        //         exit => exit.remove()
-        //     )
 
         d3.select(this.chart.shadowRoot.querySelector('#ticks-group'))
             .selectAll(`g.${type}-labels`)
@@ -170,15 +143,11 @@ class LinksGroup {
 
     highlight(d) {
         
-
         this.group.selectAll('.link')
-            .attr('opacity', e => (e.source === d.artist.key || e.target === d.artist.key) && e.values.some(x => x.item.id === d.id) && +e.year === d.year ? 1 : 0)
+            .attr('opacity', e => (e.source === d.node.key || e.target === d.node.key) && e.values.some(x => x.item === d.id) && +e.year === d.year ? 1 : 0)
           
         this.chart.group.selectAll("[class$='-labels']")
-            .style('display', e => e.item.id === d.id && e.year === d.year ? 'block' : 'none')
-
-        // this.group.selectAll("[class$='-ticks']")
-        //     .attr('opacity', e => e.item.id === d.id && e.year === d.year ? 1 : 0)
+            .style('display', e => e.item === d.id && e.year === d.year ? 'block' : 'none')
     }
 
     reverse() {

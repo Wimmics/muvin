@@ -8,7 +8,7 @@ class ContextMenu {
         let menu = []
         menu.push({ title: 'Go to source', 
             action: d => { 
-                let url = d.link || this.getWasabiLink(d);
+                let url = this.chart.isNodeValid(d) && d.nodeLink ? d.nodeLink : d.link
                 window.open(url) 
             } })
 
@@ -109,7 +109,7 @@ class ContextMenu {
         }
 
 
-        let collaborators = this.chart.data.artists[d].collaborators
+        let collaborators = this.chart.data.getNodeById(d).collaborators
     
         if (collaborators.length) { /// the author has one or more co-authors
             let collab = { title: 'Explore collaborations' }
@@ -148,11 +148,5 @@ class ContextMenu {
         }
 
         return menu
-    }
-
-    getWasabiLink(d) {
-        if (this.data.nodes.includes(d)) return `https://wasabi.i3s.unice.fr/#/search/artist/${d}` 
-
-        return `https://wasabi.i3s.unice.fr/#/search/artist/${d.data.parent ? d.data.parent.artist.name : d.data.artist.name}/album/${d.data.parent ? d.data.parent.name : d.data.name}${d.data.parant ? '/song/' + d.data.name : '#'}`
     }
 }

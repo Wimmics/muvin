@@ -13,34 +13,34 @@ class MusicTooltip extends Tooltip{
             return `<b>${capitalizeFirstLetter(key)}</b>: ${names.join(', ')}`
         }).join('<br>')
 
-        let content = `<b>${d.name} (${d.year})</b><br>
-            ${d.parent ? `Album: <b>${d.parent.name} (${d.parent.artist.name})</b><br><br>` : ''}
+        let content = `<b>${d.title} (${d.year})</b><br>
+            ${d.parent ? `Album: <b>${d.parent.title} (${d.parent.node.name})</b><br><br>` : ''}
             ${contributors(d)}<br>
-            <br><br>Right-click for more`
+            <br><br>Click for more`
         
         this.setContent(content, id); 
     }
 
     setProfileContent(e, d, id) {
-        let artist = d[0].data.artist 
+        let node = d[0].data.node 
         let year = this.chart.xAxis.invert(e.pageX, 1)
 
         let data = this.chart.data.getItems()
-        let values = data.filter(e => e.artist.key === artist.key && e.year === year && e.artist.contribution.includes(d.key))
+        let values = data.filter(e => e.node.key === node.key && e.year === year && e.node.contribution.includes(d.key))
 
-        let content = `<b> ${artist.name}</b><br><br>
+        let content = `<b> ${node.name}</b><br><br>
         <b>Contribution Type:</b> ${capitalizeFirstLetter(d.key)}<br><br>
-        <b>${year}: ${values.length}</b> item${values.length > 1 ? 's' : ''}`
+        <b>${year}: ${values.length}</b> item${values.length > 1 ? 's' : ''} <br><br>
+        Click to keep it highlighted`
 
         this.setContent(content, id)
     }
 
     setNodeContent(d, id) {
         
-        let value = this.chart.data.artists[d]
+        let value = this.chart.data.getNodeById(d)
         
         let group = value.type === 'Artist_Group'
-        console.log(value)
 
         let type = (group ? 'Creation' : 'Birth') + ' Date:'
         let deathInfo = value.lifespan.to ? `<b>${group ? 'Dissolution' : 'Death'} Date:</b> ${value.lifespan.to}\n` : ''

@@ -12,7 +12,7 @@ class NodesGroup {
             
             .force("y", d3.forceY()
                 .strength(d => this.chart.getTimeSelection() && this.chart.isSelected(d.year) ? .95 : .5)
-                .y(d => this.chart.yAxis.scale(d.artist.key))) 
+                .y(d => this.chart.yAxis.scale(d.node.key))) 
 
             .force("collide", d3.forceCollide().radius(d => d.r).iterations(32)) // Force that avoids circle overlapping
             .tick(10)
@@ -72,7 +72,7 @@ class NodesGroup {
      * @returns opacity (0, 1)
      */
      opacity(d) {
-        let key = d.artist.key
+        let key = d.node.key
         
         
         if (this.chart.getNodeSelection() && !this.chart.isNodeVisible(key)) return 0
@@ -95,12 +95,12 @@ class NodesGroup {
         if (this.chart.isFreezeActive()) return
 
         // TODO: use contributors instead of contnames
-        let collab = d.contnames ? d.contnames.filter( (e,i) => e != d.artist.name && this.chart.areItemsVisible(e)) : []
+        let collab = d.contnames ? d.contnames.filter( (e,i) => e != d.node.name && this.chart.areItemsVisible(e)) : []
 
         this.group.selectAll('.item-circle')
             .attr('opacity', e => {
-                if (!this.chart.isNodeVisible(e.artist.key)) return 0
-                if (collab.length && e.artist.name != d.artist.name && !collab.includes(e.artist.name)) return 0
+                if (!this.chart.isNodeVisible(e.node.key)) return 0
+                if (collab.length && e.node.name != d.node.name && !collab.includes(e.node.name)) return 0
                 if (e.id === d.id) return 1 // show selected item
                 if (d.parent && e.parent && e.parent.id === d.parent.id) return 1 // show siblings (items from same cluster)
                 
@@ -115,7 +115,7 @@ class NodesGroup {
             .attr('stroke', e => e.id === d.id ? '#000' : '#fff')
 
         this.chart.fstlinks.highlight(d)
-        this.chart.profiles.downplay(d.artist.key)
+        this.chart.profiles.downplay(d.node.key)
     }
 
     mouseout() {
@@ -145,7 +145,7 @@ class NodesGroup {
 
     highlightNodeItems(nodes) {
         this.group.selectAll('.item-circle')
-            .filter(e => this.chart.areItemsVisible(e.artist.key))
+            .filter(e => this.chart.areItemsVisible(e.node.key))
             .transition('focus-items')
             .duration(500)
             .attr('opacity', e => nodes.includes(e.id) ? 1 : .1)

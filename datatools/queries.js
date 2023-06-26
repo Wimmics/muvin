@@ -16,37 +16,48 @@ const datasets = {
         
         items: 
         `
-        select distinct ?id ?name ?date ?artist (replace(str(?type), "http://ns.inria.fr/wasabi/ontology/", "") as ?type) ?parentId ?parentName ?parentDate ?parentArtistId ?parentArtistName ?contributors where {
-            { select * where {
-                bind ("$author" as ?artist)
-
-                { ?uri ?contribution ?artist  }
-                union
-                { ?uri ?contribution [ foaf:name ?artist ] }
+        select distinct ?uri ?id ?title ?date 
+        (replace(str(?type), "http://ns.inria.fr/wasabi/ontology/", "") as ?type) 
+        ?parentId ?parentName 
+        (replace(str(?parentType), "http://ns.inria.fr/wasabi/ontology/", "") as ?parentType) 
+        ?parentDate ?parentNodeId ?parentNodeName 
+        ?ego ?egoRole 
+        ?alter ?alterRole where {
             
-                ?uri dcterms:title ?name ; a ?type . filter (?type != wsb:Album) 
-                
-                { ?uri schema:releaseDate ?date } union { ?uri schema:datePublished ?date }
-                
-                optional { ?uri mo:uuid ?id }
+            bind ("$node" as ?ego)
 
-                optional { ?uri schema:album ?parentURI . ?parentURI dcterms:title ?parentName ; mo:uuid ?parentId ; mo:performer ?tmpParentArtist . 
-                    ?tmpParentArtist mo:uuid ?parentArtistId ; foaf:name ?parentArtistName .
-                    optional {?parentURI schema:releaseDate ?parentDate } }
+            { ?uri ?egoRole ?ego  }
+            union
+            { ?uri ?egoRole [ foaf:name ?ego ] }
+        
+            filter (?egoRole = schema:author || ?egoRole = mo:producer || ?egoRole = mo:performer)
 
-            } }
+            ?uri dcterms:title ?title ; a ?type . filter (?type != wsb:Album) 
 
-            { select ?uri (group_concat(distinct concat(?p, '&&', ?n) ; separator = '--') as ?contributors) where {
-                { ?uri ?p ?n . filter ( ?p = schema:author || ?p = mo:producer)} 
-                union 
-                { ?uri ?p [ foaf:name ?n ] . filter (?p = mo:performer) }
-            } } 
+            { ?uri schema:releaseDate ?date } union { ?uri schema:datePublished ?date }
+
+            optional { ?uri mo:uuid ?id }
+
+            optional { ?uri schema:album ?parentURI . 
+                    ?parentURI dcterms:title ?parentName ; 
+                                mo:uuid ?parentId ; 
+                                mo:performer ?parentNode ;
+                                a ?parentType .
+                    
+                ?parentNode mo:uuid ?parentNodeId ; foaf:name ?parentNodeName .
+                optional { ?parentURI schema:releaseDate ?parentDate } }
+
+
+            { ?uri ?alterRole ?alter . filter ( ?alterRole = schema:author || ?alterRole = mo:producer)} 
+            union 
+            { ?uri ?alterRole [ foaf:name ?alter ] . filter (?alterRole = mo:performer) }
+
 
         } limit 10000 offset $offset `,
 
         nodeFeatures: `
         select distinct ?name ?uri (replace(str(?type), "http://ns.inria.fr/wasabi/ontology/", "") as ?type) ?birthDate ?deathDate ?memberOf ?memberFrom ?memberTo where {
-            bind ("$author" as ?name)
+            bind ("$node" as ?name)
 
             { ?uri a wsb:Artist_Person . ?uri foaf:name ?name }
             union
@@ -90,43 +101,40 @@ const datasets = {
         `,
         items:
         `
-        select distinct (?uri as ?id) ?artist ?name ?date ?type ?contributors ?link
-            where {
-            
-                { select * where {
-                    bind ("$author" as ?artist)
-            
-                    { ?uri dcterms:creator [hsc:person [foaf:name ?artist ] ] }
-                    union
-                    { ?uri dcterms:creator [foaf:name ?artist ] }
-            
-                    ?uri dcterms:title ?name ; 
-                        dcterms:type [ dc:identifier ?typeId ] ; 
-                        dcterms:issued ?date ;
-                        dcterms:identifier ?halId .
-                    
-                    bind ( if(?typeId in ("COMM", "POSTER", "PRESCONF", "UNDEFINED"), "Conference Paper", 
-                             if(?typeId in ("ART"), "Journal Article", 
-                                if(?typeId in ('ETABTHESE', 'THESE', 'HDR'), "Diploma", 
-                                   if(?typeId in ('MAP', 'PATENT', 'SON', 'VIDEO', 'IMG'), "Artwork", 
-                                      if(?typeId in ('OUV', 'COUV', 'DOUV'), "Book / Book Section", "Gray Knowledge"))))) as ?type)
+        select distinct ?uri ?title ?date ?type ?link ?ego ?alter
+        where {
+                bind ("$node" as ?ego)
 
-                    bind (if (contains(?halId, "http"), ?halId, concat("https://hal.science/", ?halId)) as ?link) 
-            
-                } }
+                { ?uri dcterms:creator [hsc:person [foaf:name ?ego ] ] }
+                union
+                { ?uri dcterms:creator [foaf:name ?ego ] }
+
+                ?uri dcterms:title ?title ; 
+                    dcterms:type [ dc:identifier ?typeId ] ; 
+                    dcterms:issued ?date ;
+                    dcterms:identifier ?halId .
+
+                bind ( if(?typeId in ("COMM", "POSTER", "PRESCONF", "UNDEFINED"), "Conference Paper", 
+                        if(?typeId in ("ART"), "Journal Article", 
+                            if(?typeId in ('ETABTHESE', 'THESE', 'HDR'), "Diploma", 
+                            if(?typeId in ('MAP', 'PATENT', 'SON', 'VIDEO', 'IMG'), "Artwork", 
+                                if(?typeId in ('OUV', 'COUV', 'DOUV'), "Book / Book Section", "Gray Knowledge"))))) as ?type)
+
+                
+                filter (!contains(?halId, "http"))
+                bind (concat("https://hal.science/", ?halId) as ?link) 
+
         
-                { select ?uri (group_concat(distinct concat(?n) ; separator = '--') as ?contributors) where {
-                    { ?uri dcterms:creator [foaf:name ?n ] }
-                    union
-                    { ?uri dcterms:creator [hsc:person [foaf:name ?n ] ] }
-                } } 
+                { ?uri dcterms:creator [foaf:name ?alter ] }
+                union
+                { ?uri dcterms:creator [hsc:person [foaf:name ?alter ] ] }
         
             } limit 10000 offset $offset
         `,
 
         nodeFeatures: `
             select distinct ?uri ?name ?topic  where {
-                bind ("$author" as ?name)
+                bind ("$node" as ?name)
                 
                 ?p a hsc:Author ;
                     hsc:person ?uri .

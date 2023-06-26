@@ -100,7 +100,7 @@ class TimeAxis{
         let res = this.getItemsByTime(d)
         let values = res ? res.values : []
        
-        if (d3.sum(values.filter(e => this.chart.getNodeSelection() ? this.chart.isSelected(e.artist) && e.year === d : e.year === d), e => e.values.length) === 0) return;
+        if (d3.sum(values.filter(e => this.chart.getNodeSelection() ? this.chart.isSelected(e.node) && e.year === d : e.year === d), e => e.values.length) === 0) return;
 
         let index = this.focus.indexOf(d)
         if (index !== -1) this.focus.splice(index, 1)
@@ -213,8 +213,8 @@ class TimeAxis{
         this.chart.group.selectAll('.item-circle')
             .attr('opacity', d => {
                 if (this.focus.includes(d.year)) return 1
-                if (!this.chart.isNodeVisible(d.artist.key)) return 0 // hide when the items of the artist are hidden
-                if (this.chart.getNodeSelection() && !this.chart.isNodeVisible(d.artist.key)) return 0 // hide when the artist is not the one with the focus on
+                if (!this.chart.isNodeVisible(d.node.key)) return 0 // hide when the items of the artist are hidden
+                if (this.chart.getNodeSelection() && !this.chart.isNodeVisible(d.node.key)) return 0 // hide when the artist is not the one with the focus on
                 if (d.year != value) return 0
                 return 1
             })  

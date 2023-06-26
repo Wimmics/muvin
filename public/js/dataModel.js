@@ -4,7 +4,7 @@ class DataModel {
 
         this.clusters = []
         this.items = []
-        this.artists = {}
+        this.nodes = {}
         this.links = []
         this.linkTypes = []
 
@@ -47,14 +47,14 @@ class DataModel {
     async clear() {
         this.clusters = []
         this.items = []
-        this.artists = {}
+        this.nodes = {}
         this.links = []
         this.linkTypes = []
     }
 
     async remove(node, focus) {
-        delete this.artists[node];
-        this.items = this.items.filter(d => d.artist.key !== node)
+        delete this.nodes[node];
+        this.items = this.items.filter(d => d.node.key !== node)
 
         this.updateTime()
         this.updateCollaborations()
@@ -87,8 +87,8 @@ class DataModel {
         this.items = this.items.concat(data.items)
         this.links = this.links.concat(data.links)
         
-        Object.keys(data.artists).forEach(d => {
-            this.artists[d] = data.artists[d]
+        Object.keys(data.nodes).forEach(d => {
+            this.nodes[d] = data.nodes[d]
         })
 
         // update linkTypes only once 
@@ -121,8 +121,8 @@ class DataModel {
     }
 
     async updateCollaborations() {
-        Object.keys(this.artists).forEach(key => {
-            let collaborators = this.items.filter(d => d.artist.key === key).map(d => d.contributors).flat()
+        Object.keys(this.nodes).forEach(key => {
+            let collaborators = this.items.filter(d => d.node.key === key).map(d => d.contributors).flat()
     
             collaborators = collaborators.filter( (d,i) => collaborators.findIndex(e => e.key === d.key) === i && d.key !== key)
             collaborators = collaborators.map(d => { return { value: d.name, type: d.category, key: d.key, enabled: this.isNodeExplorable(d) } })
@@ -134,14 +134,14 @@ class DataModel {
                 return a.value.localeCompare(b.value)
             })
 
-            this.artists[key].collaborators = collaborators
+            this.nodes[key].collaborators = collaborators
         })
     }
 
     // checkers
 
     isNodeValid(node) {
-        return Object.keys(this.artists).includes(node.key)
+        return Object.keys(this.nodes).includes(node.key)
     }
 
 
@@ -152,10 +152,14 @@ class DataModel {
     // getters 
 
     getItems() {
-        let items = this.items.filter(d => !d.artist.contribution.every(e => this.filters.linkTypes.includes(e)) )
+        let items = this.items.filter(d => !d.node.contribution.every(e => this.filters.linkTypes.includes(e)) )
         items = items.filter(d => d.year >= this.filters.timeFrom && d.year <= this.filters.timeTo)
         return items
     }
+
+    getItemById(key) {
+        return this.items.find(d => d.key === key)
+    } 
 
     getLinks() {
         let links = this.links.filter(d => !d.type.every(e => this.filters.linkTypes.includes(e)) )
@@ -167,20 +171,26 @@ class DataModel {
         return this.linkTypes
     }
 
+
+    /// Getters for nodes
     getNodesKeys() {
-        return Object.keys(this.artists);
+        return Object.keys(this.nodes);
     }
 
     getNodesList() {
-        return Object.values(this.artists)
+        return Object.values(this.nodes)
     }
 
     getNodes() {
-        return this.artists;
+        return this.nodes;
+    }
+
+    getNodeById(d) {
+        return this.nodes[d]
     }
 
     switchNodes(indexA, indexB) {
-        let keys =  Object.keys(this.artists)
+        let keys =  Object.keys(this.nodes)
         let temp = keys[indexA]
         keys[indexA] = keys[indexB]
         keys[indexB] = temp
@@ -188,7 +198,7 @@ class DataModel {
         let keysOrder = {}
         keys.forEach(key => { keysOrder[key] = null })
 
-        this.artists = Object.assign(keysOrder, this.artists)
+        this.nodes = Object.assign(keysOrder, this.nodes)
     }
 
     getDates() {
