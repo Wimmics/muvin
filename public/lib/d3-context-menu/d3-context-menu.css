@@ -136,20 +136,37 @@
 	padding: 4px 0;
 	position: absolute;
 	top: 0;
-	width: 100%;
+	/* width: 100%; */
+	overflow: scroll;
+	max-height: 500px;
+}
+
+ul.is-children li{
+	width: 250px;
 }
 
 .d3-context-menu-theme ul.multi-column {
 	width: auto !important; /* changed from 100% to acomodate multiple columns */
-	columns: 6; /* multiple columns to reduce sub-menu height */
+	columns: 4; /* multiple columns to reduce sub-menu height */
+	column-width: auto;
 }
 
 .d3-context-menu-theme input {
-	padding: 5px;
+	margin-top: 10px;
+	margin-bottom: 20px;
+}
+
+.d3-context-menu-theme select, 
+.d3-context-menu-theme input, 
+.d3-context-menu-theme label {
+	padding-top: 5px;
+	padding-bottom: 5px;
     margin-left: 10px;
     border: none;
     position: relative;
+	width: 100%;
 }
+
 
 .d3-context-menu-theme li.is-parent:hover > ul.is-children {
 	display: block;

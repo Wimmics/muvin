@@ -7,15 +7,13 @@ class ContextMenu {
     getItemMenu() {
         let menu = []
         menu.push({ title: 'Go to source', 
-            action: d => { 
-                let url = this.chart.isNodeValid(d) && d.nodeLink ? d.nodeLink : d.link
-                window.open(url) 
-            } })
+            action: d => window.open(d.link) 
+            })
 
         return menu;
     }
 
-    getNodeMenu() {
+    getNodeMenu(d) {
         let menu = []
 
         if (this.chart.data.getNodesKeys().length > 1) {
@@ -47,6 +45,12 @@ class ContextMenu {
                 this.chart.nodes.draw()
             }
         })
+
+        if (d.nodeLink) 
+            menu.push({
+                title: 'Go to source',
+                action: d => window.open(d.nodeLink)
+            })
 
        
         return menu
@@ -110,13 +114,15 @@ class ContextMenu {
 
 
         let collaborators = this.chart.data.getNodeById(d).collaborators
+        console.log(collaborators)
     
         if (collaborators.length) { /// the author has one or more co-authors
-            let collab = { title: 'Explore collaborations' }
+            let collab = { title: 'Import data for', key: d }
 
             collab.children = collaborators.map(e => { 
                 return { 
-                    title: `${e.value} ${e.type ? '(' + e.type + ')' : ''}`,
+                    title: `${e.value} ${e.type ? '(' + e.type + ')' : ''} (<b>${e.values.length}</b> items)`,
+                    key: e.key,
                     action: () => {
                         if (keys.includes(e.key)) return
                         this.chart.data.add(e)

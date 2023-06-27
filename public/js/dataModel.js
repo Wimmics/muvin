@@ -101,15 +101,11 @@ class DataModel {
 
     async updateFilters(type, values) {
         this.filters[type] = values
-
-        this.chart.update()
     }
 
     getFiltersByType(type){
         return this.filters[type];
     }
-
-    
 
     async updateTime() {
         this.dates = this.items.map(d => d.year)
@@ -121,21 +117,50 @@ class DataModel {
     }
 
     async updateCollaborations() {
-        Object.keys(this.nodes).forEach(key => {
-            let collaborators = this.items.filter(d => d.node.key === key).map(d => d.contributors).flat()
+        Object.keys(this.nodes).forEach(async (key) => {
+            let items = this.items.filter(d => d.node.key === key)
+            let collaborators = items.map(d => d.contributors).flat()
     
             collaborators = collaborators.filter( (d,i) => collaborators.findIndex(e => e.key === d.key) === i && d.key !== key)
-            collaborators = collaborators.map(d => { return { value: d.name, type: d.category, key: d.key, enabled: this.isNodeExplorable(d) } })
-            
-            collaborators.sort( (a, b) => { 
-                if (a.enabled && b.enabled) return a.value.localeCompare(b.value)
-                if (a.enabled) return -1
-                if (b.enabled) return 1 
-                return a.value.localeCompare(b.value)
+            collaborators = collaborators.map(d => { 
+                let values = items.filter(e => e.contnames.includes(d.name))
+                return { 
+                    value: d.name, 
+                    type: d.category, 
+                    key: d.key, 
+                    enabled: this.isNodeExplorable(d), 
+                    values: values
+                } 
             })
 
             this.nodes[key].collaborators = collaborators
+             
+
+            await this.sortCollaborators('decreasing', key) // alpha, decreasing (number of shared items)
         })
+    }
+
+    async sortCollaborators(value, key) {
+        this.nodes[key].sorting = value;
+
+        switch(value) {
+            case 'decreasing':
+                this.nodes[key].collaborators.sort( (a, b) => { 
+                    if (a.enabled && b.enabled) return b.values.length - a.values.length 
+                    if (a.enabled) return -1
+                    if (b.enabled) return 1 
+                    return b.values.length - a.values.length
+                })
+                break;
+            default:
+                this.nodes[key].collaborators.sort( (a, b) => { 
+                    if (a.enabled && b.enabled) return a.value.localeCompare(b.value)
+                    if (a.enabled) return -1
+                    if (b.enabled) return 1 
+                    return a.value.localeCompare(b.value)
+                }) 
+        }
+
     }
 
     // checkers

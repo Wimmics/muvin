@@ -241,16 +241,59 @@
 									.classed('multi-column', multiColumn)
 									.attr('id', multiColumn ? 'ul-multi' : '');
 
-								if (multiColumn) 
+								if (multiColumn) {
+									
+									let node = document.querySelector('#muvin').data.getNodeById(d.key)
+
+									children.append('label')
+										.text('Sort by')
+
+									let sorting = [{label: "Alphabetic Order", value: 'alpha'}, {label: "Number of Shared Items (Decreasing)", value: 'decreasing'}]
+
+									let select = children.append('select')
+										.on('change', handleChange)
+
+									select.selectAll('option')
+										.data(sorting)
+										.enter()
+											.append('option')
+											.attr('value', d => d.value)
+											.text(d => d.label)
+											.attr('id', 'ul-sort')
+											.property('selected', e => e.value === node.sorting)
+
+
 									children.append('input')
 										.attr('type', 'text')
 										.attr('placeholder', 'Search for')
 										.attr('id', 'ul-search')
 										.on('keyup', search)
+										
+
+								}
 								
 								createNestedMenu(children, root, ++depth)
 							}
 						});
+				}
+
+				/// functions to handle search and sorting the <li> items when the children are multiple columns
+				function handleChange() {
+					let chart = document.querySelector('#muvin')
+
+					let parent = d3.select(this.parentNode.parentNode).datum()
+
+					let node = chart.data.getNodeById(parent.key)
+				
+					let oldOrder = node.collaborators.map(e => e.key)
+					
+					let selectedOption = this.options[this.selectedIndex]
+					chart.data.sortCollaborators(selectedOption.value, parent.key)
+
+					let collaborators = node.collaborators.map(e => e.key)
+					let newOrder = collaborators.map(e => oldOrder.indexOf(e) + 5)
+
+					reorder(this.parentNode, newOrder, selectedOption.value)
 				}
 
 				function search() {
@@ -268,6 +311,31 @@
 							li[i].style.display = "none";
 						}
 					}
+				}
+
+				function reorder(list, order, selected) {
+					
+					var items = list.children;
+					
+					var elements = document.createDocumentFragment();
+					
+					// Keep the first 5 elements that never change
+					for (let i = 0; i < 5; i++) {
+						elements.appendChild(items[i].cloneNode(true))
+					}
+
+					order.forEach(function(idx) {
+						elements.appendChild(items[idx].cloneNode(true));
+					});
+
+					list.innerHTML = null;
+					list.appendChild(elements);
+
+					// Update the select list
+					let select = d3.select(list.querySelector('select'))
+					select.on('change', handleChange)
+
+					select.selectAll('option').property('selected', function() { return selected === this.value })
 				}
 			};
 		};

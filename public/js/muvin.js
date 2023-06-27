@@ -35,6 +35,7 @@ class Muvin extends HTMLElement {
         }
 
         this.div = d3.select(this.shadowRoot.querySelector('div.timeline'))
+
      
         this.width = this.div.node().clientWidth
 
@@ -82,7 +83,7 @@ class Muvin extends HTMLElement {
             this.shadowRoot.querySelector('#search-for').style.display = 'none';
             values.forEach(async (d) => await this.data.add(d))
         }
-        //else this.test() 
+        else this.test() 
 
     }
 
@@ -114,7 +115,7 @@ class Muvin extends HTMLElement {
                     {value: 'Marco Winckler'}, 
                     // {value: 'Alain Giboin'}, 
                     // {value: 'Philippe Palanque'},
-                    {value: "Anne-Marie Déry-Pinna"}
+                    //{value: "Anne-Marie Déry-Pinna"}
                 ]
                 // values = ['Marco Winckler', 'Philippe Palanque', 'Thiago Rocha Silva', 'Lucile Sassatelli', 'Célia Martinie', 'Aline Menin']
                 break;
@@ -381,6 +382,7 @@ template.innerHTML = `
     <link rel="stylesheet" href="/muvin/css/legend.css">
     <link rel="stylesheet" href="/muvin/css/menu.css">
     <link rel="stylesheet" href="/muvin/css/search.css">
+    <link rel="stylesheet" href="/muvin/css/timeslider.css">
 
     <div class='loading' id='div-loading'></div>
     <div class='tooltip' id='cluster-tooltip'></div>
@@ -398,6 +400,7 @@ template.innerHTML = `
                 <input type="text" list='nodes-list' id="nodes-input" placeholder="Type here">
                 <datalist id='nodes-list'></datalist>
             </div>
+
             <div id="view-options" style='display: none;'>
                 <div >
                     <label>Search items</label>
@@ -406,10 +409,19 @@ template.innerHTML = `
                     <button id='items-input-clear'>Clear</button>
                 </div>
 
-                <div>
-                    <label>Timeline</label>
-                    <label>From</label><select id="period-from"></select>
-                    <label>To</label><select id="period-to"></select> 
+                <div class='timePeriod'>
+                    <label>Time Period</label>
+                    <label class='time-info' id='from-label'> </label>
+
+                    <div style='width:400px; position:relative;'>
+                        <span class="multi-range">
+                            <input type="range" min="0" max="50" value="5" id="lower">
+                            <input type="range" min="0" max="50" value="45" id="upper">
+                        </span>
+                    </div>
+                    
+                    <label class='time-info' id='to-label'> </label>
+                   
                 </div>
             </div>
         </div>
@@ -425,46 +437,49 @@ template.innerHTML = `
             <p>Welcome to <b>Muvin</b>. To begin the exploration, please search for a value above.</p>
         </div>
 
-        <div class='legend'>  </div>
+        <div style='display:flex; justify-content: space-between; flex-direction: column; width: 100vw; height: 100vh;'>
+            <div class='legend'>  </div>
 
-        <div class='timeline'>
-            <div class='nodes-panel'>
-                <svg>
-                    <text id='node-count'></text>
-                    <g id='labels-group'></g>
+            <div class='timeline'>
+                <div class='nodes-panel'>
+                    <svg>
+                        <text id='node-count'></text>
+                        <g id='labels-group'></g>
+                    </svg>
+                </div>
+
+                <svg id="chart">
+                    <g id ='chart-group'>
+                        <g id='top-axis' class='timeaxis' >
+                            <line></line>
+                        </g>
+                        <g id='bottom-axis' class='timeaxis' >
+                            <line></line>
+                        </g>
+                        
+                        <g id="membership-links-group"></g>
+                        <g id='link-group'></g>
+                        <g id='nodes-group'></g>
+                        <g id='ticks-group'></g>
+                        <g id='x-slider'>
+                            <rect class='marker move'></rect>
+                            <rect id='top-button' class='slider-button move'></rect>
+                            <text></text>
+                            <rect id='bottom-button' class='slider-button move'></rect>
+                        </g>
+                        <g id='y-slider'>
+                            <image id="slider-up"  ></image>
+                            <image id="slider-down" ></image>
+                        </g>
+
+                    
+                        <g id='nodeLinks-group'> 
+                            
+                        </g>
+                    </g>
                 </svg>
             </div>
 
-            <svg id="chart">
-                <g id ='chart-group'>
-                    <g id='top-axis' class='timeaxis' >
-                        <line></line>
-                    </g>
-                    <g id='bottom-axis' class='timeaxis' >
-                        <line></line>
-                    </g>
-                    
-                    <g id="membership-links-group"></g>
-                    <g id='link-group'></g>
-                    <g id='nodes-group'></g>
-                    <g id='ticks-group'></g>
-                    <g id='x-slider'>
-                        <rect class='marker move'></rect>
-                        <rect id='top-button' class='slider-button move'></rect>
-                        <text></text>
-                        <rect id='bottom-button' class='slider-button move'></rect>
-                    </g>
-                    <g id='y-slider'>
-                        <image id="slider-up"  ></image>
-                        <image id="slider-down" ></image>
-                    </g>
-
-                   
-                    <g id='nodeLinks-group'> 
-                        
-                    </g>
-                </g>
-            </svg>
         </div>
         
     </div>

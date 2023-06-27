@@ -104,6 +104,7 @@ class Legend {
         else this.selected.push(d)
 
         this.chart.data.updateFilters('linkTypes', this.selected)
+        this.chart.update()
 
     }
 

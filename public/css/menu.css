@@ -98,7 +98,7 @@
 }
 
 .settings label{
-    width: 200px;
+    width: 140px;
     padding: 10px;
     position: relative;
 }
@@ -109,6 +109,6 @@
 }
 
 #view-options{
-    justify-content: space-between;
+    gap: 50px;
     width: 85%;
 }

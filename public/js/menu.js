@@ -91,43 +91,71 @@ class Menu{
 
         const _this = this;
 
-        let values = this.chart.data.getAllDates()
+        const applyFilters = () => {
+            lowerLabel.innerHTML = +lowerSlider.value
+            upperLabel.innerHTML = +upperSlider.value
 
-        d3.select(this.chart.shadowRoot.querySelector('#period-from'))
-            .selectAll('option')
-            .data(values)
-            .join(
-                enter => enter.append('option'),
-                update => update,
-                exit => exit.remove()
-            )
-            .attr('value', e => e)
-            .text(e => e)
-            .property('selected', d => d === this.chart.data.getFiltersByType('timeFrom'))
-            
-        d3.select(this.chart.shadowRoot.querySelector('#period-from'))
-            .on('change', function() {
-                let selectedOption = this.options[this.selectedIndex]
-                _this.chart.data.updateFilters('timeFrom', +selectedOption.value)
-            })
-            
-        d3.select(this.chart.shadowRoot.querySelector('#period-to'))
-            .selectAll('option')
-            .data(values)
-            .join(
-                enter => enter.append('option'),
-                update => update,
-                exit => exit.remove()
-            )
-            .attr('value', e => e)
-            .text(e => e)
-            .property('selected', d => d === this.chart.data.getFiltersByType('timeTo'))
+            this.chart.data.updateFilters('timeTo', +upperSlider.value)
+            this.chart.data.updateFilters('timeFrom', +lowerSlider.value)
+            this.chart.update()
+        }
 
-        d3.select(this.chart.shadowRoot.querySelector('#period-to'))
-            .on('change', function() {
-                let selectedOption = this.options[this.selectedIndex]
-                _this.chart.data.updateFilters('timeTo', +selectedOption.value)
+        let extent = d3.extent(this.chart.data.getAllDates())
+        let min = this.chart.data.getFiltersByType('timeFrom'),
+            max = this.chart.data.getFiltersByType('timeTo');
+
+        let lowerSlider = this.chart.shadowRoot.querySelector('#lower'),
+            upperSlider = this.chart.shadowRoot.querySelector('#upper'),
+            lowerVal = parseInt(lowerSlider.value),
+            upperVal = parseInt(upperSlider.value),
+            lowerLabel = this.chart.shadowRoot.querySelector('#from-label'),
+            upperLabel = this.chart.shadowRoot.querySelector('#to-label');
+
+        lowerLabel.innerHTML = min
+        upperLabel.innerHTML = max
+
+        d3.select(this.chart.shadowRoot.querySelector('#upper'))
+            .attr('min', extent[0])
+            .attr('max', extent[1])
+            .attr('value', max)
+            .on('input', () => {
+                lowerVal = parseInt(lowerSlider.value);
+                upperVal = parseInt(upperSlider.value);
+                
+                if (upperVal < lowerVal + 4) {
+                    lowerSlider.value = upperVal - 4;
+                    
+                    if (lowerVal == lowerSlider.min) {
+                        upperSlider.value = 4;
+                    }
+                }
+
+                applyFilters()
+            
             })
+
+        d3.select(this.chart.shadowRoot.querySelector('#lower'))
+            .attr('min', extent[0])
+            .attr('max', extent[1])
+            .attr('value', min)
+            .on('input', () => {
+                lowerVal = parseInt(lowerSlider.value);
+                upperVal = parseInt(upperSlider.value);
+                
+                if (lowerVal > upperVal - 4) {
+                    upperSlider.value = lowerVal + 4;
+                    
+                    if (upperVal == upperSlider.max) {
+                        lowerSlider.value = parseInt(upperSlider.max) - 4;
+                    }
+                }
+
+                applyFilters()
+            })
+
+        
+
+        
             
     }
     

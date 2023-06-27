@@ -4,11 +4,12 @@ class NodesAxis {
         this.tickDistances;
         this.chart = document.querySelector('#muvin')
         this.div = d3.select(this.chart.shadowRoot.querySelector('.nodes-panel'))
-        console.log(this.div)
 
         this.freeze = false
 
-        this.PLUS = '/muvin/images/plus.svg'
+        this.SETTINGS = '/muvin/images/settings.svg'
+        this.NETWORK = '/muvin/images/network.svg'
+
         this.EXPAND = '/muvin/images/expand.svg'
         this.MINIMIZE = '/muvin/images/minimize.svg'
         this.UP = '/muvin/images/up.svg'
@@ -34,7 +35,6 @@ class NodesAxis {
 
         this.min = this.shift
         this.max = dimensions.height - dimensions.top - dimensions.bottom - this.shift;
-        console.log(dimensions)
 
         this.svg = this.div.select('svg')
             .attr('width', dimensions.left)
@@ -149,7 +149,7 @@ class NodesAxis {
         
         let rectwidth = dimensions.left * .7
         let rectheight = 30
-        let iconsize = 15
+        let iconsize = 20
 
         let getFontSize = (d, l) => { // font size changes according to whether the node is focused on or not
             
@@ -212,17 +212,29 @@ class NodesAxis {
                     )
                         
                     .call(g => g.append('svg:image')
-                        .attr('xlink:href', this.PLUS)
+                        .attr('xlink:href', this.SETTINGS)
                         .attr('class', 'circle-plus')
                         .attr('width', iconsize)
                         .attr('height', iconsize)
                         .attr('x', rectwidth)
-                        .attr('y', rectheight / 2 - iconsize / 2)
+                        .attr('y', rectheight / 3 - iconsize / 2)
+                        .style('display', d => this.chart.areItemsVisible(d) ? 'block' : 'none')
+                        .on('click', d3.contextMenu(d => this.contextmenu.getNodeMenu(d)))
+                        .call(image => image.append('title').text('Click to get more options'))
+                    )
+                    
+                    .call(g => g.append('svg:image')
+                        .attr('xlink:href', this.NETWORK)
+                        .attr('class', 'circle-network')
+                        .attr('width', iconsize)
+                        .attr('height', iconsize)
+                        .attr('x', rectwidth)
+                        .attr('y', rectheight / 3 + iconsize / 2)
                         .style('display', d => this.chart.areItemsVisible(d) ? 'block' : 'none')
                         .on('click', d3.contextMenu(d => this.contextmenu.getNetworkMenu(d)))
-                        .on('contextmenu', d3.contextMenu(d => this.contextmenu.getNodeMenu()))
                         .call(image => image.append('title').text('Click to get more options'))
-                    ),
+                    )
+                    ,
 
                 update => update.call(g => g.select('text.title')
                         .text(d => this.data[d].name)
@@ -231,15 +243,21 @@ class NodesAxis {
                     )
                     .call(g => g.select('.circle-plus')
                         .style('display', d => this.chart.areItemsVisible(d) ? 'block' : 'none')
-                        .on('click', d3.contextMenu(d => this.contextmenu.getNetworkMenu(d))))
-                        .on('contextmenu', d3.contextMenu(d => this.contextmenu.getNodeMenu())
+                        .on('click', d3.contextMenu(d => this.contextmenu.getNodeMenu(d)))
                     )
+
+                    .call(g => g.select('.circle-network')
+                        .style('display', d => this.chart.areItemsVisible(d) ? 'block' : 'none')
+                        .on('click', d3.contextMenu(d => this.contextmenu.getNetworkMenu(d)))
+                    )
+                    
                     .call(g => g.select('rect').transition().duration(500)
                         .attr('fill', d => this.focus === d ? this.color.focus : this.color.normal)
-                        .style('display', d => this.chart.areItemsVisible(d) ? 'block' : 'none')
+                        .style('display', d => this.chart.areItemsVisible(d) ? 'block' : 'none') 
                     )
+
                     .call(g => g.select('.type-icon').attr('xlink:href', d => iconPath(d))
-                        .call(image => image.select('title').text(d => this.data[d].type))
+                        .call(image => image.select('title').text(d => this.data[d].type)) 
                     ),
 
                 exit => exit.remove()
