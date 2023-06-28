@@ -78,7 +78,7 @@ class Muvin extends HTMLElement {
             if (this.app === 'crobora') this.menu.hideSearchFor()
             values.forEach(async (d) => await this.data.add(d))
         }
-        else this.test() 
+        //else this.test() 
 
     }
 
