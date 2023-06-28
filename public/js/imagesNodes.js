@@ -2,7 +2,7 @@ class ImageNodes extends NodesGroup {
     constructor() {
         super()
 
-        this.radius = {normal: 7, focus: 50}
+        this.radius = {normal: 7, focus: 40}
 
     }
 
@@ -17,7 +17,7 @@ class ImageNodes extends NodesGroup {
 
         this.imageAttrs = {
             width: d => d.r * 2,
-            'xlink:href': d => getImageLink(d.name),
+            'xlink:href': d => getImageLink(d.title),
             alt: d => d.name,
             opacity: d => this.opacity(d),
             class: 'item-circle',
@@ -39,34 +39,26 @@ class ImageNodes extends NodesGroup {
 
         this.circleAttrs.display = d => !this.chart.isSelected(d.year) ? 'block' : 'none'
 
-        this.forceSimulation.force("collide", d3.forceCollide().radius(d => this.chart.isSelected(d.year) ? d.r / 2 : d.r).iterations(32))
+        this.forceSimulation
+            .force("x", d3.forceX()
+                .strength(d => this.chart.getTimeSelection() && this.chart.isSelected(d.year) ? .2 : .5)
+                .x(d => this.chart.xAxis.scale(d.year) + this.chart.xAxis.step(d.year) / 2))
+            
+            .force("y", d3.forceY()
+                .strength(d => this.chart.getTimeSelection() && this.chart.isSelected(d.year) ? .7 : .5)
+                .y(d => this.chart.yAxis.scale(d.node.key))) 
+            .force("collide", d3.forceCollide().radius(d => this.chart.isSelected(d.year) ? d.r / 2 : d.r).iterations(32))
             .on("tick", () => this.group.selectAll('.doc')
-                .attr('transform', d => `translate(${this.chart.isSelected(d.year) ? d.x - this.chart.xAxis.scale(d.year) * .1 : d.x}, ${d.y})` ))
+                .attr('transform', d => `translate(${this.chart.isSelected(d.year) ? d.x  : d.x}, ${d.y})` ))
     }
 
     async computeRadius() {
-
-        let values = this.chart.xAxis.values
-        let index = values.indexOf(this.chart.getTimeSelection())
-        let focusPos = this.chart.xAxis.scale(values[index])
-        let leftmostPos = this.chart.xAxis.scale(values[0])
-        let rightmostPos = this.chart.xAxis.scale(values[values.length - 1])
-
-        let leftScale = d3.scaleQuantize().domain([leftmostPos, focusPos]).range(d3.range(0.04, 0.4, 0.1))
-        let rightScale = d3.scaleQuantize().domain([focusPos, rightmostPos]).range(d3.range(0.4, 0.04, -0.1))
 
         this.data.forEach(d => {
             if (this.chart.getTimeSelection()) {
                 if (this.chart.isSelected(d.year)) 
                     d.r = this.radius.focus
                 
-                else {
-                    let curPos = this.chart.xAxis.scale(d.year)
-                    
-                    let scale = curPos > focusPos ? rightScale(curPos) : leftScale(curPos)
-                   
-                    d.r = this.radius.focus * scale
-                }
             } else d.r = this.radius.normal
 
         })
