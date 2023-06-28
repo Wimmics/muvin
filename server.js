@@ -6,11 +6,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 
 
-const { WasabiTransform } = require('./datatools/wasabiTransform')
-const { CroboraTransform } = require('./datatools/croboraTransform')
-const { HALTransform } = require('./datatools/halTransform')
-
-let transform;
+const { TransformFactory } = require('./datatools/transformFactory')
 
 
 /**
@@ -50,18 +46,6 @@ app.get(prefix, function (req, res) {
 
 // index page 
 app.get(prefix + '/:app', function (req, res) {
-    switch(req.params.app) {
-        case 'hal':
-            transform = new HALTransform()
-            break;
-        case 'wasabi':
-            transform = new WasabiTransform()
-            break;
-        case 'crobora':
-            transform = new CroboraTransform()
-            break;
-    }
-
     res.render('index', { app: req.params.app, params: req.query } );
 })
 
@@ -81,7 +65,11 @@ app.get(prefix + '/data/:app/nodes', async function(req, res) {
         
     if (fs.existsSync(datafile)) {
         res.sendFile(datafile)
-    } else res.send(JSON.stringify(await transform.fetchNodeLabels()))
+    } else {
+        let transform = TransformFactory.getTransform(req.params.app)
+        let result = await transform.fetchNodeLabels()
+        res.send(JSON.stringify(result))
+    }
 })
 
 app.get(prefix + '/data/:app', async function(req, res) {
@@ -93,7 +81,9 @@ app.get(prefix + '/data/:app', async function(req, res) {
     if (fs.existsSync(datafile))
         res.sendFile(datafile);
     else {
-        res.send(JSON.stringify(await transform.getData(node)))
+        let transform = TransformFactory.getTransform(req.params.app)
+        let result = await transform.getData(node)
+        res.send(JSON.stringify(result))
     }
    
 })

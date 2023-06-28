@@ -319,13 +319,30 @@
 					
 					var elements = document.createDocumentFragment();
 					
+					let getClone = (item) => { // clone the given node and reattach the events
+						let datum = d3.select(item).datum()
+						
+						let clone = item.cloneNode(true)
+						d3.select(clone)
+							.datum(datum)
+							.on('click', d => {
+								d.action()
+								document.querySelector('.d3-context-menu').style.display = 'none'
+							})
+
+						return clone
+					}
+
 					// Keep the first 5 elements that never change
 					for (let i = 0; i < 5; i++) {
-						elements.appendChild(items[i].cloneNode(true))
+						if (i < 3)
+							elements.appendChild(items[i].cloneNode(true))
+						else 
+							elements.appendChild(getClone(items[i]))
 					}
 
 					order.forEach(function(idx) {
-						elements.appendChild(items[idx].cloneNode(true));
+						elements.appendChild(getClone(items[idx]));
 					});
 
 					list.innerHTML = null;

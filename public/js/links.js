@@ -146,6 +146,10 @@ class LinksGroup {
         this.group.selectAll('.link')
             .attr('opacity', e => (e.source === d.node.key || e.target === d.node.key) && e.values.some(x => x.item === d.id) && +e.year === d.year ? 1 : 0)
           
+        this.highlightLabels(d)
+    }
+
+    highlightLabels(d) {
         this.chart.group.selectAll("[class$='-labels']")
             .style('display', e => e.item === d.id && e.year === d.year ? 'block' : 'none')
     }

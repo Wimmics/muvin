@@ -86,15 +86,20 @@ class NodesGroup {
     }
 
     mouseover(e, d, tooltipId) {
-        //if ((this.chart.getTimeSelection() && !this.chart.isSelected(d.year)) || (d.children && d.name === 'singles')) return
 
         this.chart.tooltip.setItemContent(d, tooltipId)
         this.chart.tooltip.show(e, tooltipId)
         this.tooltipId = tooltipId;
 
-        if (this.chart.isFreezeActive()) return
+        if (this.chart.isFreezeActive()) {
+            this.group.selectAll('.item-circle')    
+                .attr('stroke-width', e => d.id === e.id ? 3 : 1)
 
-        // TODO: use contributors instead of contnames
+            this.chart.fstlinks.highlightLabels(d)
+
+            return
+        }
+
         let collab = d.contnames ? d.contnames.filter( (e,i) => e != d.node.name && this.chart.areItemsVisible(e)) : []
 
         this.group.selectAll('.item-circle')
@@ -126,7 +131,10 @@ class NodesGroup {
         this.chart.tooltip.hide(this.tooltipId)
         this.tooltipId = null;
         
-        if (this.chart.isFreezeActive()) return;
+        if (this.chart.isFreezeActive()) {
+            this.group.selectAll('.item-circle').attr('stroke-width', 1)
+            return
+        }
 
         this.chart.profiles.reverseDownplay()
 
@@ -156,7 +164,7 @@ class NodesGroup {
         let packGroups = d3.selectAll(this.chart.shadowRoot.querySelectorAll('.item-circle'))
             .filter(d => this.opacity(d) ? true : false)
 
-        let selection = packGroups.filter(d => d.name === name)
+        let selection = packGroups.filter(d => d.title === name)
        
         if (selection.size()) {
             let data = []

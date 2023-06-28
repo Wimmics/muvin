@@ -57,13 +57,13 @@ class Menu{
     updateItemsSearch() {
         this.data = this.chart.data.getItems()
 
-        let songNames = this.data.map(d => d.name)
-        songNames = songNames.filter((d,i) => songNames.indexOf(d) === i)
-        songNames.sort((a,b) => a.localeCompare(b))
+        let itemNames = this.data.map(d => d.title)
+        itemNames = itemNames.filter((d,i) => itemNames.indexOf(d) === i)
+        itemNames.sort((a,b) => a.localeCompare(b))
 
         d3.select(this.chart.shadowRoot.querySelector('#items-list'))
             .selectAll('option')
-            .data(songNames)
+            .data(itemNames)
             .join(
                 enter => enter.append('option'),
                 update => update,
@@ -89,8 +89,6 @@ class Menu{
 
     updateTimeFilter() {
 
-        const _this = this;
-
         const applyFilters = () => {
             lowerLabel.innerHTML = +lowerSlider.value
             upperLabel.innerHTML = +upperSlider.value
@@ -106,41 +104,20 @@ class Menu{
 
         let lowerSlider = this.chart.shadowRoot.querySelector('#lower'),
             upperSlider = this.chart.shadowRoot.querySelector('#upper'),
-            lowerVal = parseInt(lowerSlider.value),
-            upperVal = parseInt(upperSlider.value),
             lowerLabel = this.chart.shadowRoot.querySelector('#from-label'),
             upperLabel = this.chart.shadowRoot.querySelector('#to-label');
 
         lowerLabel.innerHTML = min
         upperLabel.innerHTML = max
 
-        d3.select(this.chart.shadowRoot.querySelector('#upper'))
-            .attr('min', extent[0])
-            .attr('max', extent[1])
-            .attr('value', max)
-            .on('input', () => {
-                lowerVal = parseInt(lowerSlider.value);
-                upperVal = parseInt(upperSlider.value);
-                
-                if (upperVal < lowerVal + 4) {
-                    lowerSlider.value = upperVal - 4;
-                    
-                    if (lowerVal == lowerSlider.min) {
-                        upperSlider.value = 4;
-                    }
-                }
-
-                applyFilters()
-            
-            })
 
         d3.select(this.chart.shadowRoot.querySelector('#lower'))
             .attr('min', extent[0])
             .attr('max', extent[1])
             .attr('value', min)
             .on('input', () => {
-                lowerVal = parseInt(lowerSlider.value);
-                upperVal = parseInt(upperSlider.value);
+                let lowerVal = parseInt(lowerSlider.value);
+                let upperVal = parseInt(upperSlider.value);
                 
                 if (lowerVal > upperVal - 4) {
                     upperSlider.value = lowerVal + 4;
@@ -153,9 +130,25 @@ class Menu{
                 applyFilters()
             })
 
-        
+        d3.select(this.chart.shadowRoot.querySelector('#upper'))
+            .attr('min', extent[0])
+            .attr('max', extent[1])
+            .attr('value', max)
+            .on('input', () => {
+                let lowerVal = parseInt(lowerSlider.value);
+                let upperVal = parseInt(upperSlider.value);
+                
+                if (upperVal < lowerVal + 4) {
+                    lowerSlider.value = upperVal - 4;
+                    
+                    if (lowerVal == lowerSlider.min) {
+                        upperSlider.value = 4;
+                    }
+                }
 
-        
+                applyFilters()
+            
+            })
             
     }
     

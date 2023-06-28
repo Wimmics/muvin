@@ -14,15 +14,8 @@ class DataModel {
             timeTo: null
         }
 
-        this.colors = { // TODO - find a more direct way of selecting the colors (like colors.song)
-            cluster: {
-                color: '#fff',
-                gradient: ['#ffffff', '#f5f5f5', '#ececec', '#e2e2e2'] // used by the audio player
-            },
-            item: {
-                color: '#ccc',
-                gradient: ['#9e2e09', '#c36846', '#e3a084', '#ffd8c8']
-            },
+        this.colors = { 
+            item: '#ccc',
             typeScale: d3.scaleOrdinal(d3.schemeSet2)
         }
     }
@@ -53,11 +46,11 @@ class DataModel {
     }
 
     async remove(node, focus) {
+        
         delete this.nodes[node];
         this.items = this.items.filter(d => d.node.key !== node)
 
         this.updateTime()
-        this.updateCollaborations()
         this.chart.update(focus)
     }
 
@@ -70,7 +63,6 @@ class DataModel {
         
         this.updateTime()
         
-        await this.updateCollaborations()
         this.chart.update(node)
     }
 
@@ -85,17 +77,16 @@ class DataModel {
         data.links.forEach(d => { d.year = +d.year })
 
         this.items = this.items.concat(data.items)
-        this.links = this.links.concat(data.links)
-        
-        Object.keys(data.nodes).forEach(d => {
-            this.nodes[d] = data.nodes[d]
-        })
+        this.links = this.links.concat(data.links) 
+        this.nodes[data.node.key] = data.node
 
         // update linkTypes only once 
         if (!this.linkTypes.length) {
             this.linkTypes = data.linkTypes
             this.colors.typeScale.domain(this.linkTypes)
         }
+
+        await this.updateCollaborations(data.node.key)
 
     }
 
@@ -116,28 +107,28 @@ class DataModel {
         this.filters.timeTo = this.dates[this.dates.length - 1]
     }
 
-    async updateCollaborations() {
-        Object.keys(this.nodes).forEach(async (key) => {
-            let items = this.items.filter(d => d.node.key === key)
-            let collaborators = items.map(d => d.contributors).flat()
-    
-            collaborators = collaborators.filter( (d,i) => collaborators.findIndex(e => e.key === d.key) === i && d.key !== key)
-            collaborators = collaborators.map(d => { 
-                let values = items.filter(e => e.contnames.includes(d.name))
-                return { 
-                    value: d.name, 
-                    type: d.category, 
-                    key: d.key, 
-                    enabled: this.isNodeExplorable(d), 
-                    values: values
-                } 
-            })
+    async updateCollaborations(key) {
+       
+        let items = this.items.filter(d => d.node.key === key)
+        let collaborators = items.map(d => d.contributors).flat()
 
-            this.nodes[key].collaborators = collaborators
-             
-
-            await this.sortCollaborators('decreasing', key) // alpha, decreasing (number of shared items)
+        collaborators = collaborators.filter( (d,i) => collaborators.findIndex(e => e.key === d.key) === i && d.key !== key)
+        collaborators = collaborators.map(d => { 
+            let values = items.filter(e => e.contnames.includes(d.name))
+            return { 
+                value: d.name, 
+                type: d.category, 
+                key: d.key, 
+                enabled: this.isNodeExplorable(d), 
+                values: values
+            } 
         })
+
+        this.nodes[key].collaborators = collaborators
+            
+
+        await this.sortCollaborators('decreasing', key) // alpha, decreasing (number of shared items)
+        
     }
 
     async sortCollaborators(value, key) {

@@ -20,7 +20,7 @@ class Transform{
             items: null,
             links: null,
             linkTypes: this.linkTypes,
-            nodes: {}
+            node: null
         }
     }
 
@@ -109,10 +109,6 @@ class Transform{
     
             let key = this.hash(item.id, item.artist, item.artistType)
     
-            // if (items[key]) {
-            //     console.log('repeated = ', item)
-            //     value.contnames.forEach( d => { if (!items[key].contnames.includes(d)) items[key].contnames.push(d) })
-            // } else 
             items[key] = {...value}
     
             for (let source of item.contributors) {

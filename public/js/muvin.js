@@ -7,11 +7,6 @@ class Muvin extends HTMLElement {
         this.width = null
         this.height = null
         this.margin = { top: 30, right: 50, bottom: 30, left: 150 }
-        this.selected_item = null
-        
-        this.display_all = true
-        this.profileColors = true;
-        this.itemGlyphs = false;
 
         this.visibleNodes = null
         this.visibleItems = null
@@ -111,10 +106,10 @@ class Muvin extends HTMLElement {
             case 'hal':
                 //values = [{value: 'Aline Menin'}]
                 values = [
-                    // {value: 'Aline Menin'}, 
+                    //{value: 'Aline Menin'}, 
                     {value: 'Marco Winckler'}, 
-                    // {value: 'Alain Giboin'}, 
-                    // {value: 'Philippe Palanque'},
+                    //{value: 'Alain Giboin'}, 
+                    //{value: 'Philippe Palanque'}
                     //{value: "Anne-Marie Déry-Pinna"}
                 ]
                 // values = ['Marco Winckler', 'Philippe Palanque', 'Thiago Rocha Silva', 'Lucile Sassatelli', 'Célia Martinie', 'Aline Menin']
@@ -246,7 +241,7 @@ class Muvin extends HTMLElement {
     }
 
     getItemColor() {
-        return this.data.colors.item.color;
+        return this.data.colors.item;
     }
 
     getTypeValue(key) {
@@ -437,7 +432,7 @@ template.innerHTML = `
             <p>Welcome to <b>Muvin</b>. To begin the exploration, please search for a value above.</p>
         </div>
 
-        <div style='display:flex; justify-content: space-between; flex-direction: column; width: 100vw; height: 100vh;'>
+        
             <div class='legend'>  </div>
 
             <div class='timeline'>
@@ -480,7 +475,7 @@ template.innerHTML = `
                 </svg>
             </div>
 
-        </div>
+       
         
     </div>
     `

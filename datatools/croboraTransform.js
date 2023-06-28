@@ -15,7 +15,7 @@ class CroboraTransform extends Transform{
 
     async fetchNodeFeatures() { 
         let key = this.hash(this.node.value, this.node.type)
-        this.data.nodes[key] = {
+        this.data.node = {
             name: this.node.value,
             type: this.node.type,
             key: key
