@@ -50,8 +50,8 @@
     height: 100%;
     display: flex;
     flex-direction: row;
-    gap: 30px;
-    left: 10%;
+    gap: 50px;
+    left: 50px;
     position: relative;
     font-size: 13px;
 }
@@ -70,7 +70,6 @@
     cursor: pointer;
     left: 10px;
     position: relative;
-    padding: 10px;
     border-radius: 5px;
 }
 

@@ -17,7 +17,7 @@ class ContextMenu {
         let menu = []
 
         if (this.chart.data.getNodesKeys().length > 1) {
-            menu.push({ title: d => this.chart.yAxis.freeze === d ? 'Release highlight' : 'Highlight collaborations', 
+            menu.push({ title: d => this.chart.yAxis.freeze === d ? 'Release highlight' : 'Highlight network', 
                         action: d => { 
                             if (this.chart.yAxis.freeze === d) this.chart.yAxis.releaseFreeze()
                             else this.chart.yAxis.setFreeze(d) 
@@ -114,7 +114,6 @@ class ContextMenu {
 
 
         let collaborators = this.chart.data.getNodeById(d).collaborators
-        console.log(collaborators)
     
         if (collaborators.length) { /// the author has one or more co-authors
             let collab = { title: 'Import data for', key: d }

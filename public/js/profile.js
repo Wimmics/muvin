@@ -168,7 +168,7 @@ class Profile {
         this.chart.group.selectAll('.doc')
             .attr('opacity', x => x.node.key != node.key ? 1 : ( x.node.key === node.key && x.node.contribution.includes(d.key) ? 1 : .1))
 
-        this.chart.fstlinks.reverse()
+        //if (!this.chart.isFreezeActive()) this.chart.fstlinks.reverse()
     }
 
     mouseout() {
@@ -180,6 +180,6 @@ class Profile {
         this.chart.group.selectAll('.doc')
             .attr('opacity', x => !this.selected.some(s => s.node.key === x.node.key) ? 1 : (this.selected.some(s => s.node.key === x.node.key && x.node.contribution.includes(s.key)) ? 1 : .1))
 
-        this.chart.fstlinks.reverse()
+        //if (!this.chart.isFreezeActive()) this.chart.fstlinks.reverse()
     }  
 }

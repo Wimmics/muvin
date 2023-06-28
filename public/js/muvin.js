@@ -75,10 +75,10 @@ class Muvin extends HTMLElement {
         await this.data.fetchNodesLabels(this.app)
 
         if (values.length) {
-            this.shadowRoot.querySelector('#search-for').style.display = 'none';
+            if (this.app === 'crobora') this.menu.hideSearchFor()
             values.forEach(async (d) => await this.data.add(d))
         }
-        else this.test() 
+        //else this.test() 
 
     }
 
@@ -128,6 +128,15 @@ class Muvin extends HTMLElement {
      */
     async update(focus){
 
+        if (this.data.isEmpty()) {
+            this.shadowRoot.querySelector('.welcome-text').style.display = 'block'
+            this.menu.hideViewSettings()
+            this.legend.hide()
+            this.div.style('display', 'none')
+            return
+        }
+
+        this.div.style('display', 'flex')
         this.shadowRoot.querySelector('.welcome-text').style.display = 'none'
         this.hideLoading()
         this.menu.displayViewSettings()
@@ -397,11 +406,13 @@ template.innerHTML = `
             </div>
 
             <div id="view-options" style='display: none;'>
+                <button id="clear-network">Reset Network</button>
+
                 <div >
                     <label>Search items</label>
                     <input type="text" list='items-list' id="items-input" placeholder="Type here">
                     <datalist id='items-list'></datalist>
-                    <button id='items-input-clear'>Clear</button>
+                    <button id='items-input-clear'>Clear Search</button>
                 </div>
 
                 <div class='timePeriod'>
