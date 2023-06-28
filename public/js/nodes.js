@@ -7,11 +7,11 @@ class NodesGroup {
         this.forceSimulation = d3.forceSimulation()
             .alphaMin(.1)
             .force("x", d3.forceX()
-                .strength(d => this.chart.getTimeSelection() && this.chart.isSelected(d.year) ? .05 : .5)
+                .strength(d => this.chart.getTimeSelection() && this.chart.isSelected(d.year) ? 0.05 : .5)
                 .x(d => this.chart.xAxis.scale(d.year) + this.chart.xAxis.step(d.year) / 2))
             
             .force("y", d3.forceY()
-                .strength(d => this.chart.getTimeSelection() && this.chart.isSelected(d.year) ? .95 : .5)
+                .strength(d => this.chart.getTimeSelection() && this.chart.isSelected(d.year) ? 1 : .5)
                 .y(d => this.chart.yAxis.scale(d.node.key))) 
 
             .force("collide", d3.forceCollide().radius(d => d.r).iterations(32)) // Force that avoids circle overlapping
@@ -125,7 +125,7 @@ class NodesGroup {
 
     mouseout() {
 
-        this.chart.fstlinks.reverse()
+        
         if (this.chart.getTimeSelection()) this.chart.sndlinks.reverse()
 
         this.chart.tooltip.hide(this.tooltipId)
@@ -133,8 +133,13 @@ class NodesGroup {
         
         if (this.chart.isFreezeActive()) {
             this.group.selectAll('.item-circle').attr('stroke-width', 1)
+
+            this.chart.fstlinks.hideLabels()
             return
         }
+
+        this.chart.fstlinks.reverse()
+        
 
         this.chart.profiles.reverseDownplay()
 

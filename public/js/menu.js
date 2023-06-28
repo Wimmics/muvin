@@ -42,12 +42,13 @@ class Menu{
 
         this.div.select('#items-input-clear').on('click', () => this.chart.nodes.clearHighlight())
 
-        this.div.select('#toggle-best-of')
-            .on('change', function() { _this.chart.toggleBestOf(this.checked) })
-
-        this.div.selectAll('.menu-icon')
-            .on('click', () => this.toggle())
+        this.div.select('#clear-network').on('click', () => { this.chart.data.clear() })
              
+    }
+
+    hideSearchFor() {
+        this.div.select('#clear-network').style('display', 'none')
+        this.div.select('#search-for').style('display', 'none')
     }
 
     clearSearch() {

@@ -8,7 +8,6 @@ class TimeAxis{
 
         this.slider = d3.select(this.chart.shadowRoot.querySelector('#x-slider'))
 
-        this.distortion = 20
 
         this.focus = []
     }
@@ -21,7 +20,7 @@ class TimeAxis{
 
         let step = (dimensions.width - dimensions.left) / this.values.length
         
-        let focusStep = Math.min(step * 5, 500)
+        let focusStep = Math.min(step * 5, 700)
 
         this.timeScale.setDomain(this.values)
         this.timeScale.setStep(step)

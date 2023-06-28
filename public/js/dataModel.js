@@ -43,6 +43,12 @@ class DataModel {
         this.nodes = {}
         this.links = []
         this.linkTypes = []
+
+        this.chart.update()
+    }
+
+    isEmpty() {
+        return this.items.length === 0
     }
 
     async remove(node, focus) {
@@ -65,6 +71,8 @@ class DataModel {
         
         this.chart.update(node)
     }
+
+
 
     // updates
 
