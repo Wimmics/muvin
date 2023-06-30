@@ -11,27 +11,17 @@ class Muvin extends HTMLElement {
         this.visibleNodes = null
         this.visibleItems = null
         this.visibleProfile = null
+
     }
 
     async connectedCallback() {
         this.shadowRoot.appendChild(template.content.cloneNode(true));
         this.app = this.getAttribute("app")
 
-        let value = this.getAttribute("value")
-        let type = this.getAttribute("type")
-        
-        let values = []
-        if (value) {
-            value = value.split('--')
-            type = type.split('--')
-            value.forEach( (d,i) => {
-                values.push({value: d.trim(), type: type[i].trim()})
-            })
-        }
+        this.url = `/muvin/${this.app}`
 
         this.div = d3.select(this.shadowRoot.querySelector('div.timeline'))
 
-     
         this.width = this.div.node().clientWidth
 
         this.svg = this.div.select('svg#chart')
@@ -74,11 +64,27 @@ class Muvin extends HTMLElement {
 
         await this.data.fetchNodesLabels(this.app)
 
+        let value = this.getAttribute("value")
+        let type = this.getAttribute("type")
+        
+        let values = []
+        if (value) {
+            value = value.split(',')
+            type = type ? type.split(',') : null
+            value.forEach( (d,i) => {
+                let v = { value: d.trim() }
+                if (type)
+                    v[type] = type[i].trim()
+
+                values.push(v)
+            })
+        }
+
         if (values.length) {
             if (this.app === 'crobora') this.menu.hideSearchFor()
             values.forEach(async (d) => await this.data.add(d))
         }
-        //else this.test() 
+        else this.test() 
 
     }
 
@@ -119,6 +125,7 @@ class Muvin extends HTMLElement {
                 values = [{value: 'Queen'}]
                 break;
         }
+        console.log('values = ', values)
         values.forEach(async (d) => await this.data.add(d))
     }
 
@@ -406,7 +413,7 @@ template.innerHTML = `
             </div>
 
             <div id="view-options" style='display: none;'>
-                <button id="clear-network">Reset Network</button>
+                <button id="clear-network">Clear Network</button>
 
                 <div >
                     <label>Search items</label>

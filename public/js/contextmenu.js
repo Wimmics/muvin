@@ -124,7 +124,7 @@ class ContextMenu {
                     key: e.key,
                     action: () => {
                         if (keys.includes(e.key)) return
-                        this.chart.data.add(e)
+                        this.chart.data.open([e])
                     },
                     disabled: !e.enabled
                 }; 
@@ -133,19 +133,14 @@ class ContextMenu {
             collab.children.splice(0, 0, {
                 title: 'All (' + collaborators.length + ')' ,
                 action: async () => {
-                    for (let e of collaborators)
-                        if (e.enabled) 
-                            await this.chart.data.add(e) 
+                    this.chart.data.open(collaborators.filter(e => e.enabled))
                 }
             })
 
             collab.children.splice(1, 0, {
                 title: 'First 10 collaborators',
                 action: async () => {
-                    for (let i = 0; i < 10; i++) 
-                        if (collaborators[i].enabled) 
-                            await this.chart.data.add(collaborators[i])
-                    
+                    this.chart.data.open(collaborators.slice(0, 10))                    
                 }
             })
 
