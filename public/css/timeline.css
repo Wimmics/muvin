@@ -63,7 +63,11 @@ body{
     font-size: 14px;
     border-radius: 5px;
     border: 1px solid #ccc;
-    display: 'none';
+    display: none;
+}
+
+.tooltip:hover{
+    display: block;
 }
 
 .tooltip p {

@@ -27,7 +27,8 @@ class NodesGroup {
             fill: () => this.chart.getItemColor(),
             stroke: '#000',
             opacity: d => this.opacity(d),
-            class: 'item-circle'
+            class: 'item-circle',
+            //display: d => this.opacity(d) ? 'block' : 'none'
         }
 
         this.contextmenu = new ContextMenu()
@@ -74,8 +75,8 @@ class NodesGroup {
      opacity(d) {
         let key = d.node.key
         
-        
         if (this.chart.getNodeSelection() && !this.chart.isNodeVisible(key)) return 0
+        if (this.chart.isFreezeActive() && !this.chart.isFrozen(d.id)) return 0.1
 
         if (this.chart.areItemsVisible(key)) return 1
         if (this.chart.getTimeSelection() && this.chart.isSelected(key)) return 1
@@ -91,14 +92,15 @@ class NodesGroup {
         this.chart.tooltip.show(e, tooltipId)
         this.tooltipId = tooltipId;
 
-        if (this.chart.isFreezeActive()) {
-            this.group.selectAll('.item-circle')    
-                .attr('stroke-width', e => d.id === e.id ? 3 : 1)
+        
+        this.group.selectAll('.item-circle')    
+            .attr('stroke-width', e => d.id === e.id ? 3 : 1)
 
-            this.chart.fstlinks.highlightLabels(d)
+        this.chart.fstlinks.highlightLabels(d)
+        this.chart.sndlinks.highlightLinks(d)
 
-            return
-        }
+        if (this.chart.isFreezeActive())  return
+
 
         let collab = d.contnames ? d.contnames.filter( (e,i) => e != d.node.name && this.chart.areItemsVisible(e)) : []
 
@@ -113,8 +115,7 @@ class NodesGroup {
             })
             .attr('stroke-width', e => d.id === e.id ? 3 : 1)
        
-        this.chart.group.selectAll('.node-link')
-            .attr('opacity', function(e) { return d3.select(this).datum().value.id === d.id ? 1 : 0 })    
+        //this.chart.sndlinks.highlightLinks(d)
         
         this.chart.group.selectAll('.image-border')
             .attr('stroke', e => e.id === d.id ? '#000' : '#fff')
@@ -131,25 +132,28 @@ class NodesGroup {
         this.chart.tooltip.hide(this.tooltipId)
         this.tooltipId = null;
         
-        if (this.chart.isFreezeActive()) {
-            this.group.selectAll('.item-circle').attr('stroke-width', 1)
+        // this.group.selectAll('.item-circle')
+        //     .attr('opacity', d => this.chart.isFreezeActive() ? (this.chart.isFrozen(d.id) ? 1 : .1) : 1 )
+        //     .attr('stroke-width', 1)
 
-            this.chart.fstlinks.hideLabels()
-            return
-        }
+        this.reverse()     
+
+        this.chart.fstlinks.hideLabels()
+
+        if (this.chart.isFreezeActive()) return
 
         this.chart.fstlinks.reverse()
         
 
         this.chart.profiles.reverseDownplay()
 
-        this.reverse()     
+        
 
     }
 
     reverse() {
         this.group.selectAll('.item-circle')
-            .attr('opacity', d => this.opacity(d) )
+            .attr('opacity', d => this.chart.isFreezeActive() ? (this.chart.isFrozen(d.id) ? 1 : .1) : 1 )
             .attr('stroke-width', 1)
             .attr('fill', this.chart.getItemColor())
 

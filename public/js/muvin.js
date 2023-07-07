@@ -84,7 +84,7 @@ class Muvin extends HTMLElement {
             if (this.app === 'crobora') this.menu.hideSearchFor()
             values.forEach(async (d) => await this.data.add(d))
         }
-        else this.test() 
+        // else this.test() 
 
     }
 
@@ -322,6 +322,10 @@ class Muvin extends HTMLElement {
 
     isFreezeActive() {
         return this.yAxis.freeze
+    }
+
+    isFrozen(id) {
+        return this.yAxis.frozenNodes && this.yAxis.frozenNodes.snd.includes(id)
     }
 
     /**

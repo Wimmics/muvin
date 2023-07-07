@@ -20,7 +20,7 @@ class Transform{
             items: null,
             links: null,
             linkTypes: this.linkTypes,
-            node: null
+            node: {}
         }
     }
 

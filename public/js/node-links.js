@@ -82,6 +82,11 @@ class NodeLinksGroup{
             .attr('opacity', 1)
     }
 
+    highlightLinks(d) {
+        this.group.selectAll('.node-link')
+            .attr('opacity', function(e) { return d3.select(this).datum().value.id === d.id ? 1 : 0 })  
+    }
+
     mouseover(d, elem) {        
         if (!this.chart.getTimeSelection()) return
 
@@ -103,9 +108,10 @@ class NodeLinksGroup{
         
         this.reverse()
         
-        this.chart.group.selectAll('.item-circle')
-            .attr('opacity', 1)
-            .attr('stroke-width', 1)
+        this.chart.nodes.reverse()
+        // this.chart.group.selectAll('.item-circle')
+        //     .attr('opacity', 1)
+        //     .attr('stroke-width', 1)
 
         this.chart.profiles.reverseDownplay()
         this.chart.fstlinks.reverse()
@@ -121,6 +127,7 @@ class NodeLinksGroup{
         
         links = links.filter( (d,i) => links.findIndex(e => ((e.source.key === d.source.key && e.target.key === d.target.key) || (e.source.key === d.target.key && e.target.key === d.source.key)) && e.item === d.item) === i)
 
+        links = links.filter(d => this.chart.isFreezeActive() ? this.chart.isFrozen(d.item) : true)
 
         let linkedItems = links.map(d => d.item)
         let selection = this.chart.data.getItems().filter(e => linkedItems.includes(e.id) && this.chart.isSelected(e.year))

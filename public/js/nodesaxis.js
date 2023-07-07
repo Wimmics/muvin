@@ -281,6 +281,7 @@ class NodesAxis {
 
     setFreeze(d) {
         this.freeze = null
+        
         this.setHighlight(d)
         this.freeze = d
     }
@@ -299,6 +300,7 @@ class NodesAxis {
 
     releaseFreeze(){
         this.freeze = null
+        this.frozenNodes = null
         this.removeHighlight()
     }
 
@@ -313,19 +315,19 @@ class NodesAxis {
             .duration(500)
             .attr('opacity', e => e.source === d || e.target === d ? 1 : 0)
 
-        let nodes = this.chart.getConnectedNodes(d)
+        this.frozenNodes = this.chart.getConnectedNodes(d)
 
         group.selectAll('g.artist')
             .transition('focus-artist')
             .duration(500)
-            .attr('opacity', e => d === e || nodes.fst.includes(e) ? 1 : .1)
+            .attr('opacity', e => d === e || this.frozenNodes.fst.includes(e) ? 1 : .1)
 
         group.selectAll('.artist-label')
             .transition('focus-node')
             .duration(500)
-            .attr('opacity', e => d === e || nodes.fst.includes(e) ? 1 : .1)
+            .attr('opacity', e => d === e || this.frozenNodes.fst.includes(e) ? 1 : .1)
 
-        this.chart.nodes.highlightNodeItems(nodes.snd)
+        this.chart.nodes.highlightNodeItems(this.frozenNodes.snd)
 
         // TODO: verify whether it still works
         if (this.chart.getTimeSelection())
@@ -334,7 +336,7 @@ class NodesAxis {
                 .duration(500)
                 .attr('opacity', e => e.source.key === d || e.target.key === d ? 1 : 0)
 
-        this.chart.profiles.downplay(d)
+        //this.chart.profiles.downplay(d)
     
     }
 
@@ -360,7 +362,7 @@ class NodesAxis {
             .duration(500)
             .attr('opacity', 1)
 
-        this.chart.profiles.reverseDownplay()
+        //this.chart.profiles.reverseDownplay()
     }
 
     getStep(value) {

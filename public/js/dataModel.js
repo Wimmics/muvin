@@ -59,7 +59,6 @@ class DataModel {
 
         this.updateTime()
         this.open()
-        //this.chart.update(focus)
     }
 
     async add(node) {
@@ -100,8 +99,6 @@ class DataModel {
     // updates
 
     async update(data) {
-
-        console.log(data)
         
         if (!Object.keys(data).includes('items')) return
         
