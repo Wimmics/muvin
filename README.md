@@ -6,7 +6,13 @@
  - Install the necessary packages with **npm install**
  - Run the server with **npm start**
 
- Open the application on the browser at http://localhost:8020/muvin/
+## To run Muvin in a docker container
+ - Build the docker container as **docker build . -t muvin**
+ - Run the image as **docker run -p 8020:8020 -d muvin**
+
+## To play with Muvin 
+
+Open the application on the browser at http://localhost:8020/muvin/
 
 ## You can explore data from any SPARQL endpoint by including your queries in the queries.js file
  1. Prepare a query that returns data describing a list of items through at least the following variables
