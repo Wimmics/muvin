@@ -31,10 +31,10 @@ class NodeLinksGroup{
     }
 
     // draw the second level links (e.g. links between second level nodes -- songs/documents)
-    draw() {
+    async draw() {
         const _this = this;
 
-        let data = this.getData()
+        let data = await this.getData()
 
         let link = this.group.selectAll('.node-link')
             .data(data)
@@ -117,17 +117,52 @@ class NodeLinksGroup{
         this.chart.fstlinks.reverse()
     }
 
-    /**
-     * Function to compute the second level links of the network based on the nodes in focus
-     * @returns an array containing the links
-     */
-    getData() {
+
+    async getLinks() {
+
         // keep one link per node
         let links = this.chart.data.getLinks().filter(d => this.chart.areItemsVisible(d.source.key) && this.chart.areItemsVisible(d.target.key) && this.chart.isSelected(+d.year))
         
         links = links.filter( (d,i) => links.findIndex(e => ((e.source.key === d.source.key && e.target.key === d.target.key) || (e.source.key === d.target.key && e.target.key === d.source.key)) && e.item === d.item) === i)
 
         links = links.filter(d => this.chart.isFreezeActive() ? this.chart.isFrozen(d.item) : true)
+
+        // remove crossing links
+        let nodes = this.chart.data.getNodesKeys()
+       
+        let temp = {}
+        links.forEach( d => {
+            let s = nodes.indexOf(d.source.key)
+            let t = nodes.indexOf(d.target.key)
+
+            temp[`${s}-${t}-${d.item}`] = d
+        })
+
+        let vertices = Object.keys(temp)
+        let items = links.map(d => d.item)
+        let indices = Object.keys(nodes)
+
+        for (let i of items) {
+            for (let x of indices) {
+                for (let y of indices) {
+                    for (let z of indices) {
+                        if (vertices.includes(`${x}-${z}-${i}`) && vertices.includes(`${x}-${y}-${i}`) && vertices.includes(`${y}-${z}-${i}`))
+                            delete temp[`${x}-${z}-${i}`]
+                    }
+                }
+            }
+        }
+
+        return Object.values(temp);
+
+    }
+    /**
+     * Function to compute the second level links of the network based on the nodes in focus
+     * @returns an array containing the links
+     */
+    async getData() {
+        
+        let links = await this.getLinks()
 
         let linkedItems = links.map(d => d.item)
         let selection = this.chart.data.getItems().filter(e => linkedItems.includes(e.id) && this.chart.isSelected(e.year))

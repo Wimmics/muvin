@@ -235,6 +235,10 @@ class DataModel {
         return this.nodes[d]
     }
 
+    getNodesOrder() {
+        return Object.keys(this.getNodesList())
+    }
+
     switchNodes(indexA, indexB) {
         let keys =  Object.keys(this.nodes)
         let temp = keys[indexA]
