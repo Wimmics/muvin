@@ -27,7 +27,8 @@ class Menu{
                     let value = this.value
                     let node = d3.select(this.list).selectAll('option').filter(function() { return this.value === value }).datum()
                     
-                    _this.chart.data.add(node)
+                    //_this.chart.data.add(node)
+                    _this.chart.data.open([node])
                     _this.clearSearch()
                 }
             })

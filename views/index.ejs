@@ -56,10 +56,13 @@
         console.log(locals)
 
         if (locals.params.value && locals.params.value.length) {
-            let value = typeof(locals.params.value) === "string" ? locals.params.value : locals.params.value.join('--')
-            let type = typeof(locals.params.type) === "string" ? locals.params.type : locals.params.type.join('--')
-            document.querySelector("#muvin").setAttribute("type", type)
+            let value = typeof(locals.params.value) === "string" ? locals.params.value : locals.params.value.join(',')
             document.querySelector("#muvin").setAttribute("value", value)
+            if (locals.params.type) {
+                let type = typeof(locals.params.type) === "string" ? locals.params.type : locals.params.type.join(',')
+                document.querySelector("#muvin").setAttribute("type", type)
+            }
+            
         }
     </script>
 </body>

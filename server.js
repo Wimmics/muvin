@@ -76,7 +76,7 @@ app.get(prefix + '/data/:app', async function(req, res) {
     let node = {value: req.query.value, type: req.query.type === 'undefined' ? undefined : req.query.type}
 
     let filename = `data/${req.params.app}/${node.value}${node.type ? '-' + node.type : ''}-data_vis.json`
-    console.log("filename = ", filename)
+    
     let datafile = path.join(__dirname, filename);
     if (fs.existsSync(datafile))
         res.sendFile(datafile);

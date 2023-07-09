@@ -12,6 +12,8 @@ class LinksGroup {
 
         data = data.filter( (d,i) => data.findIndex(e => e.item === d.item && (e.source.key === d.source.key && e.target.key === d.target.key) || (e.source.key === d.target.key && e.target.key === d.source.key) ) === i)
 
+        data = data.filter(d => this.chart.isFreezeActive() ? this.chart.isFrozen(d.item) : true)
+
         return data
     }
 

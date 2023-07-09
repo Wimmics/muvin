@@ -9,6 +9,8 @@ class HALTransform extends Transform{
     }
 
     async transformNode(res) {
+        if (!res.length) return
+        
         let topics = res.filter(d => d.topic).map(d => d.topic.value)
         topics = topics.filter( (d,i) => topics.indexOf(d) === i)
      

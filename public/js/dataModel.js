@@ -18,6 +18,7 @@ class DataModel {
             item: '#ccc',
             typeScale: d3.scaleOrdinal(d3.schemeSet2)
         }
+
     }
 
     async init() {
@@ -44,7 +45,7 @@ class DataModel {
         this.links = []
         this.linkTypes = []
 
-        this.chart.update()
+        window.open(this.chart.url, "_self") 
     }
 
     isEmpty() {
@@ -57,7 +58,7 @@ class DataModel {
         this.items = this.items.filter(d => d.node.key !== node)
 
         this.updateTime()
-        this.chart.update(focus)
+        this.open()
     }
 
     async add(node) {
@@ -72,6 +73,27 @@ class DataModel {
         this.chart.update(node)
     }
 
+    async open(nodes) {
+        let url = this.chart.url + '?'
+        let values = []
+        Object.keys(this.nodes).forEach(d => {
+            let v = `value=${this.nodes[d].name}`
+            if (this.nodes[d].type)
+                v += `&type=${this.nodes[d].type}`
+
+            values.push(v)
+        })
+
+        if (nodes)
+            nodes.forEach(node => {
+                values.push('value=' + node.value + (node.type ? '&type=' + node.type : ''))
+            })
+
+        url += values.join('&')
+        console.log("new url = ", url)
+
+        window.open(url, "_self")
+    }
 
 
     // updates
@@ -211,6 +233,10 @@ class DataModel {
 
     getNodeById(d) {
         return this.nodes[d]
+    }
+
+    getNodesOrder() {
+        return Object.keys(this.getNodesList())
     }
 
     switchNodes(indexA, indexB) {
