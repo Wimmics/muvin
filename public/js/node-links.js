@@ -47,9 +47,7 @@ class NodeLinksGroup{
                 update => update.call(g => g.select('title').text(this.linkInfo)),
                 exit => exit.remove()
             )
-            .call(g => g.transition()
-                .duration(500)
-                .attr('opacity', 1))
+            .call(g => g.attr('opacity', d => this.chart.isFreezeActive() ? (this.chart.isFrozen(d.value.id) ? 1 : 0) : 1  ))
 
         link.selectAll('path.path-stroke')
             .data(d => d.values)
@@ -79,11 +77,15 @@ class NodeLinksGroup{
 
     reverse() {
         this.group.selectAll('.node-link')
-            .attr('opacity', 1)
+            .transition()
+            .duration(200)
+            .attr('opacity', d => this.chart.isFreezeActive() ? (this.chart.isFrozen(d.value.id) ? 1 : 0) : 1 )
     }
 
     highlightLinks(d) {
         this.group.selectAll('.node-link')
+            .transition()
+            .duration(200)
             .attr('opacity', function(e) { return d3.select(this).datum().value.id === d.id ? 1 : 0 })  
     }
 
@@ -91,6 +93,8 @@ class NodeLinksGroup{
         if (!this.chart.getTimeSelection()) return
 
         this.group.selectAll('.node-link')
+            .transition()
+            .duration(200)
             .attr('opacity', function() { return this === elem ? 1 : 0 } )
 
         let selected = e => e.id === d.value.id && e.year === d.value.year && (e.node.key === d.source.key || e.node.key === d.target.key)
@@ -109,9 +113,6 @@ class NodeLinksGroup{
         this.reverse()
         
         this.chart.nodes.reverse()
-        // this.chart.group.selectAll('.item-circle')
-        //     .attr('opacity', 1)
-        //     .attr('stroke-width', 1)
 
         this.chart.profiles.reverseDownplay()
         this.chart.fstlinks.reverse()
@@ -125,7 +126,7 @@ class NodeLinksGroup{
         
         links = links.filter( (d,i) => links.findIndex(e => ((e.source.key === d.source.key && e.target.key === d.target.key) || (e.source.key === d.target.key && e.target.key === d.source.key)) && e.item === d.item) === i)
 
-        links = links.filter(d => this.chart.isFreezeActive() ? this.chart.isFrozen(d.item) : true)
+        //links = links.filter(d => this.chart.isFreezeActive() ? this.chart.isFrozen(d.item) : true)
 
         // remove crossing links
         let nodes = this.chart.data.getNodesKeys()

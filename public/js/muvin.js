@@ -125,7 +125,7 @@ class Muvin extends HTMLElement {
                 values = [{value: 'Queen'}]
                 break;
         }
-        console.log('values = ', values)
+       
         values.forEach(async (d) => await this.data.add(d))
     }
 
@@ -175,9 +175,6 @@ class Muvin extends HTMLElement {
         
         this.yAxis.drawLabels()
         this.xAxis.drawLabels()
-
-        
-
         this.xAxis.drawSlider()
 
         if (this.yAxis.focus && focus && this.yAxis.focus != focus) 
@@ -333,7 +330,7 @@ class Muvin extends HTMLElement {
      * @param   {String} d selected label on the y axis
      * @return  {Object} keys: "snd" list of ids of second level nodes, "fst" list of first level nodes 
      */
-    getConnectedNodes(d) {
+    async getConnectedNodes(d) {
         let value = d || this.yAxis.freeze;
 
         if (!value) return
