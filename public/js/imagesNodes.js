@@ -40,13 +40,13 @@ class ImageNodes extends NodesGroup {
         this.circleAttrs.display = d => !this.chart.isSelected(d.year) ? 'block' : 'none'
 
         this.forceSimulation
-            // .force("x", d3.forceX()
-            //     .strength(d => this.chart.getTimeSelection() && this.chart.isSelected(d.year) ? .1 : .5)
-            //     .x(d => this.chart.xAxis.scale(d.year) + this.chart.xAxis.step(d.year) / 2))
+            .force("x", d3.forceX()
+                .strength(d => this.chart.getTimeSelection() && this.chart.isSelected(d.year) ? .2 : .5)
+                .x(d => this.chart.xAxis.scale(d.year) + this.chart.xAxis.step(d.year) / 2))
             
-            // .force("y", d3.forceY()
-            //     .strength(d => this.chart.getTimeSelection() && this.chart.isSelected(d.year) ? .9 : .5)
-            //     .y(d => this.chart.yAxis.scale(d.node.key))) 
+            .force("y", d3.forceY()
+                .strength(d => this.chart.getTimeSelection() && this.chart.isSelected(d.year) ? .7 : .5)
+                .y(d => this.chart.yAxis.scale(d.node.key))) 
 
             .force("collide", d3.forceCollide().radius(d => this.chart.isSelected(d.year) ? d.r / 2 : d.r).iterations(32))
 

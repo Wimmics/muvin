@@ -112,7 +112,7 @@ class Transform{
             items[key] = {...value}
     
             for (let source of item.contributors) {
-                if (item.nodeName === source.name && item.nodeType === source.category) continue
+                if (item.key === source.key) continue
 
                 
     
@@ -130,17 +130,17 @@ class Transform{
                         source: source,
                         target: target,
                         year: year,
-                        type: [],
+                        type: source.type,
                         item: value.id
                     }
                 
-                if (links[sourceKey])
-                    if (!links[sourceKey].type.includes(source.type)) 
-                        links[sourceKey].type.push(source.type)
+                // if (links[sourceKey])
+                //     if (!links[sourceKey].type.includes(source.type)) 
+                //         links[sourceKey].type.push(source.type)
 
-                else if (links[targetKey])
-                    if (!links[targetKey].type.includes(source.type)) 
-                    links[targetKey].type.push(source.type)
+                // else if (links[targetKey])
+                //     if (!links[targetKey].type.includes(source.type)) 
+                //     links[targetKey].type.push(source.type)
             }       
     
         }

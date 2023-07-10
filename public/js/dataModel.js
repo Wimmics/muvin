@@ -207,8 +207,10 @@ class DataModel {
     } 
 
     getLinks() {
-        let links = this.links.filter(d => !d.type.every(e => this.filters.linkTypes.includes(e)) )
-        links = links.filter(d => +d.year >= this.filters.timeFrom && +d.year <= this.filters.timeTo)
+       
+        let links = this.links.filter(d => !this.filters.linkTypes.includes(d.type) )
+      
+        links = links.filter(d => d.year >= this.filters.timeFrom && d.year <= this.filters.timeTo)
         return links
     }
 

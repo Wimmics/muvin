@@ -123,10 +123,10 @@ class NodeLinksGroup{
 
         // keep one link per node
         let links = this.chart.data.getLinks().filter(d => this.chart.areItemsVisible(d.source.key) && this.chart.areItemsVisible(d.target.key) && this.chart.isSelected(+d.year))
-        
-        links = links.filter( (d,i) => links.findIndex(e => ((e.source.key === d.source.key && e.target.key === d.target.key) || (e.source.key === d.target.key && e.target.key === d.source.key)) && e.item === d.item) === i)
+      
+        links = links.filter( (d,i) => links.findIndex(e => ((e.source.key === d.source.key && e.target.key === d.target.key) || (e.source.key === d.target.key && e.target.key === d.source.key)) && e.item === d.item && e.type === d.type) === i)
 
-        links = links.filter(d => d.source.key !== d.target.key )
+        links = links.filter( d => d.source.key !== d.target.key )
 
         // remove crossing links
         let nodes = this.chart.data.getNodesKeys()
@@ -136,7 +136,13 @@ class NodeLinksGroup{
             let s = nodes.indexOf(d.source.key)
             let t = nodes.indexOf(d.target.key)
 
-            temp[`${s}-${t}-${d.item}`] = d
+            let key = `${s}-${t}-${d.item}`
+            if (temp[key])
+                temp[key].type.push(d.type)
+            else {
+                d.type = [d.type]
+                temp[key] = d
+            } 
         })
 
         let vertices = Object.keys(temp)
