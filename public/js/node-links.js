@@ -126,7 +126,7 @@ class NodeLinksGroup{
         
         links = links.filter( (d,i) => links.findIndex(e => ((e.source.key === d.source.key && e.target.key === d.target.key) || (e.source.key === d.target.key && e.target.key === d.source.key)) && e.item === d.item) === i)
 
-        //links = links.filter(d => this.chart.isFreezeActive() ? this.chart.isFrozen(d.item) : true)
+        links = links.filter(d => d.source.key !== d.target.key )
 
         // remove crossing links
         let nodes = this.chart.data.getNodesKeys()
@@ -176,12 +176,12 @@ class NodeLinksGroup{
 
                 let sourceIndex = nodesData.findIndex(e => e.node.key === d.source.key)
                 let sData = nodesData[sourceIndex]
-                let source = this.chart.app === 'crobora' ? {x: sData.x - (this.chart.xAxis.scale(sData.year) * .1) + sData.r, y: sData.y + sData.r} : {x: sData.x, y: sData.y}
+                let source = this.chart.app === 'crobora' ? {x: sData.x - (this.chart.xAxis.scale(sData.year) * .01) + sData.r, y: sData.y + sData.r} : {x: sData.x, y: sData.y}
                 let sourceRadius = sData.r
 
                 let targetIndex = nodesData.findIndex(e => e.node.key === d.target.key)
                 let tData = nodesData[targetIndex]
-                let target = this.chart.app === 'crobora' ? {x: tData.x - (this.chart.xAxis.scale(tData.year) * .1) + tData.r, y: tData.y} : {x: tData.x, y: tData.y}
+                let target = this.chart.app === 'crobora' ? {x: tData.x - (this.chart.xAxis.scale(tData.year) * .01) + tData.r, y: tData.y} : {x: tData.x, y: tData.y}
                 let targetRadius = tData.r
                 
                 if (source.y > target.y) {

@@ -7,8 +7,10 @@ class PublicationsTooltip extends Tooltip{
         const itemName = `<b>${d.title} (${d.year})</b><br>`
         const type = `<b>Document type:</b> ${d.type}`
         const more = `<br><br>Click for more`
+
+        let keys = this.chart.data.getNodesKeys()
         
-        const contributors = e => `<b>${e.contnames.length} author(s):</b> ${e.contnames.map(val => capitalizeFirstLetter(val)).join(', ')}`
+        const contributors = e => `<b>${e.contnames.length} author(s):</b> ${e.contributors.map(val => keys.includes(val.key) && val.key != d.node.key ? `<b><i>${capitalizeFirstLetter(val.name)}</i></b>` : capitalizeFirstLetter(val.name)).join(', ')}`
 
         this.setContent(`${itemName}<br>${contributors(d)}<br><br>${type}${more}`, id); 
     }

@@ -74,7 +74,7 @@ class Muvin extends HTMLElement {
             value.forEach( (d,i) => {
                 let v = { value: d.trim() }
                 if (type)
-                    v[type] = type[i].trim()
+                    v.type = type[i].trim()
 
                 values.push(v)
             })
