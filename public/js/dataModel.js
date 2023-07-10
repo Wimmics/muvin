@@ -26,7 +26,6 @@ class DataModel {
     }
 
     async fetchData(node) {
-
         const response = await fetch('/muvin/data/' + this.chart.app + '?value=' + node.value + '&type=' + node.type)
 
         return await response.json()
@@ -78,7 +77,7 @@ class DataModel {
         let values = []
         Object.keys(this.nodes).forEach(d => {
             let v = `value=${this.nodes[d].name}`
-            if (this.nodes[d].type)
+            if (this.nodes[d].type && this.chart.app !== 'wasabi')
                 v += `&type=${this.nodes[d].type}`
 
             values.push(v)
@@ -86,7 +85,7 @@ class DataModel {
 
         if (nodes)
             nodes.forEach(node => {
-                values.push('value=' + node.value + (node.type ? '&type=' + node.type : ''))
+                values.push('value=' + node.value + (node.type && this.chart.app !== 'wasabi' ? '&type=' + node.type : ''))
             })
 
         url += values.join('&')

@@ -286,6 +286,12 @@ class NodesAxis {
         this.freeze = d
     }
 
+    releaseFreeze(){
+        this.freeze = null
+        this.frozenNodes = null
+        this.removeHighlight()
+    }
+
     mouseover(e, d) {
         this.chart.tooltip.setNodeContent(d, this.tooltipId)
         this.chart.tooltip.show(e, this.tooltipId, 400)
@@ -298,13 +304,7 @@ class NodesAxis {
         this.removeHighlight()
     }
 
-    releaseFreeze(){
-        this.freeze = null
-        this.frozenNodes = null
-        this.removeHighlight()
-    }
-
-    setHighlight(d) {
+    async setHighlight(d) {
         // do nothing when the links of a node are highlighted, or if the node is not on focus, or if the player is active
         if (this.freeze || this.values.length === 1) return;
                 
@@ -315,7 +315,7 @@ class NodesAxis {
             .duration(500)
             .attr('opacity', e => e.source === d || e.target === d ? 1 : 0)
 
-        this.frozenNodes = this.chart.getConnectedNodes(d)
+        this.frozenNodes = await this.chart.getConnectedNodes(d)
 
         group.selectAll('g.artist')
             .transition('focus-artist')
@@ -328,13 +328,14 @@ class NodesAxis {
             .attr('opacity', e => d === e || this.frozenNodes.fst.includes(e) ? 1 : .1)
 
         this.chart.nodes.highlightNodeItems(this.frozenNodes.snd)
+        this.chart.sndlinks.reverse()
 
         // TODO: verify whether it still works
-        if (this.chart.getTimeSelection())
-            group.selectAll('.node-link')
-                .transition('focus-links')
-                .duration(500)
-                .attr('opacity', e => e.source.key === d || e.target.key === d ? 1 : 0)
+        // if (this.chart.getTimeSelection())
+        //     group.selectAll('.node-link')
+        //         .transition('focus-links')
+        //         .duration(500)
+        //         .attr('opacity', e => e.source.key === d || e.target.key === d ? 1 : 0)
 
         //this.chart.profiles.downplay(d)
     
@@ -354,8 +355,10 @@ class NodesAxis {
             .duration(500)
             .attr('opacity', 1)
 
-        group.selectAll('.node-link')
-            .attr('opacity', this.chart.getTimeSelection() ? 1 : 0)
+        // group.selectAll('.node-link')
+        //     .attr('opacity', this.chart.getTimeSelection() ? 1 : 0)
+
+        this.chart.sndlinks.reverse()
 
         group.selectAll('.artist-label')
             .transition('unfocus-node')

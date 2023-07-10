@@ -8,8 +8,10 @@ class MusicTooltip extends Tooltip{
         let conttypes = d.contributors.map(e => e.type)
         conttypes = conttypes.filter( (e,i) => conttypes.indexOf(e) === i)
 
+        let nodes = this.chart.data.getNodesKeys()
+
         const contributors = e => conttypes.map(key => {
-            let names = d.contributors.filter(e => e.type === key).map(e => e.name)
+            let names = d.contributors.filter(e => e.type === key).map(e => nodes.includes(e.key) && e.key !== d.node.key ? `<b><i>${e.name}</i></b>` : e.name)
             return `<b>${capitalizeFirstLetter(key)}</b>: ${names.join(', ')}`
         }).join('<br>')
 

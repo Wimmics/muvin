@@ -101,7 +101,6 @@ class NodesGroup {
 
         if (this.chart.isFreezeActive())  return
 
-
         let collab = d.contnames ? d.contnames.filter( (e,i) => e != d.node.name && this.chart.areItemsVisible(e)) : []
 
         this.group.selectAll('.item-circle')
@@ -115,8 +114,6 @@ class NodesGroup {
             })
             .attr('stroke-width', e => d.id === e.id ? 3 : 1)
        
-        //this.chart.sndlinks.highlightLinks(d)
-        
         this.chart.group.selectAll('.image-border')
             .attr('stroke', e => e.id === d.id ? '#000' : '#fff')
 
@@ -131,10 +128,6 @@ class NodesGroup {
 
         this.chart.tooltip.hide(this.tooltipId)
         this.tooltipId = null;
-        
-        // this.group.selectAll('.item-circle')
-        //     .attr('opacity', d => this.chart.isFreezeActive() ? (this.chart.isFrozen(d.id) ? 1 : .1) : 1 )
-        //     .attr('stroke-width', 1)
 
         this.reverse()     
 
@@ -144,10 +137,7 @@ class NodesGroup {
 
         this.chart.fstlinks.reverse()
         
-
         this.chart.profiles.reverseDownplay()
-
-        
 
     }
 
@@ -164,7 +154,7 @@ class NodesGroup {
         this.group.selectAll('.item-circle')
             .filter(e => this.chart.areItemsVisible(e.node.key))
             .transition('focus-items')
-            .duration(500)
+            .duration(200)
             .attr('opacity', e => nodes.includes(e.id) ? 1 : .1)
             .attr('fill', this.chart.getItemColor())
     }

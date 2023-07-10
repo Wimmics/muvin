@@ -7,8 +7,10 @@
  - Run the server with **npm start**
 
 ## To run Muvin in a docker container
- - Build the docker container as **docker build . -t amenin/muvin**
- - Run the image as **docker run -p 8020:8020 -d amenin/muvin**
+
+- Build the docker container as **docker build . -t muvin**
+- Run the image as **docker run -p 8020:8020 -d muvin**
+
 
 ## To play with Muvin 
 

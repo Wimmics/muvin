@@ -73,6 +73,7 @@ app.get(prefix + '/data/:app/nodes', async function(req, res) {
 })
 
 app.get(prefix + '/data/:app', async function(req, res) {
+   
     let node = {value: req.query.value, type: req.query.type === 'undefined' ? undefined : req.query.type}
 
     let filename = `data/${req.params.app}/${node.value}${node.type ? '-' + node.type : ''}-data_vis.json`
