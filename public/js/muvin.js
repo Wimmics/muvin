@@ -406,6 +406,8 @@ template.innerHTML = `
         
         <h3>Muvin</h3>
 
+        
+
         <div id='menu-items' class='settings'>
             <div id="search-for">
                 <label>Search for</label>
@@ -442,6 +444,22 @@ template.innerHTML = `
     </div>
 
     <div class="vis">
+        <div class='import-form'>
+            <div id='topbar'>
+                <label id='title'></label>
+                <image src='/muvin/images/close.svg'></image>
+            </div>
+            <div>
+                <label>Sort by</label>
+                <select class='sort'></select>
+            </div>
+            <div>
+                <label>Search for</label>
+                <input class='search' type='text' id='ul-search' placeholder='Enter value here'></input>
+            </div>
+            <ul class='values' id='ul-multi'></ul>
+        </div>
+
         <div id="loading">  
             <img width="70px" height="70px" src="/muvin/images/loading.svg"></img>
             <p>Loading data...</p>

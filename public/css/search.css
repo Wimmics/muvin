@@ -17,3 +17,66 @@
     animation-fill-mode: forwards;
     z-index: 100;
 }
+
+.import-form{
+    left: 25%;
+    top: 15%;
+    width: 50%;
+    height: 70%;
+    position: absolute;
+    z-index: 3;
+    display: none;
+    background-color: #f5f5f5;
+    gap: 10px;
+    flex-direction: column;
+    box-shadow: 5px 5px 5px #ccc;
+}
+
+#topbar{
+    top: 0px;
+    left: 0px;
+    height: 40px;
+    width: calc(100% - 10px);
+    background-color: rgb(44, 62, 80);
+    display: flex;
+    justify-content: space-between;
+    color: white;
+    vertical-align: middle;
+    padding: 5px;
+}
+
+#topbar label{
+    text-anchor: middle;
+    width: 85%;
+    padding: 10px;
+}
+
+#topbar img{
+    width: 20px;
+    height: 20px;
+    position: relative;
+    top: 25%;
+    cursor:pointer; 
+    filter:brightness(0) invert(1);
+}
+
+.import-form select,
+.import-form input {
+    padding: 2px;
+    width: 400px;
+}
+
+.import-form div{
+    padding: 5px;
+}
+
+.import-form ul{
+    width: auto; /* changed from 100% to acomodate multiple columns */
+	columns: 3; /* multiple columns to reduce sub-menu height */
+    overflow: scroll;
+    list-style-type: none;
+}
+
+.import-form ul li:hover{
+    background-color: #ccc;
+}

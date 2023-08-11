@@ -2,6 +2,7 @@ class ContextMenu {
     constructor() {
         this.chart = document.querySelector('#muvin')
 
+        this.importDiv = this.chart.shadowRoot.querySelector('.import-form')
     }
 
     getItemMenu() {
@@ -112,41 +113,102 @@ class ContextMenu {
                 })
         }
 
-
         let collaborators = this.chart.data.getNodeById(d).collaborators
-    
         if (collaborators.length) { /// the author has one or more co-authors
-            let collab = { title: 'Import data for', key: d }
-
-            collab.children = collaborators.map(e => { 
-                return { 
-                    title: `${e.value} ${e.type ? '(' + e.type + ')' : ''} (<b>${e.values.length}</b> items)`,
-                    key: e.key,
-                    action: () => {
-                        if (keys.includes(e.key)) return
-                        this.chart.data.open([e])
-                    },
-                    disabled: !e.enabled
-                }; 
+            menu.push({ title: 'Explore collaborators', 
+                action: (d) => this.openMenuSearch(d, collaborators)
             })
-
-            collab.children.splice(0, 0, {
-                title: 'All (' + collaborators.length + ')' ,
-                action: async () => {
-                    this.chart.data.open(collaborators.filter(e => e.enabled))
-                }
-            })
-
-            collab.children.splice(1, 0, {
-                title: 'First 10 collaborators',
-                action: async () => {
-                    this.chart.data.open(collaborators.slice(0, 10))                    
-                }
-            })
-
-            menu.push(collab)
         }
 
         return menu
+    }
+
+    openMenuSearch(d, values) {
+       
+        const _this = this;
+
+        let div = d3.select(this.importDiv)
+            .style('display', 'flex')
+        
+        let sorting = [{label: "Alphabetic Order", value: 'alpha'}, {label: "Number of Shared Items (Decreasing)", value: 'decreasing'}]
+
+        let node = this.chart.data.getNodeById(d)
+
+        let top = div.select('div#topbar')
+
+        top.select('label')
+            .text(`${node.name}: Search for collaborators`)
+
+        top.select('img')
+            .on('click', () => div.style('display', 'none'))
+
+        let select = div.select('.sort')
+            .attr('id', 'ul-sort')
+            .on('change', function() {
+                let selectedOption = this.options[this.selectedIndex]
+                _this.chart.data.sortCollaborators(selectedOption.value, d)
+
+                createList(_this.chart.data.getNodeById(d).collaborators)
+            })
+
+        select.selectAll('option')
+            .data(sorting)
+            .join(
+                enter => enter.append('option'),
+                update => update,
+                exit => exit.remove()
+            )
+            .attr('value', d => d.value)
+            .text(d => d.label)
+            .property('selected', e => e.value === node.sorting)
+
+        div.select('input')
+            .on('keyup', search)
+
+        createList(values)
+        
+        function createList(values) {
+            div.select('ul')
+                .selectAll('li')
+                .data(values)
+                .join(
+                    enter => enter.append('li')
+                        .style('cursor', 'pointer')
+                        .call(label => label.append('tspan')
+                            .attr('id', 'node')
+                            .text(e => `${e.value} ${e.type ? '(' + e.type + ')' : ''} (`))
+                        .call(label => label.append('tspan')
+                            .attr('id', 'item-count')
+                            .text(e => e.values.length)
+                            .style('font-weight', 'bold'))
+                        .call(label => label.append('tspan')
+                            .text(' items)'))
+                        ,
+                    update => update
+                        .call(label => label.select('tspan#node')
+                            .text(e => `${e.value} ${e.type ? '(' + e.type + ')' : ''} (`))
+                        .call(label => label.select('tspan#item-count')
+                            .text(e => e.values.length)),
+                    exit => exit.remove()
+                )
+                .on('click', e => _this.chart.data.open([e]))
+        }
+
+        function search() {
+            var input, filter, ul, li, a, i, txtValue;
+            input = _this.chart.shadowRoot.querySelector("#ul-search");
+            filter = input.value.toUpperCase();
+            ul = _this.chart.shadowRoot.querySelector("#ul-multi");
+            li = ul.getElementsByTagName("li");
+            for (i = 0; i < li.length; i++) {
+                
+                txtValue = li[i].textContent || li[i].innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    li[i].style.display = "";
+                } else {
+                    li[i].style.display = "none";
+                }
+            }
+        }
     }
 }
