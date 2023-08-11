@@ -1,6 +1,8 @@
 class NodesAxis {
     constructor() {
         this.scale = fisheye.scale(d3.scalePoint) 
+
+        
         this.tickDistances;
         this.chart = document.querySelector('#muvin')
         this.div = d3.select(this.chart.shadowRoot.querySelector('.nodes-panel'))
@@ -328,17 +330,13 @@ class NodesAxis {
             .attr('opacity', e => d === e || this.frozenNodes.fst.includes(e) ? 1 : .1)
 
         this.chart.nodes.highlightNodeItems(this.frozenNodes.snd)
-        this.chart.sndlinks.reverse()
 
-        // TODO: verify whether it still works
-        // if (this.chart.getTimeSelection())
-        //     group.selectAll('.node-link')
-        //         .transition('focus-links')
-        //         .duration(500)
-        //         .attr('opacity', e => e.source.key === d || e.target.key === d ? 1 : 0)
+        if (this.chart.getTimeSelection())
+            group.selectAll('.node-link')
+                .transition('focus-links')
+                .duration(500)
+                .attr('opacity', e => e.source.key === d || e.target.key === d ? 1 : 0)
 
-        //this.chart.profiles.downplay(d)
-    
     }
 
     removeHighlight() {
@@ -355,17 +353,12 @@ class NodesAxis {
             .duration(500)
             .attr('opacity', 1)
 
-        // group.selectAll('.node-link')
-        //     .attr('opacity', this.chart.getTimeSelection() ? 1 : 0)
-
-        this.chart.sndlinks.reverse()
+        if (this.chart.getTimeSelection()) this.chart.sndlinks.reverse()
 
         group.selectAll('.artist-label')
             .transition('unfocus-node')
             .duration(500)
             .attr('opacity', 1)
-
-        //this.chart.profiles.reverseDownplay()
     }
 
     getStep(value) {

@@ -51,6 +51,8 @@ class Profile {
             }
         })
 
+        console.log('profile = ', this.data)
+
         /// one group per artist ; it will hold the profile wave ////////
         this.group = d3.select(this.chart.shadowRoot.querySelector('#nodes-group')).selectAll('g.artist')
             .selectAll('g.profile')

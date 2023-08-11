@@ -9,7 +9,7 @@ class NodeLinksGroup{
 
     set() {
 
-        this.linkInfo = d => `${d.source.name} → ${d.target.name}\nItem: ${d.value.title}\nContribution: ${d.types.map(e => capitalizeFirstLetter(e)).join(', ')}`
+        this.linkInfo = d => `${d.source.name} → ${d.target.name}\nItem: ${d.value.title}\nContribution: ${d.types.length ? d.types.map(e => capitalizeFirstLetter(e)).join(', ') : ''}` 
         
         this.linkGenerator = d3.linkVertical()
             .x(d => d.x)
@@ -199,7 +199,7 @@ class NodeLinksGroup{
                 }
 
 
-                let types = d.type.filter( (e,i) => d.type.indexOf(e) === i)
+                let types = d.type.filter( (e,i) => d.type.indexOf(e) === i).flat()
                 types.sort( (a,b) => a.localeCompare(b))
 
                 let values = []

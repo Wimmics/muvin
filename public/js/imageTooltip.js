@@ -30,10 +30,11 @@ class ImageTooltip extends Tooltip{
 
         let data = this.chart.data.getItems()
         let values = data.filter(e => e.node.key === node.key && e.year === year && e.node.contribution.includes(d.key))
+        let totalYear = data.filter(e => e.year === year)
         
         let content = `<img src="/muvin/images/${this.chart.app}/${node.type}-icon.svg" width="15px"></img><b> ${node.name}</b><br><br>
         <b>Broadcaster:</b> ${capitalizeFirstLetter(d.key)}<br><br>
-        <b>${year}: ${values.length}</b> image${values.length > 1 ? 's' : ''} <br><br>
+        <b>${year}: ${values.length}</b> image${values.length > 1 ? 's' : ''} out of ${totalYear.length}<br><br>
         Click to keep it highlighted`
 
         this.setContent(content, id)

@@ -53,7 +53,7 @@
 
     <script>
         let locals = <%- JSON.stringify(locals) %>;
-        console.log(locals)
+        console.log("locals = ", locals)
 
         if (locals.params.value && locals.params.value.length) {
             let value = typeof(locals.params.value) === "string" ? locals.params.value : locals.params.value.join(',')

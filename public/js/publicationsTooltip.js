@@ -10,7 +10,7 @@ class PublicationsTooltip extends Tooltip{
 
         let keys = this.chart.data.getNodesKeys()
         
-        const contributors = e => `<b>${e.contnames.length} author(s):</b> ${e.contributors.map(val => keys.includes(val.key) && val.key != d.node.key ? `<b><i>${capitalizeFirstLetter(val.name)}</i></b>` : capitalizeFirstLetter(val.name)).join(', ')}`
+        const contributors = e => `<b>${e.contnames.length} author(s):</b> ${e.contributors.map(val => keys.includes(val.key) ? `<b><i>${capitalizeFirstLetter(val.name)}</i></b>` : capitalizeFirstLetter(val.name)).join(', ')}`
 
         this.setContent(`${itemName}<br>${contributors(d)}<br><br>${type}${more}`, id); 
     }
@@ -21,11 +21,11 @@ class PublicationsTooltip extends Tooltip{
 
         let data = this.chart.data.getItems()
         let values = data.filter(e => e.node.key === node.key && e.year === year && e.node.contribution.includes(d.key))
-        
+        let totalYear = data.filter(e => e.year === year)        
 
-        let content = `<b> ${node.name}</b><br><br>
-        <b>Publication Type:</b> ${capitalizeFirstLetter(d.key)}<br><br>
-        <b>${year}: ${values.length}</b> item${values.length > 1 ? 's' : ''} <br><br>
+        let content = `<b> ${node.name} (${year})</b><br>
+        <b>${totalYear.length}</b> publications<br><br>
+        <b>${capitalizeFirstLetter(d.key)}</b>: <b>${values.length}</b> publication${values.length > 1 ? 's' : ''}<br><br>
         Click to keep it highlighted`
 
         this.setContent(content, id)
