@@ -8,11 +8,7 @@ class LinksGroup {
 
     getData() {
         let isValid = d => this.chart.isNodeValid(d.source) && this.chart.isNodeValid(d.target) && !this.chart.isSelected(d.year)
-        let data = this.chart.data.links.filter(d => isValid(d) )
-
-        data = data.filter( (d,i) => data.findIndex(e => e.item === d.item && (e.source.key === d.source.key && e.target.key === d.target.key) || (e.source.key === d.target.key && e.target.key === d.source.key) ) === i)
-
-        data = data.filter(d => this.chart.isFreezeActive() ? this.chart.isFrozen(d.item) : true)
+        let data = this.chart.data.getLinks().filter(d => isValid(d) )
 
         return data
     }

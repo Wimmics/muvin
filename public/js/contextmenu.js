@@ -18,10 +18,18 @@ class ContextMenu {
         let menu = []
 
         if (this.chart.data.getNodesKeys().length > 1) {
-            menu.push({ title: d => this.chart.yAxis.freeze === d ? 'Release highlight' : 'Highlight network', 
+            menu.push({ title: d => this.chart.data.getFocus() === d ? 'Release highlight' : 'Highlight network', 
                         action: d => { 
-                            if (this.chart.yAxis.freeze === d) this.chart.yAxis.releaseFreeze()
-                            else this.chart.yAxis.setFreeze(d) 
+                            if (this.chart.data.getFocus() === d) {
+                                this.chart.data.updateFilters('focus', null)
+                            }
+                                
+                            else { 
+                                this.chart.data.updateFilters('focus', d)
+                            }
+
+                            this.chart.data.updateTime()
+                            this.chart.update()
                         }
                     })            
         }
@@ -166,32 +174,51 @@ class ContextMenu {
             .on('keyup', search)
 
         createList(values)
+
+        function getGeneralOptions(values) {
+            let options = []
+            options.push({
+                value: 'All (' + values.length + ')' ,
+                action: async () => {
+                    _this.chart.data.open(values.filter(e => e.enabled))
+                }
+            })
+
+            options.push({
+                value: 'First 10 collaborators (list order)',
+                action: async () => {
+                    _this.chart.data.open(values.slice(0, 10))                    
+                }
+            })
+
+            return options
+        }
         
         function createList(values) {
+            let data = getGeneralOptions(values).concat(values)
+
             div.select('ul')
                 .selectAll('li')
-                .data(values)
+                .data(data)
                 .join(
                     enter => enter.append('li')
                         .style('cursor', 'pointer')
                         .call(label => label.append('tspan')
                             .attr('id', 'node')
-                            .text(e => `${e.value} ${e.type ? '(' + e.type + ')' : ''} (`))
+                            .text(e => `${e.value} ${e.type ? '(' + e.type + ')' : ''}`))
                         .call(label => label.append('tspan')
                             .attr('id', 'item-count')
-                            .text(e => e.values.length)
+                            .text(e => e.values ? `(${e.values.length} items)` : '')
                             .style('font-weight', 'bold'))
-                        .call(label => label.append('tspan')
-                            .text(' items)'))
                         ,
                     update => update
                         .call(label => label.select('tspan#node')
-                            .text(e => `${e.value} ${e.type ? '(' + e.type + ')' : ''} (`))
+                            .text(e => `${e.value} ${e.type ? '(' + e.type + ')' : ''} `))
                         .call(label => label.select('tspan#item-count')
-                            .text(e => e.values.length)),
+                            .text(e => e.values ? `(${e.values.length} items)` : '')),
                     exit => exit.remove()
                 )
-                .on('click', e => _this.chart.data.open([e]))
+                .on('click', e => e.action ? e.action() : _this.chart.data.open([e]))
         }
 
         function search() {

@@ -122,11 +122,9 @@ class NodeLinksGroup{
     async getLinks() {
 
         // keep one link per node
-        let links = this.chart.data.getLinks().filter(d => this.chart.areItemsVisible(d.source.key) && this.chart.areItemsVisible(d.target.key) && this.chart.isSelected(+d.year))
-      
-        links = links.filter( (d,i) => links.findIndex(e => ((e.source.key === d.source.key && e.target.key === d.target.key) || (e.source.key === d.target.key && e.target.key === d.source.key)) && e.item === d.item && e.type === d.type) === i)
+        let links = JSON.parse(JSON.stringify(this.chart.data.getLinks())) // make a local copy of the data to avoid propagating the modifications below
 
-        links = links.filter( d => d.source.key !== d.target.key )
+        links = links.filter(d => this.chart.areItemsVisible(d.source.key) && this.chart.areItemsVisible(d.target.key) && this.chart.isSelected(+d.year))
 
         // remove crossing links
         let nodes = this.chart.data.getNodesKeys()
@@ -170,14 +168,17 @@ class NodeLinksGroup{
     async getData() {
         
         let links = await this.getLinks()
-
+        
         let linkedItems = links.map(d => d.item)
         let selection = this.chart.data.getItems().filter(e => linkedItems.includes(e.id) && this.chart.isSelected(e.year))
+        
         let data = []
 
         links.forEach(d => {
+           
             let nodesData = selection.filter(e =>  [d.source.key, d.target.key].includes(e.node.key) && e.id === d.item )
-            
+        
+
             for (let j = 0; j < nodesData.length - 1; j++) {
 
                 let sourceIndex = nodesData.findIndex(e => e.node.key === d.source.key)
@@ -199,7 +200,7 @@ class NodeLinksGroup{
                 }
 
 
-                let types = d.type.filter( (e,i) => d.type.indexOf(e) === i).flat()
+                let types = d.type.filter( (e,i) => d.type.indexOf(e) === i)
                 types.sort( (a,b) => a.localeCompare(b))
 
                 let values = []

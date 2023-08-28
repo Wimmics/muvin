@@ -167,6 +167,8 @@ class NodesAxis {
         }
 
         let iconPath = d => this.chart.app === 'crobora' ? `/muvin/images/${this.chart.app}/${this.data[d].type}-icon.svg` : ''
+        let rectFill = d => this.focus === d || this.chart.data.getFocus() === d ? this.color.focus : this.color.normal
+        let textColor =  d => this.focus === d || this.chart.data.getFocus() === d ? '#fff' : '#000'
 
         let group = d3.select(this.chart.shadowRoot.querySelector('#labels-group'))
         group.selectAll('g.artist-label')
@@ -178,7 +180,7 @@ class NodesAxis {
                     .attr('opacity', 1)
 
                     .call(g => g.append('rect')
-                        .attr('fill', d => this.focus === d ? this.color.focus : this.color.normal)
+                        .attr('fill', rectFill)
                         .attr('rx', 15)
                         .attr('width', rectwidth)
                         .attr('height', rectheight)
@@ -198,7 +200,7 @@ class NodesAxis {
                         .style('text-anchor', 'middle')
                         .attr('x', (rectwidth -(rectwidth * .05)) / 2)
                         .attr('y', '1.2em')
-                        .attr('fill', d => this.focus === d ? '#fff' : '#000')
+                        .attr('fill', textColor)
                         .style('pointer-events', 'none')
                     )
 
@@ -240,7 +242,7 @@ class NodesAxis {
 
                 update => update.call(g => g.select('text.title')
                         .text(d => this.data[d].name)
-                        .attr('fill', d => this.focus === d ? '#fff' : '#000')
+                        .attr('fill', textColor)
                         .style('font-size', function(d) { return getFontSize(d, this.getComputedTextLength())})
                     )
                     .call(g => g.select('.circle-plus')
@@ -254,7 +256,7 @@ class NodesAxis {
                     )
                     
                     .call(g => g.select('rect').transition().duration(500)
-                        .attr('fill', d => this.focus === d ? this.color.focus : this.color.normal)
+                        .attr('fill', rectFill)
                         .style('display', d => this.chart.areItemsVisible(d) ? 'block' : 'none') 
                     )
 

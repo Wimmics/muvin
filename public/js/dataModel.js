@@ -11,7 +11,8 @@ class DataModel {
         this.filters = {
             linkTypes: [],
             timeFrom: null,
-            timeTo: null
+            timeTo: null,
+            focus: null
         }
 
         this.colors = { 
@@ -26,13 +27,13 @@ class DataModel {
     }
 
     async fetchData(node) {
-        const response = await fetch('/muvin/data/' + this.chart.app + '?value=' + node.value + '&type=' + node.type)
+        const response = await fetch(this.chart.urlOrigin + '/muvin/data/' + this.chart.app + '?value=' + node.value + '&type=' + node.type)
 
         return await response.json()
     }
 
     async fetchNodesLabels(value) {
-        const response = await fetch('/muvin/data/' + value + '/nodes')
+        const response = await fetch(this.chart.urlOrigin + '/muvin/data/' + value + '/nodes')
         this.nodeLabels = await response.json()
         
     }
@@ -89,7 +90,6 @@ class DataModel {
             })
 
         url += values.join('&')
-        console.log("new url = ", url)
 
         window.open(url, "_self")
     }
@@ -127,8 +127,17 @@ class DataModel {
         return this.filters[type];
     }
 
+    getFocus() {
+        return this.filters.focus
+    }
+
     async updateTime() {
-        this.dates = this.items.map(d => d.year)
+        if (this.filters.focus) {
+            this.dates = this.getItems().map(d => d.year)
+        } else {
+            this.dates = this.items.map(d => d.year)
+        }
+        
         this.dates = this.dates.filter((d,i) => this.dates.indexOf(d) === i)
         this.dates.sort()
 
@@ -197,20 +206,50 @@ class DataModel {
     // getters 
 
     getItems() {
+
         let items = this.items.filter(d => !d.node.contribution.every(e => this.filters.linkTypes.includes(e)) )
-        items = items.filter(d => d.year >= this.filters.timeFrom && d.year <= this.filters.timeTo)
+
+        if (this.filters.timeFrom && this.filters.timeTo) {
+            items = items.filter(d => d.year >= this.filters.timeFrom && d.year <= this.filters.timeTo)
+        }
+       
+        if (this.filters.focus) {
+            let nodes = this.getNodesKeys()
+
+            items = items.filter(d => d.contributors.length > 1 // only collaborative items
+                && d.contributors.some(e => e.key === this.filters.focus) // include the author on focus
+                && d.contributors.some(e => nodes.includes(e.key) && e.key != this.filters.focus) // every author is visible
+                ) 
+        }
+
         return items
     }
 
     getItemById(key) {
-        return this.items.find(d => d.key === key)
+        return this.items.find(d => d.id === key)
     } 
 
     getLinks() {
        
         let links = this.links.filter(d => !this.filters.linkTypes.includes(d.type) )
       
-        links = links.filter(d => d.year >= this.filters.timeFrom && d.year <= this.filters.timeTo)
+        if (this.filters.timeFrom && this.filters.timeTo) 
+            links = links.filter(d => d.year >= this.filters.timeFrom && d.year <= this.filters.timeTo)
+
+        let nodes = this.getNodesKeys()
+
+        links = links.filter( (d,i) => links.findIndex(e => e.item === d.item && 
+                e.type === d.type &&
+                ((e.source.key === d.source.key && e.target.key === d.target.key) || (e.source.key === d.target.key && e.target.key === d.source.key)) &&
+                e.year === d.year) === i)
+
+        links = links.filter( d => nodes.includes(d.source.key) && nodes.includes(d.target.key))
+        links = links.filter( d => d.source.key !== d.target.key)
+       
+        if (this.filters.focus) {
+            links = links.filter(d => this.getItemById(d.item).contributors.some(e => e.key === this.filters.focus) )
+        }    
+
         return links
     }
 

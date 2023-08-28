@@ -12,13 +12,16 @@ class Muvin extends HTMLElement {
         this.visibleItems = null
         this.visibleProfile = null
 
+
     }
 
     async connectedCallback() {
         this.shadowRoot.appendChild(template.content.cloneNode(true));
         this.app = this.getAttribute("app")
 
-        this.url = `/muvin/${this.app}`
+        console.log(window.location)
+        this.urlOrigin = window.location.origin
+        this.url = `${this.urlOrigin}/muvin/${this.app}`
 
         this.div = d3.select(this.shadowRoot.querySelector('div.timeline'))
 
