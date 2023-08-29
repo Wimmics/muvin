@@ -9,13 +9,13 @@ class NodesAxis {
 
         this.freeze = false
 
-        this.SETTINGS = '/muvin/images/settings.svg'
-        this.NETWORK = '/muvin/images/network.svg'
+        this.SETTINGS = window.location.origin + '/muvin/images/settings.svg'
+        this.NETWORK = window.location.origin + '/muvin/images/network.svg'
 
-        this.EXPAND = '/muvin/images/expand.svg'
-        this.MINIMIZE = '/muvin/images/minimize.svg'
-        this.UP = '/muvin/images/up.svg'
-        this.DOWN = '/muvin/images/down.svg'
+        this.EXPAND = window.location.origin + '/muvin/images/expand.svg'
+        this.MINIMIZE = window.location.origin + '/muvin/images/minimize.svg'
+        this.UP = window.location.origin + '/muvin/images/up.svg'
+        this.DOWN = window.location.origin + '/muvin/images/down.svg'
 
         this.tooltipId = 'node'
 
@@ -166,7 +166,7 @@ class NodesAxis {
             return Math.min( (rectwidth * .8) / l, .8) * p  + "em"
         }
 
-        let iconPath = d => this.chart.app === 'crobora' ? `/muvin/images/${this.chart.app}/${this.data[d].type}-icon.svg` : ''
+        let iconPath = d => this.chart.app === 'crobora' ? `${window.location.origin}/muvin/images/${this.chart.app}/${this.data[d].type}-icon.svg` : ''
         let rectFill = d => this.focus === d || this.chart.data.getFocus() === d ? this.color.focus : this.color.normal
         let textColor =  d => this.focus === d || this.chart.data.getFocus() === d ? '#fff' : '#000'
 

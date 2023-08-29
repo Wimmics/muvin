@@ -19,8 +19,7 @@ class Muvin extends HTMLElement {
         this.shadowRoot.appendChild(template.content.cloneNode(true));
         this.app = this.getAttribute("app")
 
-        this.urlOrigin = window.location.origin
-        this.url = `${this.urlOrigin}/muvin/${this.app}`
+        this.url = `${window.location.origin}/muvin/${this.app}`
 
         this.div = d3.select(this.shadowRoot.querySelector('div.timeline'))
 
@@ -449,7 +448,7 @@ template.innerHTML = `
         <div class='import-form'>
             <div id='topbar'>
                 <label id='title'></label>
-                <image src='/muvin/images/close.svg'></image>
+                <image src='http://dataviz.i3s.unice.fr/muvin/images/close.svg'></image>
             </div>
             <div>
                 <label>Sort by</label>
@@ -463,7 +462,7 @@ template.innerHTML = `
         </div>
 
         <div id="loading">  
-            <img width="70px" height="70px" src="/muvin/images/loading.svg"></img>
+            <img width="70px" height="70px" src="http://dataviz.i3s.unice.fr/muvin/images/loading.svg"></img>
             <p>Loading data...</p>
         </div>
 

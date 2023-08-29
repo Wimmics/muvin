@@ -8,8 +8,8 @@ class Menu{
 
         this.width = 200;
 
-        this.openIcon = '/muvin/images/open.svg';
-        this.closeIcon = '/muvin/images/close.svg';
+        this.openIcon = window.location.origin + '/muvin/images/open.svg';
+        this.closeIcon = window.location.origin + '/muvin/images/close.svg';
     }
 
     init() {
