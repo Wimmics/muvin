@@ -1,5 +1,6 @@
 const port = 8020
 
+const https = require('https')
 const fs = require('fs');
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -134,5 +135,14 @@ app.get(prefix + '/testdata', function(req, res) {
     }
 })
 
-app.listen(port, async () => { console.log(`Server started at port ${port}.`) })
+https
+  .createServer({
+    key: fs.readFileSync("key.pem"),
+    cert: fs.readFileSync("cert.pem"),
+  }, app)
+  .listen(port, ()=>{
+    console.log(`server is runing at port ${port}`)
+  });
+
+//app.listen(port, async () => { console.log(`Server started at port ${port}.`) })
 
