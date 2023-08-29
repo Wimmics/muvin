@@ -19,7 +19,6 @@ class Muvin extends HTMLElement {
         this.shadowRoot.appendChild(template.content.cloneNode(true));
         this.app = this.getAttribute("app")
 
-        console.log(window.location)
         this.urlOrigin = window.location.origin
         this.url = `${this.urlOrigin}/muvin/${this.app}`
 
@@ -391,13 +390,13 @@ class Muvin extends HTMLElement {
 const template = document.createElement("template");
 template.innerHTML = `
     
-    <link rel="stylesheet" href="/muvin/css/header.css">
-    <link rel="stylesheet" href="/muvin/css/dropdown.css">
-    <link rel="stylesheet" href="/muvin/css/timeline.css">
-    <link rel="stylesheet" href="/muvin/css/legend.css">
-    <link rel="stylesheet" href="/muvin/css/menu.css">
-    <link rel="stylesheet" href="/muvin/css/search.css">
-    <link rel="stylesheet" href="/muvin/css/timeslider.css">
+    <link rel="stylesheet" href="http://dataviz.i3s.unice.fr/muvin/css/header.css">
+    <link rel="stylesheet" href="http://dataviz.i3s.unice.fr/muvin/css/dropdown.css">
+    <link rel="stylesheet" href="http://dataviz.i3s.unice.fr/muvin/css/timeline.css">
+    <link rel="stylesheet" href="http://dataviz.i3s.unice.fr/muvin/css/legend.css">
+    <link rel="stylesheet" href="http://dataviz.i3s.unice.fr/muvin/css/menu.css">
+    <link rel="stylesheet" href="http://dataviz.i3s.unice.fr/muvin/css/search.css">
+    <link rel="stylesheet" href="http://dataviz.i3s.unice.fr/muvin/css/timeslider.css">
 
     <div class='loading' id='div-loading'></div>
     <div class='tooltip' id='cluster-tooltip'></div>
