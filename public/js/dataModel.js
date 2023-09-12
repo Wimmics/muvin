@@ -27,13 +27,13 @@ class DataModel {
     }
 
     async fetchData(node) {
-        const response = await fetch('/muvin/data/' + this.chart.app + '?value=' + node.value + '&type=' + node.type)
+        const response = await fetch(this.chart.baseUrl + '/muvin/data/' + this.chart.app + '?value=' + node.value + '&type=' + node.type)
 
         return await response.json()
     }
 
     async fetchNodesLabels(value) {
-        const response = await fetch('/muvin/data/' + value + '/nodes')
+        const response = await fetch(this.chart.baseUrl + '/muvin/data/' + value + '/nodes')
         this.nodeLabels = await response.json()
         
     }

@@ -25,7 +25,7 @@ class Legend {
             .attr('transform', `translate(0, 25)`)
 
         this.svg.append('svg:image')
-            .attr('xlink:href', '/muvin/images/question.svg')
+            .attr('xlink:href', `${this.chart.baseUrl}/muvin/images/question.svg`)
             .attr('width', 15)
             .attr('height', 15)
             .attr('x', 110)

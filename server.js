@@ -138,11 +138,16 @@ app.get(prefix + '/testdata', function(req, res) {
 
 app.listen(port, async () => { console.log(`HTTP Server started at port ${port}.`) })
 
-let privateKey = fs.readFileSync( '/etc/httpd/certificate/exp_20240906/dataviz_i3s_unice_fr.key' )
-let certificate = fs.readFileSync( '/etc/httpd/certificate/exp_20240906/dataviz_i3s_unice_fr_cert.crt' )
-let ca = fs.readFileSync( '/etc/httpd/certificate/exp_20240906/dataviz_i3s_unice_fr_AC.cer' )
-var options = { key: privateKey, cert: certificate, ca: ca }
-https.createServer( options, function(req,res) {
-    app.handle( req, res );
-} ).listen( 8023, async () => { console.log(`HTTPS Server started at port ${8023}.`) } );
+try {
+    var privateKey = fs.readFileSync( '/etc/httpd/certificate/exp_20240906/dataviz_i3s_unice_fr.key' );
+    var certificate = fs.readFileSync( '/etc/httpd/certificate/exp_20240906/dataviz_i3s_unice_fr_cert.crt' );
+    var ca = fs.readFileSync( '/etc/httpd/certificate/exp_20240906/dataviz_i3s_unice_fr_AC.cer' );
+    var options = {key: privateKey, cert: certificate, ca: ca};
+    https.createServer( options, function(req,res)
+    {
+        app.handle( req, res );
+    } ).listen( 8023 );
+} catch(e) {
+    console.log("Could not start HTTPS server")
+}
 

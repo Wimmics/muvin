@@ -200,7 +200,7 @@ class NodeLinksGroup{
                 }
 
 
-                let types = d.type.filter( (e,i) => d.type.indexOf(e) === i)
+                let types = d.type.filter( (e,i) => d.type.indexOf(e) === i).flat()
                 types.sort( (a,b) => a.localeCompare(b))
 
                 let values = []
