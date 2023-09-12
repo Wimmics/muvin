@@ -19,7 +19,7 @@ class Muvin extends HTMLElement {
         this.shadowRoot.appendChild(template.content.cloneNode(true));
         this.app = this.getAttribute("app")
 
-        this.baseUrl = 'http://localhost:8020'
+        this.baseUrl = 'https://dataviz.i3s.unice.fr'
         this.url = this.baseUrl + `/muvin/${this.app}`
 
         this.div = d3.select(this.shadowRoot.querySelector('div.timeline'))
