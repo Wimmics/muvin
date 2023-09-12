@@ -62,7 +62,7 @@ class CroboraTransform extends Transform{
                 nodeContribution: [ d.channel.toLowerCase() ],
 
                 contributors: getContributors(),
-                link: `https://dataviz.i3s.unice.fr/crobora/document/${d.ID_document}`,
+                link: `http://dataviz.i3s.unice.fr/crobora/document/${d.ID_document}`,
                 parentId: d.ID_document,
                 parentTitle: d.document_title,
                 parentDate: d.day_airing

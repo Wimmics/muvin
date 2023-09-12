@@ -155,11 +155,11 @@ const datasets = {
     // CROBORA
     crobora: {
         type: 'api',
-        url: "https://dataviz.i3s.unice.fr/crobora-api/",
+        url: "http://dataviz.i3s.unice.fr/crobora-api/",
         categories: ['france 2', 'arte', 'tf1', 'rai uno', 'rai due', 'canale 5', 'Web'],
 
-        nodeNames: ['https://dataviz.i3s.unice.fr/crobora-api/cluster/names', 'https://dataviz.i3s.unice.fr/crobora-api/cluster/names2'],
-        items: 'https://dataviz.i3s.unice.fr/crobora-api/search/imagesOR?categories=$category&keywords=$value&options=illustration&options=location&options=celebrity&options=event'
+        nodeNames: ['http://dataviz.i3s.unice.fr/crobora-api/cluster/names', 'http://dataviz.i3s.unice.fr/crobora-api/cluster/names2'],
+        items: 'http://dataviz.i3s.unice.fr/crobora-api/search/imagesOR?categories=$category&keywords=$value&options=illustration&options=location&options=celebrity&options=event'
     }   
 }
 
