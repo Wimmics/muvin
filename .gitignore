@@ -3,6 +3,4 @@ package-lock.json
 
 data/**
 
-https-proxy-master/**
-
 .DS_Store
