@@ -38,7 +38,7 @@ Open the application on the browser at http://localhost:8020/muvin/
 
  ## Online demo
 
- The visualization is available online at http://dataviz.i3s.unice.fr/muvin/
+ The visualization is available online at https://dataviz.i3s.unice.fr/muvin/
 
  ## License
 
