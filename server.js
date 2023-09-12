@@ -1,3 +1,5 @@
+const https = require("https")
+
 const port = 8020
 
 const fs = require('fs');
@@ -135,4 +137,13 @@ app.get(prefix + '/testdata', function(req, res) {
 })
 
 app.listen(port, async () => { console.log(`Server started at port ${port}.`) })
+
+var privateKey = fs.readFileSync( '/etc/httpd/certificate/exp_20240906/dataviz_i3s_unice_fr.key' );
+var certificate = fs.readFileSync( '/etc/httpd/certificate/exp_20240906/dataviz_i3s_unice_fr_cert.crt' );
+var ca = fs.readFileSync( '/etc/httpd/certificate/exp_20240906/dataviz_i3s_unice_fr_AC.cer' );
+var options = {key: privateKey, cert: certificate, ca: ca};
+https.createServer( options, function(req,res)
+{
+    app.handle( req, res );
+} ).listen( 8023 );
 
