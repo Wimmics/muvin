@@ -390,20 +390,20 @@ class Muvin extends HTMLElement {
 const template = document.createElement("template");
 template.innerHTML = `
     
-    <link rel="stylesheet" href="/muvin/css/header.css">
-    <link rel="stylesheet" href="/muvin/css/dropdown.css">
-    <link rel="stylesheet" href="/muvin/css/timeline.css">
-    <link rel="stylesheet" href="/muvin/css/legend.css">
-    <link rel="stylesheet" href="/muvin/css/menu.css">
-    <link rel="stylesheet" href="/muvin/css/search.css">
-    <link rel="stylesheet" href="/muvin/css/timeslider.css">
+    <link rel="stylesheet" href="https://dataviz.i3s.unice.fr/muvin/css/header.css">
+    <link rel="stylesheet" href="https://dataviz.i3s.unice.fr/muvin/css/dropdown.css">
+    <link rel="stylesheet" href="https://dataviz.i3s.unice.fr/muvin/css/timeline.css">
+    <link rel="stylesheet" href="https://dataviz.i3s.unice.fr/muvin/css/legend.css">
+    <link rel="stylesheet" href="https://dataviz.i3s.unice.fr/muvin/css/menu.css">
+    <link rel="stylesheet" href="https://dataviz.i3s.unice.fr/muvin/css/search.css">
+    <link rel="stylesheet" href="https://dataviz.i3s.unice.fr/muvin/css/timeslider.css">
 
     <div class='loading' id='div-loading'></div>
     <div class='tooltip' id='cluster-tooltip'></div>
     <div class='tooltip' id='item-tooltip'></div>
     <div class='tooltip' id='node-tooltip'></div>
     <div class='tooltip' id='profile-tooltip'></div>
-    
+
     <div class="menu">
         
         <h3>Muvin</h3>
@@ -439,7 +439,7 @@ template.innerHTML = `
                     </div>
                     
                     <label class='time-info' id='to-label'> </label>
-                   
+                
                 </div>
             </div>
         </div>
@@ -449,7 +449,7 @@ template.innerHTML = `
         <div class='import-form'>
             <div id='topbar'>
                 <label id='title'></label>
-                <image src='/muvin/images/close.svg'></image>
+                <image src='https://dataviz.i3s.unice.fr/muvin/images/close.svg'></image>
             </div>
             <div>
                 <label>Sort by</label>
@@ -463,7 +463,7 @@ template.innerHTML = `
         </div>
 
         <div id="loading">  
-            <img width="70px" height="70px" src="/muvin/images/loading.svg"></img>
+            <img width="70px" height="70px" src="https://dataviz.i3s.unice.fr/muvin/images/loading.svg"></img>
             <p>Loading data...</p>
         </div>
 
@@ -514,7 +514,7 @@ template.innerHTML = `
                 </svg>
             </div>
 
-       
+    
         
     </div>
     `
