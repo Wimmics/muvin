@@ -18,6 +18,7 @@ class Muvin extends HTMLElement {
     async connectedCallback() {
         this.shadowRoot.appendChild(template.content.cloneNode(true));
         this.app = this.getAttribute("app")
+        this.searchHidden = this.getAttribute("search") === "true"
 
         this.baseUrl = 'http://localhost:8020'
         this.url = this.baseUrl + `/muvin/${this.app}`
@@ -82,10 +83,10 @@ class Muvin extends HTMLElement {
             })
         }
 
-        if (values.length) {
-            if (this.app === 'crobora') this.menu.hideSearchFor()
-            values.forEach(async (d) => await this.data.add(d))
-        }
+        if (this.searchHidden) this.menu.hideSearchFor()
+        
+        if (values.length) values.forEach(async (d) => await this.data.add(d))
+        
         // else this.test() 
 
     }
@@ -408,13 +409,12 @@ template.innerHTML = `
         
         <h3>Muvin</h3>
 
-        
-
         <div id='menu-items' class='settings'>
             <div id="search-for">
                 <label>Search for</label>
                 <input type="text" list='nodes-list' id="nodes-input" placeholder="Type here">
                 <datalist id='nodes-list'></datalist>
+                <button id="search-go">Go</button>
             </div>
 
             <div id="view-options" style='display: none;'>

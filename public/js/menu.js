@@ -23,14 +23,14 @@ class Menu{
                     if (this.value.length > 2) 
                         _this.updateAutocomplete(this.value.toLowerCase())
                 } else {
-                    
-                    let value = this.value
-                    let node = d3.select(this.list).selectAll('option').filter(function() { return this.value === value }).datum()
-                    
-                    //_this.chart.data.add(node)
-                    _this.chart.data.open([node])
-                    _this.clearSearch()
+                    _this.loadData(this.value)
                 }
+            })
+
+        this.div.select("#search-go")
+            .on('click', () => {
+                let value = this.div.select("#nodes-input").node().value
+                this.loadData(value)
             })
         
 
@@ -45,6 +45,24 @@ class Menu{
 
         this.div.select('#clear-network').on('click', () => { this.chart.data.clear() })
              
+    }
+
+    loadData(value) {
+        
+        let datalist = d3.select(this.chart.shadowRoot.querySelector('#nodes-list'))
+        
+        let option = datalist.selectAll('option').filter(function() { return this.value === value })
+        
+        let node = {value: value}
+        if (option.size())
+            node = option.datum()
+        else if (this.chart.app === 'crobora') {
+            alert('You must choose an option from the list.')
+            return
+        }
+        
+        this.chart.data.open([node])
+        this.clearSearch()
     }
 
     hideSearchFor() {
@@ -144,7 +162,7 @@ class Menu{
                     lowerSlider.value = upperVal - 4;
                     
                     if (lowerVal == lowerSlider.min) {
-                        upperSlider.value = 4;
+                        upperSlider.value = parseInt(lowerSlider.min) + 4;
                     }
                 }
 
