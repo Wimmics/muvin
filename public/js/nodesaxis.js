@@ -234,7 +234,7 @@ class NodesAxis {
                         .attr('height', iconsize)
                         .attr('x', rectwidth)
                         .attr('y', rectheight / 3 + iconsize / 2)
-                        .style('display', d => this.chart.areItemsVisible(d) ? 'block' : 'none')
+                        .style('display', d => this.chart.areItemsVisible(d) && !this.chart.searchHidden ? 'block' : 'none')
                         .on('click', d3.contextMenu(d => this.contextmenu.getNetworkMenu(d)))
                         .call(image => image.append('title').text('Click to get more options'))
                     )
@@ -251,7 +251,7 @@ class NodesAxis {
                     )
 
                     .call(g => g.select('.circle-network')
-                        .style('display', d => this.chart.areItemsVisible(d) ? 'block' : 'none')
+                        .style('display', d => this.chart.areItemsVisible(d) && !this.chart.searchHidden ? 'block' : 'none')
                         .on('click', d3.contextMenu(d => this.contextmenu.getNetworkMenu(d)))
                     )
                     
