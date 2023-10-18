@@ -146,11 +146,14 @@ class Muvin extends HTMLElement {
 
         if (this.data.isEmpty()) {
             this.shadowRoot.querySelector('.welcome-text').style.display = 'block'
+            this.shadowRoot.querySelector('#display-items-info').style.display = 'none'
             this.menu.hideViewSettings()
             this.legend.hide()
             this.div.style('display', 'none')
             return
         }
+
+        this.shadowRoot.querySelector('#display-items-info').style.display = 'block'
 
         this.div.style('display', 'flex')
         this.shadowRoot.querySelector('.welcome-text').style.display = 'none'
@@ -470,6 +473,17 @@ template.innerHTML = `
                 <div>
                     <button id="clear-network">Clear Network</button>
                 </div>
+
+                <div class="section">
+                    <div>
+                        <input type="checkbox" id="display-items" style="transform: scale(.5);">
+                        <label >Display Items</label> 
+                    </div>
+                </div>
+
+                <div>
+                    <button id="clear-network">Clear Network</button>
+                </div>
             </div>
         </div>
     </div>
@@ -502,7 +516,7 @@ template.innerHTML = `
 
         
             <div class='legend'>  </div>
-            <div style="position:relative; top: 100px; font-size: 11px;">
+            <div id="display-items-info" style="position:relative; top: 100px; font-size: 11px; display: none;">
                 <p>Obs.: When more than 10 nodes are displayed, items are not displayed by default. You can display them by using the checkbox above.
             </div>
             <div class='timeline'>
