@@ -12,6 +12,10 @@
     color: white;
 }
 
+.menu div.section {
+    border-left: 1px solid #fff;
+}
+
 .menu .closebtn {
     position: absolute;
     top: 0;
@@ -97,9 +101,13 @@
 }
 
 .settings label{
-    width: 140px;
+    width: 180px;
     padding: 10px;
     position: relative;
+}
+
+.settings button {
+    width: 100px;
 }
 
 .settings tr{
