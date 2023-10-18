@@ -221,6 +221,7 @@ class Muvin extends HTMLElement {
 
     updateItemsDisplay(display) {
         this.showItems = display;
+        console.log(this.showItems)
         this.draw()
     }
 
@@ -474,16 +475,6 @@ template.innerHTML = `
                     <button id="clear-network">Clear Network</button>
                 </div>
 
-                <div class="section">
-                    <div>
-                        <input type="checkbox" id="display-items" style="transform: scale(.5);">
-                        <label >Display Items</label> 
-                    </div>
-                </div>
-
-                <div>
-                    <button id="clear-network">Clear Network</button>
-                </div>
             </div>
         </div>
     </div>
