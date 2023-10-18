@@ -44,6 +44,8 @@ class Menu{
         this.div.select('#items-input-clear').on('click', () => this.chart.nodes.clearHighlight())
 
         this.div.select('#clear-network').on('click', () => { this.chart.data.clear() })
+
+        this.div.select('#display-items').on('click', function() { _this.chart.updateItemsDisplay(this.checked) } )
              
     }
 
@@ -53,10 +55,10 @@ class Menu{
         
         let option = datalist.selectAll('option').filter(function() { return this.value === value })
         
-        let node = {value: value}
+        let node = null// {value: value}
         if (option.size())
             node = option.datum()
-        else if (this.chart.app === 'crobora') {
+        else {
             alert('You must choose an option from the list.')
             return
         }
@@ -182,5 +184,9 @@ class Menu{
 
     setWidth(val) {
         this.div.style('width', val + 'px')
+    }
+
+    toggleDisplayItems(value) {
+        this.div.select("#display-items").property('checked', value)
     }
 }

@@ -21,7 +21,7 @@ class PublicationsTooltip extends Tooltip{
 
         let data = this.chart.data.getItems()
         let values = data.filter(e => e.node.key === node.key && e.year === year && e.node.contribution.includes(d.key))
-        let totalYear = data.filter(e => e.year === year)        
+        let totalYear = data.filter(e => e.node.key === node.key && e.year === year)        
 
         let content = `<b> ${node.name} (${year})</b><br>
         <b>${totalYear.length}</b> publications<br><br>

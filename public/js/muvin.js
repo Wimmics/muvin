@@ -12,7 +12,7 @@ class Muvin extends HTMLElement {
         this.visibleItems = null
         this.visibleProfile = null
 
-
+        this.showItems = true
     }
 
     async connectedCallback() {
@@ -85,7 +85,13 @@ class Muvin extends HTMLElement {
 
         if (this.searchHidden) this.menu.hideSearchFor()
         
-        if (values.length) values.forEach(async (d) => await this.data.add(d))
+        if (values.length) { 
+            if (values.length > 10) {
+                this.menu.toggleDisplayItems(false)
+                this.showItems = false
+            }
+            values.forEach(async (d) => await this.data.add(d))
+        }
         
         // else this.test() 
 
@@ -140,11 +146,14 @@ class Muvin extends HTMLElement {
 
         if (this.data.isEmpty()) {
             this.shadowRoot.querySelector('.welcome-text').style.display = 'block'
+            this.shadowRoot.querySelector('#display-items-info').style.display = 'none'
             this.menu.hideViewSettings()
             this.legend.hide()
             this.div.style('display', 'none')
             return
         }
+
+        this.shadowRoot.querySelector('#display-items-info').style.display = 'block'
 
         this.div.style('display', 'flex')
         this.shadowRoot.querySelector('.welcome-text').style.display = 'none'
@@ -165,6 +174,8 @@ class Muvin extends HTMLElement {
         this.visibleNodes = [...this.data.getNodesKeys()]
         this.visibleProfile = [...this.visibleNodes]
         this.visibleItems = [...this.visibleNodes]
+
+        
 
         this.menu.updateItemsSearch()
         this.menu.updateTimeFilter()
@@ -208,8 +219,17 @@ class Muvin extends HTMLElement {
         return this.data;
     }
 
+    updateItemsDisplay(display) {
+        this.showItems = display;
+        this.draw()
+    }
+
+    drawItems() {
+        return this.showItems
+    }
+
     areItemsVisible(key) {
-        return this.visibleItems.includes(key)
+        return this.showItems && this.visibleItems.includes(key)
     }
 
     displayItems(d) {
@@ -409,8 +429,8 @@ template.innerHTML = `
         
         <h3>Muvin</h3>
 
-        <div id='menu-items' class='settings'>
-            <div id="search-for">
+        <div id='menu-items' class='settings' >
+            <div id="search-for" class='section'>
                 <label>Search for</label>
                 <input type="text" list='nodes-list' id="nodes-input" placeholder="Type here">
                 <datalist id='nodes-list'></datalist>
@@ -418,16 +438,17 @@ template.innerHTML = `
             </div>
 
             <div id="view-options" style='display: none;'>
-                <button id="clear-network">Clear Network</button>
+                
 
-                <div >
-                    <label>Search items</label>
+                <div class = 'section'>
+                    <label >Search items</label>
                     <input type="text" list='items-list' id="items-input" placeholder="Type here">
-                    <datalist id='items-list'></datalist>
                     <button id='items-input-clear'>Clear Search</button>
+                    <datalist id='items-list'></datalist>
+                    
                 </div>
 
-                <div class='timePeriod'>
+                <div class='timePeriod section'>
                     <label>Time Period</label>
                     <label class='time-info' id='from-label'> </label>
 
@@ -440,6 +461,17 @@ template.innerHTML = `
                     
                     <label class='time-info' id='to-label'> </label>
                    
+                </div>
+
+                <div class="section">
+                    <div>
+                        <input type="checkbox" id="display-items" style="transform: scale(.5);">
+                        <label >Display Items</label> 
+                    </div>
+                </div>
+
+                <div>
+                    <button id="clear-network">Clear Network</button>
                 </div>
             </div>
         </div>
@@ -473,7 +505,9 @@ template.innerHTML = `
 
         
             <div class='legend'>  </div>
-
+            <div id="display-items-info" style="position:relative; top: 100px; font-size: 11px; display: none;">
+                <p>Obs.: When more than 10 nodes are displayed, items are not displayed by default. You can display them by using the checkbox above.
+            </div>
             <div class='timeline'>
                 <div class='nodes-panel'>
                     <svg>
