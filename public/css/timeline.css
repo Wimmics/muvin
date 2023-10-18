@@ -39,7 +39,7 @@ body{
 .slider-button {
     fill: #dbdbdb;
     stroke: #ccc;
-    cursor: grab;
+    cursor: move;
 }
 
 .vis{
