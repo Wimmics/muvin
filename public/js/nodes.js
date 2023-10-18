@@ -143,7 +143,7 @@ class NodesGroup {
 
     reverse() {
         this.group.selectAll('.item-circle')
-            .attr('opacity', d => this.chart.isFreezeActive() ? (this.chart.isFrozen(d.id) ? 1 : .1) : 1 )
+            .attr('opacity', d => this.chart.isFreezeActive() ? (this.chart.isFrozen(d.id) ? 1 : .1) : (this.chart.drawItems() ? 1 : 0) )
             .attr('stroke-width', 1)
             .attr('fill', this.chart.getItemColor())
 
