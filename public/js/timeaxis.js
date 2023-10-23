@@ -18,7 +18,7 @@ class TimeAxis{
 
         let dimensions = this.chart.getDimensions()
 
-        let step = (dimensions.width - dimensions.left) / this.values.length
+        let step = this.timeScale.getStep() || (dimensions.width - dimensions.left) / this.values.length
         
         let focusStep = Math.min(step * 5, 700)
 
