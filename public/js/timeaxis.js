@@ -16,17 +16,22 @@ class TimeAxis{
       
         this.values = this.chart.data.getDates()
 
-        let dimensions = this.chart.getDimensions()
+        let chartDimensions = this.chart.getDimensions()
+        let chartWidth = this.chart.getDefaultWidth()
 
-        let step = this.timeScale.getStep() || (dimensions.width - dimensions.left) / this.values.length
-        
+        let step = (chartWidth - chartDimensions.left) / this.values.length
         let focusStep = Math.min(step * 5, 700)
 
         this.timeScale.setDomain(this.values)
         this.timeScale.setStep(step)
         this.timeScale.setFocusLength(focusStep)
-        this.timeScale.setStartingPos(dimensions.left)
+        this.timeScale.setStartingPos(chartDimensions.left)
         await this.timeScale.setMapping()
+
+        let onFocus = this.timeScale.getFocus()
+        if (onFocus && onFocus.length) {
+            onFocus.forEach(d => this.timeScale.setDistortion(d))
+        }
     }
 
     drawLabels() {

@@ -22,9 +22,10 @@ class Menu{
                 if (eventSource === 'key') {
                     if (this.value.length > 2) 
                         _this.updateAutocomplete(this.value.toLowerCase())
-                } else {
-                    _this.loadData(this.value)
-                }
+                } 
+                // else {
+                //     _this.loadData(this.value)
+                // }
             })
 
         this.div.select("#search-go")
@@ -46,24 +47,38 @@ class Menu{
         this.div.select('#clear-network').on('click', () => { this.chart.data.clear() })
 
         this.div.select('#display-items').on('click', function() { _this.chart.updateItemsDisplay(this.checked) } )
-             
+            
+        this.div.select('#time-button').on('click', () => {
+            let dropdown = this.chart.shadowRoot.querySelector("#timeDropdown")
+            dropdown.classList.toggle("show")
+
+            let bounding = dropdown.getBoundingClientRect()
+            let out = (bounding.left + bounding.width) - window.innerWidth
+        
+            if (out > 0)
+                dropdown.style.left = window.innerWidth - (bounding.left + bounding.width) - 50 + "px"
+        })
     }
 
     loadData(value) {
+        let node;
+        if (this.chart.app === 'crobora') {
+            let datalist = d3.select(this.chart.shadowRoot.querySelector('#nodes-list'))
+            let option = datalist.selectAll('option').filter(function() { return this.value === value })
+            if (option.size()) node = option.datum()
+        } else 
+            node = this.chart.data.getNode(value.trim())
+
+        console.log("node = ", node)
         
-        let datalist = d3.select(this.chart.shadowRoot.querySelector('#nodes-list'))
-        
-        let option = datalist.selectAll('option').filter(function() { return this.value === value })
-        
-        let node = null// {value: value}
-        if (option.size())
-            node = option.datum()
+        if (node)
+            this.chart.data.open([node])
         else {
             alert('You must choose an option from the list.')
             return
         }
         
-        this.chart.data.open([node])
+        
         this.clearSearch()
     }
 

@@ -25,8 +25,8 @@ class Muvin extends HTMLElement {
 
         this.div = d3.select(this.shadowRoot.querySelector('div.timeline'))
 
-        this.width = this.div.node().clientWidth
-
+        this.defaultWidth = this.width = this.div.node().clientWidth
+        
         this.svg = this.div.select('svg#chart')
 
         this.group = this.svg.select('g#chart-group')
@@ -87,9 +87,9 @@ class Muvin extends HTMLElement {
         
         if (values.length) { 
             if (values.length > 10) {
-                this.menu.toggleDisplayItems(false)
                 this.showItems = false
             }
+            this.menu.toggleDisplayItems(this.showItems)
             values.forEach(async (d) => await this.data.add(d))
         }
         
@@ -175,8 +175,6 @@ class Muvin extends HTMLElement {
         this.visibleProfile = [...this.visibleNodes]
         this.visibleItems = [...this.visibleNodes]
 
-        
-
         this.menu.updateItemsSearch()
         this.menu.updateTimeFilter()
 
@@ -206,6 +204,7 @@ class Muvin extends HTMLElement {
     draw() {
 
         this.width = this.xAxis.range()[1]
+       
         this.svg.attr('height', this.height).attr('width', this.width)
 
         this.profiles.draw()
@@ -213,6 +212,10 @@ class Muvin extends HTMLElement {
         this.fstlinks.draw()
 
         
+    }
+
+    getDefaultWidth() {
+        return this.defaultWidth
     }
 
     getData() {
@@ -449,29 +452,36 @@ template.innerHTML = `
                     
                 </div>
 
-                <div class='timePeriod section'>
-                    <label>Time Period</label>
-                    <label class='time-info' id='from-label'> </label>
-
-                    <div style='width:400px; position:relative;'>
-                        <span class="multi-range">
-                            <input type="range" min="0" max="50" value="5" id="lower">
-                            <input type="range" min="0" max="50" value="45" id="upper">
-                        </span>
-                    </div>
+                <div class="dropdown"  >
                     
-                    <label class='time-info' id='to-label'> </label>
-                
-                </div>
+                    <button class="dropbtn" id='time-button'>Filters</button>
 
-                <div class="section">
-                    <div>
-                        <input type="checkbox" id="display-items" style="transform: scale(.5);">
-                        <label >Display Items</label> 
+                    <div id="timeDropdown" class="dropdown-content">
+
+                        <div class='timePeriod'>
+                            <label>Time</label>
+                            <label class='time-info' id='from-label'> </label>
+
+                            <div style='width:400px; position:relative;'>
+                                <span class="multi-range">
+                                    <input type="range" min="0" max="50" value="5" id="lower">
+                                    <input type="range" min="0" max="50" value="45" id="upper">
+                                </span>
+                            </div>
+                            
+                            <label class='time-info' id='to-label'> </label>
+                        </div>
+
+                        <div>
+                            <div>
+                                <input type="checkbox" id="display-items" style="transform: scale(.5);">
+                                <label >Display Items</label> 
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-                <div>
+                    
+                <div >
                     <button id="clear-network">Clear Network</button>
                 </div>
 
@@ -508,7 +518,7 @@ template.innerHTML = `
         
             <div class='legend'>  </div>
             <div id="display-items-info" style="position:relative; top: 100px; font-size: 11px; display: none;">
-                <p>Obs.: When more than 10 nodes are displayed, items are not displayed by default. You can display them by using the checkbox above.
+                <p>Obs.: When more than 10 nodes are displayed, items are not displayed by default. You can display them by using the filters.
             </div>
             <div class='timeline'>
                 <div class='nodes-panel'>

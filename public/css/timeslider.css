@@ -1,6 +1,6 @@
 
 .timePeriod{
-    width: 700px;
+    width: 550px;
 }
 
 .timePeriod label{
@@ -11,7 +11,7 @@
 input[type=range] {
     box-sizing: border-box;
     appearance: none;
-    width: 400px;
+    width: 300px;
     margin: 0;
     padding: 0 2px;
     /* Add some L/R padding to ensure box shadow of handle is shown */
