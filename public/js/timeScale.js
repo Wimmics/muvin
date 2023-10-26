@@ -20,6 +20,10 @@ class TimeScale {
         this.range[0] = min
     }
 
+    getFocus() {
+        return this.domain ? this.domain.filter(d => this.map[d].distortion) : null
+    }
+
     getRange() {
         return this.range
     }

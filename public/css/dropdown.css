@@ -1,6 +1,5 @@
 .dropbtn {
-    background-color:teal;
-    color: white;
+    color: black;
     padding: 10px;
     font-size: 14px;
     border: none;
@@ -9,12 +8,11 @@
 
 .dropdown {
     position: relative;
-    display: inline-block;
-    left: 10px;
+    display: inline-block !important;
 }
   
 .dropdown-content {
-    display: none;
+    display: none !important;
     position: absolute;
     background-color: #f9f9f9;
     min-width: 160px;
@@ -22,13 +20,17 @@
     padding: 5px;
     color: black;
     overflow-y: auto;
-    height: 200px;
+    height: 100px;
     width: fit-content;
+    flex-direction: column;
+    top: 45px;
 }
 
 .dropdown-content ul {
     padding: 0;
 }
+
+.show { display:flex !important; }
 
 .submitbtn{
     padding: 10px;

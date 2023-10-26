@@ -305,10 +305,13 @@ class DataModel {
     }
 
     getMatchingLabels(value) {
-        let labels = this.chart.data.nodeLabels.filter(d => d.value.toLowerCase().includes(value))
+        let labels = this.nodeLabels.filter(d => d.value.toLowerCase().includes(value))
         labels.sort( (a,b) => a.value.localeCompare(b.value))
 
         return labels
     }
 
+    getNode(value) {
+        return this.nodeLabels.find(d => d.value === value)
+    }
 }

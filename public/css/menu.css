@@ -4,7 +4,6 @@
     position: fixed;
     top: 0;
     left: 0;
-    overflow: hidden;
     transition: 0.5s;
     padding: 10px;
     display: flex;
