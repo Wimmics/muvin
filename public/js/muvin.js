@@ -517,7 +517,7 @@ template.innerHTML = `
 
         
             <div class='legend'>  </div>
-            <div id="display-items-info" style="position:relative; top: 100px; font-size: 11px; display: none;">
+            <div id="display-items-info" style="position:relative; top:100px; font-size: 11px; display: none;">
                 <p>Obs.: When more than 10 nodes are displayed, items are not displayed by default. You can display them by using the filters.
             </div>
             <div class='timeline'>
