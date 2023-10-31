@@ -9,6 +9,7 @@
     display: flex;
     background-color: rgb(44, 62, 80);
     color: white;
+    z-index: 10;
 }
 
 .menu div.section {
