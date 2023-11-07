@@ -85,12 +85,14 @@ class Muvin extends HTMLElement {
 
         if (this.searchHidden) this.menu.hideSearchFor()
         
+        console.log("values = ", values)
         if (values.length) { 
             if (values.length > 10) {
                 this.showItems = false
             }
             this.menu.toggleDisplayItems(this.showItems)
-            values.forEach(async (d) => await this.data.add(d))
+            this.data.load(values)
+            //values.forEach(async (d) => await this.data.add(d))
         }
         
         // else this.test() 
@@ -134,8 +136,8 @@ class Muvin extends HTMLElement {
                 values = [{value: 'Queen'}]
                 break;
         }
-       
-        values.forEach(async (d) => await this.data.add(d))
+        this.data.load(values)
+        //values.forEach(async (d) => await this.data.add(d))
     }
 
     /**
@@ -515,8 +517,8 @@ template.innerHTML = `
 
         
             <div class='legend'>  </div>
-            <div id="display-items-info" style="position:relative; top:100px; font-size: 11px; display: none;">
-                <p>Obs.: When more than 10 nodes are displayed, items are not displayed by default. You can display them by using the filters.
+            <div id="display-items-info" style="position:relative; top: 90px; font-size: 12px; display: none;">
+                <p><b>Obs.:</b> You can display/hide the circles by using the filters.
             </div>
             <div class='timeline'>
                 <div class='nodes-panel'>

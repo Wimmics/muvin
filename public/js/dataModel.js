@@ -61,16 +61,19 @@ class DataModel {
         this.open()
     }
 
-    async add(node) {
+    async load(values) {
 
         this.chart.showLoading()
 
-        let data = await this.fetchData(node)
-        await this.update(data)
+        for (let value of values) {
+            let data = await this.fetchData(value)
+            await this.update(data)
+        }
         
         this.updateTime()
         
-        this.chart.update(node)
+        this.chart.update()
+       
     }
 
     async open(nodes) {
