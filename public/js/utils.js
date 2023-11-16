@@ -83,7 +83,7 @@ function getTicksDistance(scale, breaks) {
 }
 
 function getImageLink(image_title) {
-    let path = "http://dataviz.i3s.unice.fr/crobora/assets/images/images_archives/"
+    let path = "https://crobora.huma-num.fr/crobora-secret-team/assets/images/images_archives/"
 
     image_title = encodeURIComponent(image_title)
     if (image_title.includes("TF1")){
