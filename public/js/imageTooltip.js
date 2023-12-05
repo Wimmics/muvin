@@ -5,7 +5,7 @@ class ImageTooltip extends Tooltip{
     }
 
     setItemContent(d, id) { // TO-DO: modify according to crobora data
-
+        console.log(d)
         const image = `<div style="width: 100%; margin:auto; text-align:center;">
                 <a href="${d.link}" target="_blank" style="pointer-events: ${d.link ? 'auto' : 'none'};">
                     <img class="main-image" src=${getImageLink(d.title)} width="250px" title="Click to explore the archive metadata in the CROBORA platform" ></img> </a>

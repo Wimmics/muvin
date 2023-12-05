@@ -9,6 +9,7 @@ class CroboraTransform extends Transform{
 
     async fetchItems() {
         let query = this.queries.items.replace(/\$category/g, this.node.type).replace(/\$value/g, encodeURIComponent(this.node.value))
+        console.log("query = ", query)
         let res = await sparql.sendRequest(query)
         this.values = JSON.parse(res)
     }
@@ -39,6 +40,7 @@ class CroboraTransform extends Transform{
 
         let categories = ['event', 'location', 'illustration', 'celebrity']
         this.values = cleanValues.map(d => {
+            console.log('d = ',d)
         
             let getContributors = () => {
                 let vals = []
@@ -53,6 +55,7 @@ class CroboraTransform extends Transform{
 
             return {
                 id: d._id,
+                source: d.source,
                 title: d.image_title,
                 date: d.day_airing,
                 type: 'image',

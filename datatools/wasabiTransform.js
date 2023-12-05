@@ -9,12 +9,22 @@ class WasabiTransform extends Transform{
     }
 
     async transformNode(res) {
-        let members = res.map(d => ({ name: d.memberOf.value, from: d.memberFrom ? d.memberFrom.value : 'Not Available', to: d.memberTo ? d.memberTo.value : 'Not Available' }))
+        let key = this.hash(this.node.value)
+
+        if (!res.length) {
+            this.data.node = { key: key, name: this.node.value }
+            return;
+        }
+
+        let members;
+        if (res[0].memberOf) 
+            members = res.map(d => ({ name: d.memberOf.value, 
+                            from: d.memberFrom ? d.memberFrom.value : 'Not Available', 
+                            to: d.memberTo ? d.memberTo.value : 'Not Available' }))
 
         let birth = res[0].birthDate
         let death = res[0].deathDate
 
-        let key = this.hash(this.node.value)
         this.data.node = {
             key: key,
             name: res[0].name.value,

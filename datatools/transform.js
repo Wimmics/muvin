@@ -41,7 +41,7 @@ class Transform{
             console.log(e)
         }
 
-        await this.transformNode(bindings)
+        return bindings
     }
 
     async transformNode() {
@@ -168,7 +168,8 @@ class Transform{
         await this.fetchItems()
         await this.clean()  
         await this.transform()
-        await this.fetchNodeFeatures()
+        let nodeData = await this.fetchNodeFeatures()
+        await this.transformNode(nodeData)
         await this.write()
 
         return this.data

@@ -67,6 +67,7 @@ class DataModel {
 
         for (let value of values) {
             let data = await this.fetchData(value)
+            console.log(value, "data = ", data)
             await this.update(data)
         }
         

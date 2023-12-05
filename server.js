@@ -84,8 +84,14 @@ app.get(prefix + '/data/:app', async function(req, res) {
     if (fs.existsSync(datafile))
         res.sendFile(datafile);
     else {
-        let transform = TransformFactory.getTransform(req.params.app)
-        let result = await transform.getData(node)
+        let result;
+        try {
+            let transform = TransformFactory.getTransform(req.params.app)
+            result = await transform.getData(node)
+        } catch(error) {
+            console.log(error)
+        }
+        
         res.send(JSON.stringify(result))
     }
    

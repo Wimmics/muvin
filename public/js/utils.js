@@ -83,6 +83,7 @@ function getTicksDistance(scale, breaks) {
 }
 
 function getImageLink(image_title) {
+  console.log(image_title)
     let path = "https://crobora.huma-num.fr/crobora-secret-team/assets/images/images_archives/"
 
     image_title = encodeURIComponent(image_title)
