@@ -1,4 +1,4 @@
-const port = 8020
+
 
 const fs = require('fs');
 const express = require('express');
@@ -142,6 +142,9 @@ app.get(prefix + '/testdata', function(req, res) {
     }
 })
 
+const port = 8020
+const portHTTPS = 8023
+
 app.listen(port, async () => { console.log(`HTTP Server started at port ${port}.`) })
 
 try {
@@ -152,7 +155,7 @@ try {
     https.createServer( options, function(req,res)
     {
         app.handle( req, res );
-    } ).listen( 8023 );
+    } ).listen( portHTTPS, async () => { console.log(`HTTPS Server started at port ${portHTTPS}.`) } );
 } catch(e) {
     console.log("Could not start HTTPS server")
 }
