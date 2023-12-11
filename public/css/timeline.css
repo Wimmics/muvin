@@ -16,11 +16,11 @@ body{
 }
 
 .timeline {
-    height: calc(100% - 120px);
+    height: calc(100% - 60px);
     display: flex;
     width: 100%;
     position: relative;
-    top: 100px;
+    top: 20px;
 }
 
 .welcome-text{
@@ -45,11 +45,10 @@ body{
 .vis{
     display:flex; 
     flex-direction: column;
-    height: calc(100vh - 70px);
+    height: 100vh;
     overflow-y: hidden;
     overflow-x: auto;
-    position: relative;
-    top: 50px;
+    position: absolute;
     width: fit-content;
 }
 

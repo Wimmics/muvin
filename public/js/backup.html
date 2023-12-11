@@ -1,0 +1,84 @@
+<div class="menu" style="display:none;" >
+        
+    <h3>Muvin</h3>
+
+    <div id='menu-items' class='settings' >
+
+        <div id="view-options" style='display: none;'>
+            
+
+            <div class = 'section'>
+                <label >Search items</label>
+                <input type="text" list='items-list' id="items-input" placeholder="Type here">
+                <button id='items-input-clear'>Clear Search</button>
+                <datalist id='items-list'></datalist>
+                
+            </div>
+
+            <div class="dropdown"  >
+                
+                <button class="dropbtn" id='time-button'>Filters</button>
+
+                <div id="timeDropdown" class="dropdown-content">
+
+                    <div class='timePeriod'>
+                        <label>Time</label>
+                        <label class='time-info' id='from-label'> </label>
+
+                        <div style='width:400px; position:relative;'>
+                            <span class="multi-range">
+                                <input type="range" min="0" max="50" value="5" id="lower">
+                                <input type="range" min="0" max="50" value="45" id="upper">
+                            </span>
+                        </div>
+                        
+                        <label class='time-info' id='to-label'> </label>
+                    </div>
+
+                    <div>
+                        <div>
+                            <input type="checkbox" id="display-items" style="transform: scale(.5);">
+                            <label >Display Items</label> 
+                        </div>
+                    </div>
+                </div>
+            </div>
+                
+            
+        </div>
+    </div>
+</div>
+
+
+
+    <div style="display:none;">
+        <div class='import-form'>
+            <div id='topbar'>
+                <label id='title'></label>
+                <image src='/muvin/images/close.svg'></image>
+            </div>
+            <div>
+                <label>Sort by</label>
+                <select class='sort'></select>
+            </div>
+            <div>
+                <label>Search for</label>
+                <input class='search' type='text' id='ul-search' placeholder='Enter value here'></input>
+            </div>
+            <ul class='values' id='ul-multi'></ul>
+        </div>
+
+        <div id="loading">  
+            <img width="70px" height="70px" src="/muvin/images/loading.svg"></img>
+            <p>Loading data...</p>
+        </div>
+
+        <div class='welcome-text'>
+            <p>Welcome to <b>Muvin</b>. To begin the exploration, please search for a value above.</p>
+        </div>
+
+        <div class='legend'>  </div>
+        <div id="display-items-info" style="position:relative; top: 90px; font-size: 12px; display: none;">
+            <p><b>Obs.:</b> You can display/hide the circles by using the filters.
+        </div>
+    </div>

@@ -143,7 +143,7 @@ class NodesAxis {
     drawLabels() {
         const _this = this;
 
-        this.svg.select('#node-count').text(`Nodes: ${this.values.length}`)
+        this.chart.displayNodeCount(this.values.length) // TO-DO: put this on the main class
 
         this.slider.style('display', this.focus ? 'block' : 'none')
 

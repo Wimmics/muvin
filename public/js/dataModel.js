@@ -261,6 +261,10 @@ class DataModel {
         return this.linkTypes
     }
 
+    getColors() {
+        return this.colors
+    }
+
 
     /// Getters for nodes
     getNodesKeys() {

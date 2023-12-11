@@ -1,50 +1,20 @@
 class Menu{
-    constructor() {
+    constructor(data) {
         this.chart = document.querySelector('#muvin')
 
-        this.div = d3.select(this.chart.shadowRoot.querySelector('.menu'))
-
-        this.isOpen = false;
-
-        this.width = 200;
+        this.div = d3.select(this.chart.shadowRoot.querySelector('#menu'))
 
         this.openIcon = `${this.chart.baseUrl}/muvin/images/open.svg`;
         this.closeIcon = `${this.chart.baseUrl}/muvin/images/close.svg`;
+
+        this.legend = new Legend(data)
+        this.dataFilter; // TO-DO: create class to handle filters
+        this.dataSort; // TO-DO: create class to handle items search
+        this.dataSearch = new ItemsSearch(data)
     }
 
     init() {
         const _this = this;
-        let eventSource;   
-
-        this.div.select("#nodes-input")
-            .on('keydown', () => eventSource = d3.event.key ? 'key' : 'list')
-            .on('input', function() {
-                if (eventSource === 'key') {
-                    if (this.value.length > 2) 
-                        _this.updateAutocomplete(this.value.toLowerCase())
-                } 
-                // else {
-                //     _this.loadData(this.value)
-                // }
-            })
-
-        this.div.select("#search-go")
-            .on('click', () => {
-                let value = this.div.select("#nodes-input").node().value
-                this.loadData(value)
-            })
-        
-
-        this.div.select('#items-input')
-            .on('keydown', () => eventSource = d3.event.key ? 'key' : 'list')
-            .on('input', function() {
-                if (eventSource === 'key') return;
-                _this.chart.nodes.highlightItem(this.value)
-            })
-
-        this.div.select('#items-input-clear').on('click', () => this.chart.nodes.clearHighlight())
-
-        this.div.select('#clear-network').on('click', () => { this.chart.data.clear() })
 
         this.div.select('#display-items').on('click', function() { _this.chart.updateItemsDisplay(this.checked) } )
             
@@ -58,73 +28,30 @@ class Menu{
             if (out > 0)
                 dropdown.style.left = window.innerWidth - (bounding.left + bounding.width) - 50 + "px"
         })
-    }
 
-    loadData(value) {
-        let node;
-        if (this.chart.app === 'crobora') {
-            let datalist = d3.select(this.chart.shadowRoot.querySelector('#nodes-list'))
-            let option = datalist.selectAll('option').filter(function() { return this.value === value })
-            if (option.size()) node = option.datum()
-        } else 
-            node = this.chart.data.getNode(value.trim())
+        // set menu buttons interaction
+        this.div.selectAll('div.menu-icon')
+            .filter(function() { return this.id != 'about_button'; })
+            .on('click', function() {
+                _this[this.id.split('_')[0]].open()
+            } )
 
-        console.log("node = ", node)
-        
-        if (node)
-            this.chart.data.open([node])
-        else {
-            alert('You must choose an option from the list.')
-            return
-        }
-        
-        
-        this.clearSearch()
-    }
-
-    hideSearchFor() {
-        this.div.select('#clear-network').style('display', 'none')
-        this.div.select('#search-for').style('display', 'none')
-    }
-
-    clearSearch() {
-        this.div.select("#nodes-input").node().value = ''
-    }
-
-    updateItemsSearch() {
-        this.data = this.chart.data.getItems()
-
-        let itemNames = this.data.map(d => d.title)
-        itemNames = itemNames.filter((d,i) => itemNames.indexOf(d) === i)
-        itemNames.sort((a,b) => a.localeCompare(b))
-
-        d3.select(this.chart.shadowRoot.querySelector('#items-list'))
-            .selectAll('option')
-            .data(itemNames)
-            .join(
-                enter => enter.append('option'),
-                update => update,
-                exit => exit.remove()
-            ).attr('value', d => d)
-    
-    }
-
-    updateAutocomplete(value) {
-
-        let labels = this.chart.data.getMatchingLabels(value)
- 
-        d3.select(this.chart.shadowRoot.querySelector('#nodes-list'))
-            .selectAll('option')
-            .data(labels)
-            .join(
-                enter => enter.append('option'),
-                update => update,
-                exit => exit.remove()
-            ).attr('value', e =>  `${e.value} ${e.type ? '(' + e.type + ')' : ''}`)
+        this.legend.init()
+        this.dataSearch.init()
         
     }
+
+
+    update() {
+        this.legend.set()
+        this.dataSearch.update()
+        // this.search.update()
+        // this.filters.updateTimeFilter()
+    }
+
 
     updateTimeFilter() {
+        return;
 
         const applyFilters = () => {
             lowerLabel.innerHTML = +lowerSlider.value
@@ -195,10 +122,6 @@ class Menu{
 
     hideViewSettings() {
         this.div.select('#view-options').style('display', 'none')
-    }
-
-    setWidth(val) {
-        this.div.style('width', val + 'px')
     }
 
     toggleDisplayItems(value) {

@@ -1,4 +1,4 @@
-.menu{
+/* .menu{
     height: 35px;
     width: 100vw;
     position: fixed;
@@ -118,4 +118,138 @@
 #view-options{
     gap: 50px;
     width: 85%;
+} */
+
+
+/* menu icons */
+
+.menu-buttons{
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    top: 50px;
+    left: 0px;
+    z-index: 1000;
+    gap: 3px;
+}
+
+.menu-buttons a:link{
+    color: #f1f1f1;
+}
+
+.menu-buttons i{
+    color: #f1f1f1;
+}
+
+.menu-icon{
+    cursor: pointer;
+    position: relative;
+    width: 30px;
+    height: 35px;
+    background-color: #2C3E50;
+    line-height: 35px;
+    margin-top: 5px;
+    text-align: center;
+    font-size: 1em;
+    color: #f1f1f1;
+}
+
+.menu-icon img{
+    margin-top: 10px;
+    filter: brightness(0) invert(1);
+    width: 15px;
+    height: 15px;
+}
+
+.panel-topbar{
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    height: 30px;
+}
+
+.right-icon {
+    left: calc(100% - 30px);
+    border-radius: 15px 0px 0px 15px;
+}
+
+.left-icon {
+    border-radius: 0px 15px 15px 0px;
+}
+
+.close-icon{
+    position: relative;
+    display: inline;
+    font-size: 1.2em;
+    right: 2px;
+    top: 0px;
+    color: #cccccc;
+    cursor: pointer;
+    z-index: 1001;
+    float: right;
+}
+
+.sideNav-bar{
+    top: 50px;
+    width: 0px;
+    position: fixed;
+    transition: 0.5s;
+    background-color: #F3F3F3;
+    box-shadow: 2px 2px 2px #cccccc;
+    border-radius: 0px 5px 5px 0px;
+    z-index: 1500;
+    left: 0;
+}
+
+.sideNav-bar input:focus{
+    outline: none;
+}
+
+.sideNav-bar input{
+    background-color: white;
+}
+
+.sideNav-bar input[type=file] {
+    background: transparent;
+}
+
+.filtering-div{
+    position: relative;
+    top: 20px;
+    left: 5%;
+}
+
+input {
+    border: 1px solid transparent;
+    background-color: #f1f1f1;
+    padding: 5px;
+    font-size: 14px;
+    border-radius: 5px;
+}
+input[type=text] {
+    background-color: #f1f1f1;
+}
+input[type=submit] {
+    background-color: #2C3E50;
+    color: #fff;
+}
+
+button {
+    background-color: #2C3E50;
+    color: #fff;
+    padding: 5px;
+    font-size: 14px;
+    border: #fff;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#search-for{
+    display: flex;
+    gap: 10px;
+    vertical-align: middle;
+}
+
+label {
+    padding: 5px;
 }

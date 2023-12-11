@@ -15,9 +15,30 @@ class Muvin extends HTMLElement {
         this.showItems = true
     }
 
+    setAppAttributes() {
+        this.nodes = new NormalNodes()
+        switch(this.app) {
+            case 'hal':
+                this.tooltip = new PublicationsTooltip()
+                this.nodeNature = 'author'
+                break
+            case 'wasabi':
+                this.tooltip = new MusicTooltip()
+                this.nodeNature = 'artist'
+                break
+            case 'crobora':
+                this.tooltip = new ImageTooltip()
+                this.nodeNature = 'keyword'
+                this.nodes = new ImageNodes()
+                break
+        }
+    }
+
     async connectedCallback() {
         this.shadowRoot.appendChild(template.content.cloneNode(true));
         this.app = this.getAttribute("app")
+        this.setAppAttributes()
+
         this.searchHidden = this.getAttribute("search") === "true"
 
         this.baseUrl = ''
@@ -35,16 +56,18 @@ class Muvin extends HTMLElement {
         d3.select(this.shadowRoot).on('click', () => {
             this.shadowRoot.querySelectorAll('div.context-menu').style = 'none'
         })
+
+        this.search = new NodesSearch() // nodes search bar
+        this.search.init()
         
         this.data = new DataModel()
 
         this.xAxis = new TimeAxis() // temporal axis formed by years
         this.yAxis = new NodesAxis() // axis formed by authors/artists names (nodes of the first level of the network)
 
-        this.legend = new Legend() // color legend for links (different types) and items (nodes of the second level of the network)
-        this.legend.init()
+        // this.legend = new Legend() // color legend for links (different types) and items (nodes of the second level of the network)
+        // this.legend.init()
 
-        this.nodes = this.app === 'crobora' ? new ImageNodes() : new NormalNodes()
         this.nodes.set()
         
         this.fstlinks = new LinksGroup()
@@ -53,17 +76,12 @@ class Muvin extends HTMLElement {
 
         this.profiles = new StreamGraph()
 
-        if (this.app === 'hal')
-            this.tooltip = new PublicationsTooltip()
-        else if (this.app === 'wasabi')
-            this.tooltip = new MusicTooltip()
-        else if (this.app === 'crobora')
-            this.tooltip = new ImageTooltip()
-
         this.tooltip.hideAll()
 
-        this.menu = new Menu()
+        this.menu = new Menu(this.data)
         this.menu.init()
+
+        
 
         await this.data.fetchNodesLabels(this.app)
 
@@ -90,9 +108,8 @@ class Muvin extends HTMLElement {
             if (values.length > 10) {
                 this.showItems = false
             }
-            this.menu.toggleDisplayItems(this.showItems)
+            // this.menu.toggleDisplayItems(this.showItems)
             this.data.load(values)
-            //values.forEach(async (d) => await this.data.add(d))
         }
         
         // else this.test() 
@@ -100,44 +117,13 @@ class Muvin extends HTMLElement {
     }
 
     showLoading() {
+        return;
         this.shadowRoot.querySelector('#loading').style.display = "block";
     }
 
     hideLoading() {
+        return;
         this.shadowRoot.querySelector('#loading').style.display = "none";
-    }
-
-    /**
-     * Launch test with HAL data
-     */
-    async test() {
-        let values = [];
-        
-        switch(this.app) {
-            case 'crobora':
-                values = [{value: 'Angela Merkel', type: 'celebrity'}]
-                    // {value: 'Nicolas Sarkozy', type: 'celebrity'}, 
-                    // {value: 'Europe', type: 'event'}, 
-                    // {value: 'Charles Michel', type: 'celebrity'}]
-                break;
-            case 'hal':
-                //values = [{value: 'Aline Menin'}]
-                values = [
-                    //{value: 'Aline Menin'}, 
-                    {value: 'Marco Winckler'}, 
-                    //{value: 'Alain Giboin'}, 
-                    //{value: 'Philippe Palanque'}
-                    //{value: "Anne-Marie Déry-Pinna"}
-                ]
-                // values = ['Marco Winckler', 'Philippe Palanque', 'Thiago Rocha Silva', 'Lucile Sassatelli', 'Célia Martinie', 'Aline Menin']
-                break;
-            case 'wasabi':
-                //values = [{value: 'Queen'}, {value: 'Freddie Mercury'}, {value: 'David Bowie'}]
-                values = [{value: 'Queen'}]
-                break;
-        }
-        this.data.load(values)
-        //values.forEach(async (d) => await this.data.add(d))
     }
 
     /**
@@ -155,12 +141,12 @@ class Muvin extends HTMLElement {
             return
         }
 
-        this.shadowRoot.querySelector('#display-items-info').style.display = 'block'
+        // this.shadowRoot.querySelector('#display-items-info').style.display = 'block'
 
         this.div.style('display', 'flex')
-        this.shadowRoot.querySelector('.welcome-text').style.display = 'none'
+        // this.shadowRoot.querySelector('.welcome-text').style.display = 'none'
         this.hideLoading()
-        this.menu.displayViewSettings()
+        //this.menu.displayViewSettings()
 
         d3.select(this.shadowRoot.querySelector('#nodes-group'))
             .selectAll('g.artist')
@@ -177,12 +163,10 @@ class Muvin extends HTMLElement {
         this.visibleProfile = [...this.visibleNodes]
         this.visibleItems = [...this.visibleNodes]
 
-        this.menu.updateItemsSearch()
-        this.menu.updateTimeFilter()
-
         this.height = this.shadowRoot.querySelector('.timeline').clientHeight
 
-        this.legend.update()
+        //this.legend.update()
+        this.menu.update() //TO-DO: reactivate once menu is ready
         this.xAxis.set()
         this.yAxis.set()
         await this.profiles.set()
@@ -411,6 +395,10 @@ class Muvin extends HTMLElement {
         this.svg.selectAll('g').remove()
     }
 
+    displayNodeCount(value) {
+        d3.select(this.shadowRoot.querySelector('#node-count')).text(`Nodes: ${value}`)
+    }
+
 }
 
 const template = document.createElement("template");
@@ -429,138 +417,87 @@ template.innerHTML = `
     <div class='tooltip' id='item-tooltip'></div>
     <div class='tooltip' id='node-tooltip'></div>
     <div class='tooltip' id='profile-tooltip'></div>
-    
-    <div class="menu">
-        
-        <h3>Muvin</h3>
 
-        <div id='menu-items' class='settings' >
-            <div id="search-for" class='section'>
-                <label>Search for</label>
-                <input type="text" list='nodes-list' id="nodes-input" placeholder="Type here">
-                <datalist id='nodes-list'></datalist>
-                <button id="search-go">Go</button>
+    <div id='menu'>
+        <!-- left side buttons -- settings for the current data and visual tools -->
+        <div class='menu-buttons' >
+            <div class="menu-icon left-icon" id='legend_button' title='Click to see the color-code used in the visualization'>
+                <img src="/muvin/images/palette.png"></img>
             </div>
-
-            <div id="view-options" style='display: none;'>
-                
-
-                <div class = 'section'>
-                    <label >Search items</label>
-                    <input type="text" list='items-list' id="items-input" placeholder="Type here">
-                    <button id='items-input-clear'>Clear Search</button>
-                    <datalist id='items-list'></datalist>
-                    
-                </div>
-
-                <div class="dropdown"  >
-                    
-                    <button class="dropbtn" id='time-button'>Filters</button>
-
-                    <div id="timeDropdown" class="dropdown-content">
-
-                        <div class='timePeriod'>
-                            <label>Time</label>
-                            <label class='time-info' id='from-label'> </label>
-
-                            <div style='width:400px; position:relative;'>
-                                <span class="multi-range">
-                                    <input type="range" min="0" max="50" value="5" id="lower">
-                                    <input type="range" min="0" max="50" value="45" id="upper">
-                                </span>
-                            </div>
-                            
-                            <label class='time-info' id='to-label'> </label>
-                        </div>
-
-                        <div>
-                            <div>
-                                <input type="checkbox" id="display-items" style="transform: scale(.5);">
-                                <label >Display Items</label> 
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                    
-                <div >
-                    <button id="clear-network">Clear Network</button>
-                </div>
+            <div class="menu-icon left-icon" id='dataFilter_button' title='Click to use the filtering mechanisms'>
+                <img src="/muvin/images/filter.png"></img>
+            </div>
+            <div class="menu-icon left-icon" id='dataSort_button' title='Click to reorder the nodes in the visualization'>
+                <img src="/muvin/images/sort.png"></img>
+            </div>
+            <div class="menu-icon left-icon" id='dataSearch_button' title='Click to search for items in the visualization'>
+                <img src="/muvin/images/search.svg"></img>
+            </div>
+            <div class="menu-icon left-icon" style='top: 20px;' id='about_button' title='Click to learn more about the project'>
+                <img src="/muvin/images/info.png"></img>
             </div>
         </div>
+
+        <!-- divs activated by the buttons above -->
+        <div class='sideNav-bar' id='legend'></div>
+        <div class='sideNav-bar' id='dataFilter'></div>
+        <div class='sideNav-bar' id='dataSort'></div>
+        <div class='sideNav-bar' id='dataSearch'> </div>
     </div>
 
     <div class="vis">
-        <div class='import-form'>
-            <div id='topbar'>
-                <label id='title'></label>
-                <image src='/muvin/images/close.svg'></image>
-            </div>
-            <div>
-                <label>Sort by</label>
-                <select class='sort'></select>
-            </div>
-            <div>
-                <label>Search for</label>
-                <input class='search' type='text' id='ul-search' placeholder='Enter value here'></input>
-            </div>
-            <ul class='values' id='ul-multi'></ul>
-        </div>
 
-        <div id="loading">  
-            <img width="70px" height="70px" src="/muvin/images/loading.svg"></img>
-            <p>Loading data...</p>
-        </div>
-
-        <div class='welcome-text'>
-            <p>Welcome to <b>Muvin</b>. To begin the exploration, please search for a value above.</p>
-        </div>
-
+        <!-- Search bar to begin exploration -->
+        <div id="search-for">
+            <label id="search-info">Search for</label>
+            <input type="text" list='nodes-list' id="nodes-input" placeholder="Type here">
+            <datalist id='nodes-list'></datalist>
+            <button id="search-go">Go</button>
         
-            <div class='legend'>  </div>
-            <div id="display-items-info" style="position:relative; top: 90px; font-size: 12px; display: none;">
-                <p><b>Obs.:</b> You can display/hide the circles by using the filters.
-            </div>
-            <div class='timeline'>
-                <div class='nodes-panel'>
-                    <svg>
-                        <text id='node-count'></text>
-                        <g id='labels-group'></g>
-                    </svg>
-                </div>
+            <button id="clear-network">Clear Network</button>
+        </div>
 
-                <svg id="chart">
-                    <g id ='chart-group'>
-                        <g id='top-axis' class='timeaxis' >
-                            <line></line>
-                        </g>
-                        <g id='bottom-axis' class='timeaxis' >
-                            <line></line>
-                        </g>
-                        
-                        <g id="membership-links-group"></g>
-                        <g id='link-group'></g>
-                        <g id='nodes-group'></g>
-                        <g id='ticks-group'></g>
-                        <g id='x-slider'>
-                            <rect class='marker move'></rect>
-                            <rect id='top-button' class='slider-button move'></rect>
-                            <text></text>
-                            <rect id='bottom-button' class='slider-button move'></rect>
-                        </g>
-                        <g id='y-slider'>
-                            <image id="slider-up"  ></image>
-                            <image id="slider-down" ></image>
-                        </g>
+        <!-- div that contains the visualization -->
+        <div class='timeline'>
 
-                    
-                        <g id='nodeLinks-group'> 
-                            
-                        </g>
-                    </g>
+            <label id='node-count' ></label>
+            <div class='nodes-panel'>
+                <svg>
+                    <g id='labels-group'></g>
                 </svg>
             </div>
 
-       
+            <svg id="chart">
+                <g id ='chart-group'>
+                    <g id='top-axis' class='timeaxis' >
+                        <line></line>
+                    </g>
+                    <g id='bottom-axis' class='timeaxis' >
+                        <line></line>
+                    </g>
+                    
+                    <g id="membership-links-group"></g>
+                    <g id='link-group'></g>
+                    <g id='nodes-group'></g>
+                    <g id='ticks-group'></g>
+                    <g id='x-slider'>
+                        <rect class='marker move'></rect>
+                        <rect id='top-button' class='slider-button move'></rect>
+                        <text></text>
+                        <rect id='bottom-button' class='slider-button move'></rect>
+                    </g>
+                    <g id='y-slider'>
+                        <image id="slider-up"  ></image>
+                        <image id="slider-down" ></image>
+                    </g>
+
+                
+                    <g id='nodeLinks-group'> 
+                        
+                    </g>
+                </g>
+            </svg>
+        </div>
         
     </div>
     `

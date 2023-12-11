@@ -1,72 +1,71 @@
-class Legend {
-    constructor() {
+class Legend extends SidePanel{
+    constructor(data) {
+        super(data)
+
         this.itemRadius = 7
         this.fontSize = '13px'
+        this.top = 10
         this.left = 10
 
-        this.chart = document.querySelector('#muvin')
-        this.div = d3.select(this.chart.shadowRoot.querySelector('div.legend'))
+        this.div = d3.select(this.chart.shadowRoot.querySelector('div#legend'))
 
-        this.selected = []
+        this.selected = [] // TO-DO: put this in the filters panel
+
+        this.isSet = false;
+
+        //TO-DO: draw a legend for the circles' radius
     }
 
     init() {
 
         // color legend for links (i.e. collaboration type)
-        this.linkLegend = this.div.append('div')
-            .classed('link-legend', true)
+        this.div.styles({
+                'width': this.width + 'px',
+                'height': this.height + 'px',
+                'overflow': 'hidden'
+            })
 
-        this.svg = this.linkLegend.append('svg')
-            .attr('id', 'link-legend')
+        this.title = 'Legend'
+        this.setTitle()
+
+        this.svg = this.div.append('svg')
+            .attrs({
+                'width': '100%',
+                'height': this.height - 30 + 'px',
+                'id': 'link-legend',
+                'transform': 'translate(20, 10)'
+            })
             
         this.svg.append('text')
             .text(this.chart.app === 'crobora' ? 'Broadcaster' : 'Contribution Type')
             .attr('font-size', this.fontSize)
-            .attr('transform', `translate(0, 25)`)
+            .attr('font-weight', 'bold')
+            .attr('transform', `translate(0, ${this.top})`)
 
-        this.svg.append('svg:image')
-            .attr('xlink:href', `${this.chart.baseUrl}/muvin/images/question.svg`)
-            .attr('width', 15)
-            .attr('height', 15)
-            .attr('x', 110)
-            .attr('y', 12)
-            .style('cursor', 'pointer')
-            .append('title')
-            .text(`Click on the circles to show/hide items in each ${this.chart.app === 'crobora' ? 'channel' : 'category'}`)
-
-        this.hide()
-        
     }
 
-    update() {
+    set() {
+        if (this.isSet) return
 
-        let chartData = this.chart.getData()
-        this.colors = chartData.colors
-        this.data = chartData.linkTypes
+        this.colors = this.data.getColors()
 
         this.drawLinkLegend()
 
-        this.show()
+        this.isSet = true;
 
     }
 
     drawLinkLegend() {
 
-        let itemWidth = d3.max(this.data, d => d.length * 12)
+        let itemHeight = this.itemRadius * 2 + 5;
 
-        let svg = this.svg
-            .attr('width', this.data.length * (itemWidth + this.itemRadius))
-            .attr('height', 70)
-
-        this.group = svg.selectAll('g')
-            .data(this.data)
+        this.group = this.svg.selectAll('g')
+            .data(this.data.getLinkTypes())
             .join(
                 enter => enter.append('g')
-                    .attr('transform', `translate(0, 35)`)
+                    .attr('transform', (d,i) => `translate(${this.left}, ${this.top + 15 + i * itemHeight})`)
                     
-                    .call(g => g.append('circle')
-                        .attr('cx', (d,i) => this.left + i * itemWidth)
-                        .attr('cy', this.left)         
+                    .call(g => g.append('circle')       
                         .attr('r', this.itemRadius)
                         .attr('fill', e => this.selected.includes(e) ? '#fff' : this.colors.typeScale(e) )
                         .attr('stroke', d => d3.rgb(this.chart.getTypeColor(d)).darker())
@@ -78,8 +77,8 @@ class Legend {
                     
                     .call(g => g.append('text')
                         .attr('font-size', this.fontSize)
-                        .attr('y', (_,i) => this.itemRadius * 2)
-                        .attr('x', (d,i) => this.left + (this.itemRadius * 2) + i * itemWidth)
+                        .attr('y', (_,i) => this.itemRadius)
+                        .attr('x', (d,i) => 10)
                         .text(d => capitalizeFirstLetter(d))),
                 update => update
                     .call(g => g.select('circle')
@@ -92,6 +91,7 @@ class Legend {
                 exit => exit.remove()
             )
 
+        this.close()
             
     }
 
