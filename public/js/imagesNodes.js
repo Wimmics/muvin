@@ -17,7 +17,7 @@ class ImageNodes extends NodesGroup {
 
         this.imageAttrs = {
             width: d => d.r * 2,
-            'xlink:href': d => getImageLink(d.title),
+            'xlink:href': d => getImage(d.title, this.chart.getToken()),
             alt: d => d.name,
             opacity: d => this.opacity(d),
             class: 'item-circle',

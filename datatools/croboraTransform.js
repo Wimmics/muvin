@@ -8,10 +8,27 @@ class CroboraTransform extends Transform{
     }
 
     async fetchItems() {
-        let query = this.queries.items.replace(/\$category/g, this.node.type).replace(/\$value/g, encodeURIComponent(this.node.value))
-        console.log("query = ", query)
-        let res = await sparql.sendRequest(query)
-        this.values = JSON.parse(res)
+        
+        let params = {
+            keywords: [ this.node.value ],
+            categories: [ this.node.type ],
+            options: ["illustration", "location", "celebrity", "event"]
+        }
+
+        let result = await fetch("https://crobora.huma-num.fr/crobora-api/search/imagesOR", {
+                method: "POST", 
+                headers: { "Content-Type": "application/json"},
+                body: JSON.stringify(params) })
+            .then(async function(response){
+                if(response.status >= 200 && response.status < 300){
+                return await response.text().then(data => {
+                    return JSON.parse(data)
+                })}
+                else return response
+            })
+            
+        return result
+        
     }
 
     async fetchNodeFeatures() { 
@@ -40,7 +57,6 @@ class CroboraTransform extends Transform{
 
         let categories = ['event', 'location', 'illustration', 'celebrity']
         this.values = cleanValues.map(d => {
-            console.log('d = ',d)
         
             let getContributors = () => {
                 let vals = []

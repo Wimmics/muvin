@@ -18,7 +18,7 @@ class Muvin extends HTMLElement {
     async connectedCallback() {
         this.shadowRoot.appendChild(template.content.cloneNode(true));
         this.app = this.getAttribute("app")
-        this.searchHidden = this.getAttribute("search") === "true"
+        this.token = this.getAttribute("token")
 
         this.baseUrl = ''
         this.url = this.baseUrl + `/muvin/${this.app}`
@@ -105,6 +105,10 @@ class Muvin extends HTMLElement {
 
     hideLoading() {
         this.shadowRoot.querySelector('#loading').style.display = "none";
+    }
+
+    getToken() {
+        return this.token;
     }
 
     /**

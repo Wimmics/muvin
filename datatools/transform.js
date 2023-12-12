@@ -133,14 +133,6 @@ class Transform{
                         type: source.type,
                         item: value.id
                     }
-                
-                // if (links[sourceKey])
-                //     if (!links[sourceKey].type.includes(source.type)) 
-                //         links[sourceKey].type.push(source.type)
-
-                // else if (links[targetKey])
-                //     if (!links[targetKey].type.includes(source.type)) 
-                //     links[targetKey].type.push(source.type)
             }       
     
         }
@@ -165,7 +157,9 @@ class Transform{
     async getData(node) {
         this.node = node;
 
-        await this.fetchItems()
+        this.values = await this.fetchItems()
+        if (!this.values.length) return this.values;
+
         await this.clean()  
         await this.transform()
         let nodeData = await this.fetchNodeFeatures()

@@ -88,6 +88,7 @@ app.get(prefix + '/data/:app', async function(req, res) {
         try {
             let transform = TransformFactory.getTransform(req.params.app)
             result = await transform.getData(node)
+            if (!result) result = {"message": "There was an error while retrieving the data!"}
         } catch(error) {
             console.log(error)
         }
