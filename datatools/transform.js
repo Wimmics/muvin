@@ -157,7 +157,7 @@ class Transform{
     async getData(node) {
         this.node = node;
 
-        this.values = await this.fetchItems()
+        await this.fetchItems()
         if (!this.values.length) return this.values;
 
         await this.clean()  

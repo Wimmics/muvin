@@ -116,9 +116,9 @@ const datasets = {
 
                 bind ( if(?typeId in ("COMM", "POSTER", "PRESCONF", "UNDEFINED"), "Conference Paper", 
                         if(?typeId in ("ART"), "Journal Article", 
-                            if(?typeId in ('ETABTHESE', 'THESE', 'HDR'), "Diploma", 
-                            if(?typeId in ('MAP', 'PATENT', 'SON', 'VIDEO', 'IMG'), "Artwork", 
-                                if(?typeId in ('OUV', 'COUV', 'DOUV'), "Book / Book Section", "Gray Knowledge"))))) as ?type)
+                            if(?typeId in ("ETABTHESE", "THESE", "HDR"), "Diploma", 
+                            if(?typeId in ("MAP", "PATENT", "SON", "VIDEO", "IMG"), "Artwork", 
+                                if(?typeId in ("OUV", "COUV", "DOUV"), "Book / Book Section", "Gray Knowledge"))))) as ?type)
 
                 
                 filter (!contains(?halId, "http"))
