@@ -17,7 +17,7 @@ class CroboraTransform extends Transform{
             options: ["illustration", "location", "celebrity", "event"]
         }
 
-        let result = await fetch("https://crobora.huma-num.fr/crobora-api/search/imagesOR", {
+        this.values = await fetch("https://crobora.huma-num.fr/crobora-api/search/imagesOR", {
                 method: "POST", 
                 headers: { "Content-Type": "application/json"},
                 body: JSON.stringify(params) })
@@ -28,8 +28,6 @@ class CroboraTransform extends Transform{
                 })}
                 else return response
             })
-            
-        return result
         
     }
 
