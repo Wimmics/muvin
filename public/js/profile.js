@@ -13,6 +13,8 @@ class Profile {
         let nodes = this.chart.data.getNodesList()
         let dates = this.chart.data.getDates()
         let items = this.chart.data.getItems()
+
+        console.log(types, nodes, dates, items)
         
        
         let itemsByYear = []
@@ -50,6 +52,8 @@ class Profile {
                 'data' : this.stack(nodeData)
             }
         })
+
+        console.log("profile data = ", this.data)
 
         /// one group per artist ; it will hold the profile wave ////////
         this.group = d3.select(this.chart.shadowRoot.querySelector('#nodes-group')).selectAll('g.artist')

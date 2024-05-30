@@ -20,6 +20,9 @@ class Muvin extends HTMLElement {
         this.app = this.getAttribute("app")
         this.token = this.getAttribute("token")
 
+        this.query = this.getAttribute("query")
+        this.endpoint = this.getAttribute("endpoint")
+
         this.baseUrl = ''
         this.url = this.baseUrl + `/muvin/${this.app}`
 
@@ -59,13 +62,14 @@ class Muvin extends HTMLElement {
             this.tooltip = new MusicTooltip()
         else if (this.app === 'crobora')
             this.tooltip = new ImageTooltip()
+        else this.tooltip = new Tooltip()
 
         this.tooltip.hideAll()
 
         this.menu = new Menu()
         this.menu.init()
 
-        await this.data.fetchNodesLabels(this.app)
+        await this.data.init(this.app)
 
         let value = this.getAttribute("value")
         let type = this.getAttribute("type")
@@ -93,7 +97,7 @@ class Muvin extends HTMLElement {
             this.menu.toggleDisplayItems(this.showItems)
             this.data.load(values)
             //values.forEach(async (d) => await this.data.add(d))
-        }
+        } 
         
         // else this.test() 
 

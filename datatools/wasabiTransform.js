@@ -4,8 +4,8 @@ const D3Node = require('d3-node')
 const d3 = new D3Node().d3  
 
 class WasabiTransform extends Transform{
-    constructor() {
-        super('wasabi')
+    constructor(app, data) {
+        super(app, data)
     }
 
     async transformNode(res) {

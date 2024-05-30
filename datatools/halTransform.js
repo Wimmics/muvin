@@ -4,8 +4,8 @@ const D3Node = require('d3-node')
 const d3 = new D3Node().d3  
 
 class HALTransform extends Transform{
-    constructor() {
-        super('hal')
+    constructor(app, data) {
+        super(app, data)
     }
 
     async transformNode(res) {
@@ -23,35 +23,7 @@ class HALTransform extends Transform{
         }
     }
 
-    async clean() {
-        
-        let nestedValues = d3.nest()
-            .key(d => d.uri.value)
-            .entries(this.values)
-
-        this.values = nestedValues.map(d => {
-
-            let ref = d.values[0]
-
-            let alters = d.values.map(e => e.alter.value)
-            alters = alters.filter( (e,i) => alters.indexOf(e) === i)
-
-            return {
-                id: ref.uri.value,
-                title: ref.title.value,
-                date: ref.date.value,
-                type: ref.type.value.toLowerCase(),
-                link: ref.link.value,
-
-                nodeName: this.node.value,
-                nodeType: this.node.type,
-                nodeContribution: [ ref.type.value.toLowerCase() ],
-
-                contributors: alters.map(e => ({ name: e, type: ref.type.value.toLowerCase() })),
-            }
-        })
-   
-    }
+    
 }
 
 // let test = new HALTransform()

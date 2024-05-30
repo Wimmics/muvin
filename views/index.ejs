@@ -55,17 +55,26 @@
         let locals = <%- JSON.stringify(locals) %>;
         console.log("locals = ", locals)
 
-        if (locals.params.value && locals.params.value.length) {
-            let value = typeof(locals.params.value) === "string" ? locals.params.value : locals.params.value.join(',')
-            document.querySelector("#muvin").setAttribute("value", value)            
+        if (locals.params) {
+            if (locals.params.value && locals.params.value.length) {
+                let value = typeof(locals.params.value) === "string" ? locals.params.value : locals.params.value.join(',')
+                document.querySelector("#muvin").setAttribute("value", value)            
+            }
+
+            if (locals.params.type) {
+                let type = typeof(locals.params.type) === "string" ? locals.params.type : locals.params.type.join(',')
+                document.querySelector("#muvin").setAttribute("type", type)
+            }
+
+            if (locals.params.token) document.querySelector("#muvin").setAttribute("token", locals.params.token)
         }
 
-        if (locals.params.type) {
-            let type = typeof(locals.params.type) === "string" ? locals.params.type : locals.params.type.join(',')
-            document.querySelector("#muvin").setAttribute("type", type)
+        if (locals.query && locals.endpoint) {
+            document.querySelector("#muvin").setAttribute('app', "demo")
+            document.querySelector("#muvin").setAttribute('query', locals.query)
+            document.querySelector('#muvin').setAttribute('endpoint', locals.endpoint)
+            document.querySelector('#muvin').setAttribute('value', locals.values)
         }
-
-        document.querySelector("#muvin").setAttribute("token", locals.params.token)
 
 
     </script>

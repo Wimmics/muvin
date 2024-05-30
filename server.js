@@ -46,10 +46,15 @@ app.get(prefix, function (req, res) {
     res.render('about');
 })
 
-// index page 
-app.get(prefix + '/:app', function (req, res) {
-    res.render('index', { app: req.params.app, params: req.query } );
+app.get(prefix + "/demo", async function(req, res) {
+    res.render('index', req.query )
 })
+
+// // index page 
+// app.get(prefix + '/:app', function (req, res) {
+//     console.log(req)
+//     res.render('index', { app: req.params.app, params: req.query } );
+// })
 
 app.get(prefix + '/data/:app/nodes', async function(req, res) {
     let parentdir = path.join(__dirname, 'data/')
@@ -74,11 +79,17 @@ app.get(prefix + '/data/:app/nodes', async function(req, res) {
     }
 })
 
-app.get(prefix + '/data/:app', async function(req, res) {
+app.post(prefix + '/data/:app', async function(req, res) {
    
-    let node = {value: req.query.value, type: req.query.type === 'undefined' ? undefined : req.query.type}
+    let data = {value: req.body.value, type: req.body.type === 'undefined' ? undefined : req.body.type}
+    console.log(req.body)
 
-    let filename = `data/${req.params.app}/${node.value}${node.type ? '-' + node.type : ''}-data_vis.json`
+    if (req.body.query) {
+        data.query = req.body.query, 
+        data.endpoint = req.body.endpoint
+    }
+
+    let filename = `data/${req.params.app}/${data.value}${data.type ? '-' + data.type : ''}-data_vis.json`
     
     let datafile = path.join(__dirname, filename);
     if (fs.existsSync(datafile))
@@ -86,8 +97,8 @@ app.get(prefix + '/data/:app', async function(req, res) {
     else {
         let result;
         try {
-            let transform = TransformFactory.getTransform(req.params.app)
-            result = await transform.getData(node)
+            let transform = TransformFactory.getTransform(req.params.app, data)
+            result = await transform.getData()
             if (!result) result = {"message": "There was an error while retrieving the data!"}
         } catch(error) {
             console.log(error)

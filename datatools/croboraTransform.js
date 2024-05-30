@@ -5,8 +5,8 @@ const sparql = require('./sparql_helper')
 const fetch = require('node-fetch')
 
 class CroboraTransform extends Transform{
-    constructor() {
-        super('crobora')
+    constructor(app, data) {
+        super(app, data)
     }
 
     async fetchItems() {

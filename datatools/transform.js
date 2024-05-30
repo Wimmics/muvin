@@ -6,13 +6,20 @@ const sparql = require('./sparql_helper')
 
 const crypto = require('crypto')
 
+const D3Node = require('d3-node')
+const d3 = new D3Node().d3  
+
 class Transform{
-    constructor(db) {
+    constructor(db, config) {
         this.db = db
         this.values
 
-        this.queries = datasets[this.db]
-        this.linkTypes = datasets[this.db].categories.map(d => d.toLowerCase())
+        this.query = config.query || datasets[this.db].queries.items
+        this.endpoint = config.endpoint || datasets[this.db].queries.endpoint
+        this.nodeQuery = datasets[this.db] ? datasets[this.db].queries.nodeFeatures : null
+        this.prefixes = datasets[this.db] ? datasets[this.db].queries.prefixes : ""
+
+        this.linkTypes = datasets[this.db] ? datasets[this.db].categories.map(d => d.toLowerCase()) : []
 
         this.datapath = `../data/${this.db}`
 
@@ -20,19 +27,28 @@ class Transform{
             items: null,
             links: null,
             linkTypes: this.linkTypes,
-            node: {}
+            node: null // incremental version
         }
+
+        this.node = {key: this.hash(config.value),  name: config.value, type: config.type } 
+        this.data.node = this.node
     }
 
     async fetchItems() {
-        let query = this.queries.prefixes + this.queries.items.replace(/\$node/g, this.node.value)
-        this.values = await sparql.executeQuery(query, this.queries.url)
+        let query = this.prefixes + this.query.replace(/\$value/g, this.node.name)
+        this.values = await sparql.executeQuery(query, this.endpoint)
+
+        let types = this.values.map(d => d.type.value.toLowerCase())
+        types = types.filter( (d,i) => types.indexOf(d) === i) 
+        this.data.linkTypes = types
     }
 
-    async fetchNodeFeatures() {
-        let query = this.queries.prefixes + this.queries.nodeFeatures.replace(/\$node/g, this.node.value)
+    async fetchNodeFeatures() { // to be included directly on the main query
+        if (!this.nodeQuery) return;
 
-        let result = await sparql.sendRequest(sparql.getSparqlUrl(query.replace('$offset', 0), this.queries.url))
+        let query = this.prefixes + this.nodeQuery.replace(/\$node/g, this.node.name)
+
+        let result = await sparql.sendRequest(sparql.getSparqlUrl(query.replace('$offset', 0), this.endpoint))
         let bindings;
         try{
             result = JSON.parse(result)
@@ -64,7 +80,32 @@ class Transform{
     }
 
     async clean() {
-       
+        
+        let nestedValues = d3.nest()
+            .key(d => d.uri.value)
+            .entries(this.values)
+
+        this.values = nestedValues.map(d => {
+
+            let ref = d.values[0]
+
+            let alters = d.values.map(e => e.alter.value)
+            alters = alters.filter( (e,i) => alters.indexOf(e) === i)
+
+            return {
+                id: ref.uri.value,
+                title: ref.title.value,
+                date: ref.date.value,
+                type: ref.type.value.toLowerCase(),
+                link: ref.link.value,
+
+                nodeName: ref.ego.value,
+                nodeContribution: [ ref.type.value.toLowerCase() ],
+
+                contributors: alters.map(e => ({ name: e, type: ref.type.value.toLowerCase() })),
+            }
+        })
+   
     }
 
     async transform() {
@@ -143,20 +184,17 @@ class Transform{
     }
 
     async write() {
-        let filename = `${this.datapath}/${this.node.value}${this.node.type ? '-' + this.node.type : ''}-data_vis.json`
+        let filename = `${this.datapath}/${this.node.name}${this.node.type ? '-' + this.node.type : ''}-data_vis.json`
         try {
             let data_to_write = JSON.stringify(this.data, null, 4)
             fs.writeFileSync(path.join(__dirname, filename), data_to_write) 
         } catch(e) {
             console.log(this.data)
             console.log(e)
-            
         }
     }
 
-    async getData(node) {
-        this.node = node;
-
+    async getData() {
         await this.fetchItems()
         if (!this.values.length) return this.values;
 
@@ -164,7 +202,7 @@ class Transform{
         await this.transform()
         let nodeData = await this.fetchNodeFeatures()
         await this.transformNode(nodeData)
-        await this.write()
+        if(this.db !== "demo") await this.write()
 
         return this.data
     }

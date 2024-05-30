@@ -131,6 +131,8 @@ class ContextMenu {
         return menu
     }
 
+    // TODO: chackboxes to select multiple values and load them at once
+    // TODO: see how to reuse the dynamic query from ldviz to set the incremental exploration
     openMenuSearch(d, values) {
        
         const _this = this;

@@ -22,14 +22,31 @@ class DataModel {
 
     }
 
-    async init() {
+    async init(value) {
+        if (value !== "demo") this.fetchNodesLabels(value)
        
     }
 
     async fetchData(node) {
-        const response = await fetch(this.chart.baseUrl + '/muvin/data/' + this.chart.app + '?value=' + node.value + '&type=' + node.type)
-        
-        return await response.json()
+        let body;
+        if (this.chart.query) {
+            body = { query: this.chart.query, endpoint: this.chart.endpoint, value: node.value, type: node.type} 
+        } else {
+            body = {value: node.value, type: node.type} 
+        }
+
+        fetch(this.chart.baseUrl + '/muvin/data/' + this.chart.app, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body)
+        }).then(response => {
+            return response.text();
+        }).then(text => {
+            this.update(JSON.parse(text))
+        }).catch(error => {
+            // console.log(error)
+            alert(error);
+        });
     }
 
     async fetchNodesLabels(value) {
@@ -65,18 +82,7 @@ class DataModel {
 
         this.chart.showLoading()
 
-        for (let value of values) {
-            let data = await this.fetchData(value)
-            if (data.message) {
-                alert(data.message)
-                continue
-            }
-            await this.update(data)
-        }
-        
-        this.updateTime()
-        
-        this.chart.update()
+        values.forEach(node => this.fetchData(node))
        
     }
 
@@ -109,20 +115,20 @@ class DataModel {
         if (!Object.keys(data).includes('items')) return
         
         data.items.forEach(d => { d.year = +d.year })
-
         data.links.forEach(d => { d.year = +d.year })
 
         this.items = this.items.concat(data.items)
         this.links = this.links.concat(data.links) 
-        this.nodes[data.node.key] = data.node
-
-        // update linkTypes only once 
-        if (!this.linkTypes.length) {
-            this.linkTypes = data.linkTypes
-            this.colors.typeScale.domain(this.linkTypes)
-        }
+        this.nodes[data.node.key] = data.node 
+       
+        this.linkTypes = data.linkTypes
+        this.colors.typeScale.domain(this.linkTypes)
 
         await this.updateCollaborations(data.node.key)
+
+        await this.updateTime()
+        
+        this.chart.update()
 
     }
 
@@ -153,26 +159,29 @@ class DataModel {
     }
 
     async updateCollaborations(key) {
-       
-        let items = this.items.filter(d => d.node.key === key)
-        let collaborators = items.map(d => d.contributors).flat()
+        
+        //Object.keys(this.nodes).forEach(async (key) => {
+            let items = this.items.filter(d => d.node.key === key)
+            let collaborators = items.map(d => d.contributors).flat()
 
-        collaborators = collaborators.filter( (d,i) => collaborators.findIndex(e => e.key === d.key) === i && d.key !== key)
-        collaborators = collaborators.map(d => { 
-            let values = items.filter(e => e.contnames.includes(d.name))
-            return { 
-                value: d.name, 
-                type: d.category, 
-                key: d.key, 
-                enabled: this.isNodeExplorable(d), 
-                values: values
-            } 
-        })
+            collaborators = collaborators.filter( (d,i) => collaborators.findIndex(e => e.key === d.key) === i && d.key !== key)
+            collaborators = collaborators.map(d => { 
+                let values = items.filter(e => e.contnames.includes(d.name))
+                return { 
+                    value: d.name, 
+                    type: d.category, 
+                    key: d.key, 
+                    //enabled: this.isNodeExplorable(d), 
+                    values: values
+                } 
+            })
 
-        this.nodes[key].collaborators = collaborators
-            
+            this.nodes[key].collaborators = collaborators
+                
 
-        await this.sortCollaborators('decreasing', key) // alpha, decreasing (number of shared items)
+            await this.sortCollaborators('decreasing', key) // alpha, decreasing (number of shared items)
+        //})
+        
         
     }
 

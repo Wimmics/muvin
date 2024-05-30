@@ -9,16 +9,16 @@ class TransformFactory extends Transform {
         super()
     }
 
-    static getTransform(app) {
+    static getTransform(app, data) {
         switch (app) {
             case 'hal':
-                return new HALTransform()
+                return new HALTransform(app, data)
             case 'wasabi':
-                return new WasabiTransform()
+                return new WasabiTransform(app, data)
             case 'crobora':
-                return new CroboraTransform()
+                return new CroboraTransform(app, data)
             default:
-                return new Transform()
+                return new Transform(app, data)
         }
     }
 }
