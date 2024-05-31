@@ -96,10 +96,7 @@ class Muvin extends HTMLElement {
             }
             this.menu.toggleDisplayItems(this.showItems)
             this.data.load(values)
-            //values.forEach(async (d) => await this.data.add(d))
         } 
-        
-        // else this.test() 
 
     }
 

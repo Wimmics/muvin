@@ -86,25 +86,29 @@ class DataModel {
        
     }
 
+    // This method was replaced by load() ; TODO: test the replacement on all use cases
     async open(nodes) {
-        let url = this.chart.url + '?'
-        let values = []
-        Object.keys(this.nodes).forEach(d => {
-            let v = `value=${this.nodes[d].name}`
-            if (this.nodes[d].type && this.chart.app !== 'wasabi')
-                v += `&type=${this.nodes[d].type}`
+        console.log('open() nodes = ', nodes)
 
-            values.push(v)
-        })
+        nodes.forEach(node => this.fetchData(node))
+        // let url = this.chart.url + '?'
+        // let values = []
+        // Object.keys(this.nodes).forEach(d => {
+        //     let v = `value=${this.nodes[d].name}`
+        //     if (this.nodes[d].type && this.chart.app !== 'wasabi')
+        //         v += `&type=${this.nodes[d].type}`
 
-        if (nodes)
-            nodes.forEach(node => {
-                values.push('value=' + node.value + (node.type && this.chart.app !== 'wasabi' ? '&type=' + node.type : ''))
-            })
+        //     values.push(v)
+        // })
 
-        url += values.join('&')
+        // if (nodes)
+        //     nodes.forEach(node => {
+        //         values.push('value=' + node.value + (node.type && this.chart.app !== 'wasabi' ? '&type=' + node.type : ''))
+        //     })
 
-        window.open(url, "_self")
+        // url += values.join('&')
+
+        //window.open(url, "_self")
     }
 
 

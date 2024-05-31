@@ -82,7 +82,6 @@ app.get(prefix + '/data/:app/nodes', async function(req, res) {
 app.post(prefix + '/data/:app', async function(req, res) {
    
     let data = {value: req.body.value, type: req.body.type === 'undefined' ? undefined : req.body.type}
-    console.log(req.body)
 
     if (req.body.query) {
         data.query = req.body.query, 

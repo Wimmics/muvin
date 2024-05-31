@@ -182,14 +182,14 @@ class ContextMenu {
             options.push({
                 value: 'All (' + values.length + ')' ,
                 action: async () => {
-                    _this.chart.data.open(values.filter(e => e.enabled))
+                    _this.chart.data.load(values.filter(e => e.enabled))
                 }
             })
 
             options.push({
                 value: 'First 10 collaborators (list order)',
                 action: async () => {
-                    _this.chart.data.open(values.slice(0, 10))                    
+                    _this.chart.data.load(values.slice(0, 10))                    
                 }
             })
 
@@ -220,7 +220,7 @@ class ContextMenu {
                             .text(e => e.values ? `(${e.values.length} items)` : '')),
                     exit => exit.remove()
                 )
-                .on('click', e => e.action ? e.action() : _this.chart.data.open([e]))
+                .on('click', e => e.action ? e.action() : _this.chart.data.load([e]))
         }
 
         function search() {

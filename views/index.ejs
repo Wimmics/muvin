@@ -55,25 +55,27 @@
         let locals = <%- JSON.stringify(locals) %>;
         console.log("locals = ", locals)
 
+        let muvin = document.querySelector("#muvin")
+
         if (locals.params) {
             if (locals.params.value && locals.params.value.length) {
                 let value = typeof(locals.params.value) === "string" ? locals.params.value : locals.params.value.join(',')
-                document.querySelector("#muvin").setAttribute("value", value)            
+                muvin.setAttribute("value", value)            
             }
 
             if (locals.params.type) {
                 let type = typeof(locals.params.type) === "string" ? locals.params.type : locals.params.type.join(',')
-                document.querySelector("#muvin").setAttribute("type", type)
+                muvin.setAttribute("type", type)
             }
 
-            if (locals.params.token) document.querySelector("#muvin").setAttribute("token", locals.params.token)
+            if (locals.params.token) muvin.setAttribute("token", locals.params.token)
         }
 
         if (locals.query && locals.endpoint) {
-            document.querySelector("#muvin").setAttribute('app', "demo")
-            document.querySelector("#muvin").setAttribute('query', locals.query)
-            document.querySelector('#muvin').setAttribute('endpoint', locals.endpoint)
-            document.querySelector('#muvin').setAttribute('value', locals.values)
+            muvin.setAttribute('app', "demo")
+            muvin.setAttribute('query', locals.query)
+            muvin.setAttribute('endpoint', locals.endpoint)
+            muvin.setAttribute('value', locals.values)
         }
 
 

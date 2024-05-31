@@ -13,9 +13,6 @@ class Profile {
         let nodes = this.chart.data.getNodesList()
         let dates = this.chart.data.getDates()
         let items = this.chart.data.getItems()
-
-        console.log(types, nodes, dates, items)
-        
        
         let itemsByYear = []
         nodes.forEach(node => { // each node is an object containing name, type and a contributions array
