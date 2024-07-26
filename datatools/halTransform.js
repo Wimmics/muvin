@@ -14,13 +14,9 @@ class HALTransform extends Transform{
         let topics = res.filter(d => d.topic).map(d => d.topic.value)
         topics = topics.filter( (d,i) => topics.indexOf(d) === i)
      
-        let key = this.hash(this.node.value)
-        this.data.node = {
-            key: key,
-            name: res[0].name.value,
-            id: res[0].uri.value,
-            topics: topics
-        }
+        // let key = this.hash(this.node.value)
+        this.data.node = { ...this.node }
+        this.data.node.topics = topics
     }
 
     

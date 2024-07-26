@@ -46,15 +46,15 @@ app.get(prefix, function (req, res) {
     res.render('about');
 })
 
-app.get(prefix + "/demo", async function(req, res) {
-    res.render('index', req.query )
-})
-
-// // index page 
-// app.get(prefix + '/:app', function (req, res) {
-//     console.log(req)
-//     res.render('index', { app: req.params.app, params: req.query } );
+// // route for launching muvin through ldviz 
+// app.get(prefix + "/preview", async function(req, res) {
+//     res.render('index', req.query )
 // })
+
+// index page 
+app.get(prefix + '/:app', function (req, res) {
+    res.render('index', { app: req.params.app, params: req.query } );
+})
 
 app.get(prefix + '/data/:app/nodes', async function(req, res) {
     let parentdir = path.join(__dirname, 'data/')

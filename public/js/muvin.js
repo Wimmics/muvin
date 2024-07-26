@@ -13,15 +13,42 @@ class Muvin extends HTMLElement {
         this.visibleProfile = null
 
         this.showItems = true
+
+        this.separator = '--' // to treat the query parameters
     }
 
     async connectedCallback() {
         this.shadowRoot.appendChild(template.content.cloneNode(true));
+
+        // Treat query parameters
         this.app = this.getAttribute("app")
         this.token = this.getAttribute("token")
 
         this.query = this.getAttribute("query")
         this.endpoint = this.getAttribute("endpoint")
+
+        let value = this.getAttribute("value")
+        let type = this.getAttribute("type") // this is mainly used by CROBORA, as the data has a type and a label
+
+        let values = []
+        if (value) {
+            value = value.split(this.separator)
+            type = type ? type.split(this.separator) : null
+            value.forEach( (d,i) => {
+                let v = { value: d.trim() }
+                if (type)
+                    v.type = type[i].trim()
+
+                values.push(v)
+            })
+        }
+
+        console.log("values = ", values)
+
+
+        if (this.searchHidden) this.menu.hideSearchFor() 
+
+        /////////
 
         this.baseUrl = ''
         this.url = this.baseUrl + `/muvin/${this.app}`
@@ -39,8 +66,9 @@ class Muvin extends HTMLElement {
             this.shadowRoot.querySelectorAll('div.context-menu').style = 'none'
         })
         
-        this.data = new DataModel()
+        this.data = new DataModel(this.app, {query: this.query, endpoint: this.endpoint, token: this.token})
 
+        /// init chart elements
         this.xAxis = new TimeAxis() // temporal axis formed by years
         this.yAxis = new NodesAxis() // axis formed by authors/artists names (nodes of the first level of the network)
 
@@ -56,43 +84,15 @@ class Muvin extends HTMLElement {
 
         this.profiles = new StreamGraph()
 
-        if (this.app === 'hal')
-            this.tooltip = new PublicationsTooltip()
-        else if (this.app === 'wasabi')
-            this.tooltip = new MusicTooltip()
-        else if (this.app === 'crobora')
-            this.tooltip = new ImageTooltip()
-        else this.tooltip = new Tooltip()
-
+        this.tooltip = TooltipFactory.getTooltip(this.app)
         this.tooltip.hideAll()
 
         this.menu = new Menu()
         this.menu.init()
-
-        await this.data.init(this.app)
-
-        let value = this.getAttribute("value")
-        let type = this.getAttribute("type")
         
-        let values = []
-        if (value) {
-            value = value.split(',')
-            type = type ? type.split(',') : null
-            value.forEach( (d,i) => {
-                let v = { value: d.trim() }
-                if (type)
-                    v.type = type[i].trim()
-
-                values.push(v)
-            })
-        }
-
-        if (this.searchHidden) this.menu.hideSearchFor()
-        
-        console.log("values = ", values)
         if (values.length) { 
-            if (values.length > 10) {
-                this.showItems = false
+            if (values.length > 10) { // over 10 nodes, hide items to reduce visual clutter (TODO: calibrate this information through a stylesheet)
+                this.showItems = false 
             }
             this.menu.toggleDisplayItems(this.showItems)
             this.data.load(values)

@@ -1,6 +1,7 @@
 class DataModel {
-    constructor() {
+    constructor(app, obj) {
         this.chart = document.querySelector('#muvin')
+        this.app = app
 
         this.clusters = []
         this.items = []
@@ -20,22 +21,23 @@ class DataModel {
             typeScale: d3.scaleOrdinal(d3.schemeSet2)
         }
 
-    }
+        Object.assign(this, obj)
 
-    async init(value) {
-        if (value !== "demo") this.fetchNodesLabels(value)
-       
+        if (!this.query) this.fetchNodesLabels(this.app)
+
+        this.route = this.chart.baseUrl + '/muvin/data/' + this.app
+
     }
 
     async fetchData(node) {
         let body;
-        if (this.chart.query) {
-            body = { query: this.chart.query, endpoint: this.chart.endpoint, value: node.value, type: node.type} 
+        if (this.query) {
+            body = { query: this.query, endpoint: this.endpoint, value: node.value, type: node.type} 
         } else {
-            body = {value: node.value, type: node.type} 
+            body = { value: node.value, type: node.type } 
         }
 
-        fetch(this.chart.baseUrl + '/muvin/data/' + this.chart.app, {
+        fetch(this.route, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(body)
@@ -78,7 +80,7 @@ class DataModel {
         this.open()
     }
 
-    async load(values) {
+    async load(values) {    
 
         this.chart.showLoading()
 
@@ -90,25 +92,32 @@ class DataModel {
     async open(nodes) {
         console.log('open() nodes = ', nodes)
 
-        nodes.forEach(node => this.fetchData(node))
-        // let url = this.chart.url + '?'
-        // let values = []
-        // Object.keys(this.nodes).forEach(d => {
-        //     let v = `value=${this.nodes[d].name}`
-        //     if (this.nodes[d].type && this.chart.app !== 'wasabi')
-        //         v += `&type=${this.nodes[d].type}`
+        if (this.query){
+            nodes.forEach(node => this.fetchData(node))
+            return
+        }
 
-        //     values.push(v)
-        // })
+        let url = this.chart.url + '?'
 
-        // if (nodes)
-        //     nodes.forEach(node => {
-        //         values.push('value=' + node.value + (node.type && this.chart.app !== 'wasabi' ? '&type=' + node.type : ''))
-        //     })
+        // if (this.query) url += `endpoint=${this.endpoint}&query=${encodeURIComponent(this.query)}&` // for the visualizations launched from ldviz
 
-        // url += values.join('&')
+        let values = []
+        Object.keys(this.nodes).forEach(d => {
+            let v = `value=${this.nodes[d].name}`
+            if (this.nodes[d].type && this.chart.app !== 'wasabi')
+                v += `&type=${this.nodes[d].type}`
 
-        //window.open(url, "_self")
+            values.push(v)
+        })
+
+        if (nodes)
+            nodes.forEach(node => {
+                values.push('value=' + node.value + (node.type && this.chart.app !== 'wasabi' ? '&type=' + node.type : ''))
+            })
+
+        url += values.join('&')
+
+        window.open(url, "_self")
     }
 
 
@@ -131,6 +140,8 @@ class DataModel {
         await this.updateCollaborations(data.node.key)
 
         await this.updateTime()
+
+        console.log(this)
         
         this.chart.update()
 
@@ -227,7 +238,7 @@ class DataModel {
 
     getItems() {
 
-        let items = this.items.filter(d => !d.node.contribution.every(e => this.filters.linkTypes.includes(e)) )
+        let items = this.items.filter(d => !d.node.contribution.every(e => this.filters.linkTypes.includes(e)) ) // filter out selected link types
 
         if (this.filters.timeFrom && this.filters.timeTo) {
             items = items.filter(d => d.year >= this.filters.timeFrom && d.year <= this.filters.timeTo)

@@ -3,7 +3,7 @@ const datasets = {
     // Wasabi
     wasabi: { 
         type: 'sparql',
-        url: "http://wasabi.inria.fr/sparql",
+        endpoint: "http://wasabi.inria.fr/sparql",
         categories: ["performer", "producer", "author"],
 
         prefixes: `
@@ -53,7 +53,7 @@ const datasets = {
             { ?uri ?alterRole [ foaf:name ?alter ] . filter (?alterRole = mo:performer) }
 
 
-        } limit 10000 offset $offset `,
+        } limit 10000 `,
 
         nodeFeatures: `
         select distinct ?name ?uri (replace(str(?type), "http://ns.inria.fr/wasabi/ontology/", "") as ?type) ?birthDate ?deathDate ?memberOf ?memberFrom ?memberTo where {
@@ -89,7 +89,7 @@ const datasets = {
     // HAL Archives Ouverts
     hal: {
         type: 'sparql',
-        url: "http://sparql.archives-ouvertes.fr/sparql",
+        endpoint: "http://sparql.archives-ouvertes.fr/sparql",
         categories: ["Conference Paper", "Journal Article", "Diploma", "Artwork", "Book / Book Section", "Gray Knowledge"],
 
         prefixes: `
@@ -129,7 +129,7 @@ const datasets = {
                 union
                 { ?uri dcterms:creator [hsc:person [foaf:name ?alter ] ] }
         
-            } limit 10000 offset $offset
+            } limit 10000
         `,
 
         nodeFeatures: `
@@ -155,7 +155,7 @@ const datasets = {
     // CROBORA
     crobora: {
         type: 'api',
-        url: "https://crobora.huma-num.fr/crobora-api/",
+        endpoint: "https://crobora.huma-num.fr/crobora-api/",
         categories: ['france 2', 'arte', 'tf1', 'rai uno', 'rai due', 'canale 5', 'Web'],
 
         nodeNames: ['https://crobora.huma-num.fr/crobora-api/cluster/names', 'https://crobora.huma-num.fr/crobora-api/cluster/names2'],

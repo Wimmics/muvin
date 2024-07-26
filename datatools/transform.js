@@ -11,13 +11,14 @@ const d3 = new D3Node().d3
 
 class Transform{
     constructor(db, config) {
+       
         this.db = db
         this.values
 
-        this.query = config.query || datasets[this.db].queries.items
-        this.endpoint = config.endpoint || datasets[this.db].queries.endpoint
-        this.nodeQuery = datasets[this.db] ? datasets[this.db].queries.nodeFeatures : null
-        this.prefixes = datasets[this.db] ? datasets[this.db].queries.prefixes : ""
+        this.query = config.query || datasets[this.db].items
+        this.endpoint = config.endpoint || datasets[this.db].endpoint
+        this.nodeQuery = datasets[this.db] ? datasets[this.db].nodeFeatures : null
+        this.prefixes = datasets[this.db] ? datasets[this.db].prefixes : ""
 
         this.linkTypes = datasets[this.db] ? datasets[this.db].categories.map(d => d.toLowerCase()) : []
 
@@ -30,12 +31,29 @@ class Transform{
             node: null // incremental version
         }
 
-        this.node = {key: this.hash(config.value),  name: config.value, type: config.type } 
+        this.node = { 
+            key: config.type ? this.hash(config.value, config.type) : this.hash(config.value),  
+            name: config.value, 
+            type: config.type 
+        }
+
         this.data.node = this.node
+
+        console.log(this)
     }
 
     async fetchItems() {
-        let query = this.prefixes + this.query.replace(/\$value/g, this.node.name)
+        
+        // Dynamically find the special variable that needs to be replaced
+        let variable = this.query.split(/[^A-Za-z0-9$]+/).find(v => v.startsWith('$'))
+
+        // /\$value/g 
+        // Dynamically build the regex
+        let regex = new RegExp("\\" + variable, "g");
+        
+        let query = this.prefixes + this.query.replace(regex, this.node.name)
+        query += ' offset $offset'
+
         this.values = await sparql.executeQuery(query, this.endpoint)
 
         let types = this.values.map(d => d.type.value.toLowerCase())
@@ -113,6 +131,7 @@ class Transform{
         let links = {}
     
         for (let item of this.values) {
+
             let year = item.parentDate ? item.parentDate.split('-')[0] : item.date.split('-')[0]
     
             if (year === "0000") continue
@@ -128,12 +147,13 @@ class Transform{
                                                         
             item.contributors = item.contributors.map(e => ({...e, key: e.category ? this.hash(e.name, e.category) : this.hash(e.name)}))
             
-            let nodeKey = item.nodeType ? this.hash(item.nodeName, item.nodeType) : this.hash(item.nodeName)
+            // let nodeKey = item.nodeType ? this.hash(item.nodeName, item.nodeType) : this.hash(item.nodeName)
+           
             let value = {
                 node: {
                     name: item.nodeName,
                     type: item.nodeType,
-                    key: nodeKey,
+                    key: this.node.key,
                     contribution: item.nodeContribution
                 },
                 id: item.id,
@@ -148,7 +168,7 @@ class Transform{
                 nodeLink: item.nodeLink  
             }
     
-            let key = this.hash(item.id, item.artist, item.artistType)
+            let key = this.hash(item.id)
     
             items[key] = {...value}
     
@@ -160,7 +180,7 @@ class Transform{
                 let target = item.parentNodeName ? { name: item.parentNodeName, 
                                                     type: item.parentNodeType, 
                                                     key: item.parentNodeType ? this.hash(item.parentNodeName, item.parentNodeType) : this.hash(item.parentNodeName) } : 
-                                                            { name: item.nodeName, type: item.nodeContribution, key: nodeKey }
+                                                            { name: item.nodeName, type: item.nodeContribution, key: this.node.key }
     
 
                 let sourceKey = this.hash(item.id, year, source.name, source.type, target.name, target.type)

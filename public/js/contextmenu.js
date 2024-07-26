@@ -220,7 +220,7 @@ class ContextMenu {
                             .text(e => e.values ? `(${e.values.length} items)` : '')),
                     exit => exit.remove()
                 )
-                .on('click', e => e.action ? e.action() : _this.chart.data.load([e]))
+                .on('click', e => e.action ? e.action() : _this.chart.data.open([e]))
         }
 
         function search() {

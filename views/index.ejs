@@ -43,6 +43,7 @@
     <script src="/muvin/js/publicationsTooltip.js"></script>
     <script src="/muvin/js/musicTooltip.js"></script>
     <script src="/muvin/js/imageTooltip.js"></script>
+    <script src="/muvin/js/tooltipFactory.js"></script>
 
     <script src="/muvin/js/muvin.js" type="module"></script>
 </head>
@@ -57,27 +58,17 @@
 
         let muvin = document.querySelector("#muvin")
 
+        // Treats parameters from CROBORA (keeping like this because a change would require modifying crobora's code)
         if (locals.params) {
-            if (locals.params.value && locals.params.value.length) {
-                let value = typeof(locals.params.value) === "string" ? locals.params.value : locals.params.value.join(',')
-                muvin.setAttribute("value", value)            
-            }
 
-            if (locals.params.type) {
-                let type = typeof(locals.params.type) === "string" ? locals.params.type : locals.params.type.join(',')
-                muvin.setAttribute("type", type)
-            }
+            Object.keys(locals.params).forEach(p => {
+                let value = locals.params[p]
+                if (Array.isArray(value))
+                    value = value.join('--')
 
-            if (locals.params.token) muvin.setAttribute("token", locals.params.token)
+                muvin.setAttribute(p, value)
+            }) 
         }
-
-        if (locals.query && locals.endpoint) {
-            muvin.setAttribute('app', "demo")
-            muvin.setAttribute('query', locals.query)
-            muvin.setAttribute('endpoint', locals.endpoint)
-            muvin.setAttribute('value', locals.values)
-        }
-
 
     </script>
 </body>
