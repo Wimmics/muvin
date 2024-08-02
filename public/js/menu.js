@@ -44,7 +44,9 @@ class Menu{
 
         this.div.select('#items-input-clear').on('click', () => this.chart.nodes.clearHighlight())
 
-        this.div.select('#clear-network').on('click', () => { this.chart.data.clear() })
+        this.div.select('#clear-network').on('click', async () => await this.handleClearNetwork())
+
+        this.div.select('#clear-cache').on('click', async () => await this.handleClearCache())
 
         this.div.select('#display-items').on('click', function() { _this.chart.updateItemsDisplay(this.checked) } )
             
@@ -60,6 +62,23 @@ class Menu{
         })
     }
 
+    async handleClearCache() {
+        if (confirm("Are you sure you want to clear the cached data and reload the visualization?")) {
+            let res =  await fetch(`${this.chart.baseUrl}/muvin/clearcache/${this.chart.app}`, { method: 'POST' })
+
+            if (res.status == 200) {
+                await this.chart.data.reload()  
+            } else alert("Something went wrong! The cache was not cleared.")
+
+        }
+    }
+
+    async handleClearNetwork() {
+        await this.chart.data.clear()
+
+        window.open(this.chart.url, "_self") 
+    }
+
     loadData(value) {
         let node;
         if (this.chart.app === 'crobora') {
@@ -68,11 +87,9 @@ class Menu{
             if (option.size()) node = option.datum()
         } else 
             node = this.chart.data.getNode(value.trim())
-
-        console.log("node = ", node)
         
         if (node)
-            this.chart.data.open([node])
+            this.chart.data.load([node])
         else {
             alert('You must choose an option from the list.')
             return

@@ -39,7 +39,8 @@ class Transform{
 
         this.data.node = this.node
 
-        console.log(this)
+        this.expectedKeys = ['uri', 'title', 'date', 'type', 'ego', 'alter']
+
     }
 
     async fetchItems() {
@@ -56,9 +57,24 @@ class Transform{
 
         this.values = await sparql.executeQuery(query, this.endpoint)
 
+        if (!this.values.length) 
+            return { message: `Value: ${this.node.name}\n The query did not return any results.`}
+
+        
+        let keys = Object.keys(this.values[0]) // variables in the select
+        let containAllKeys = this.expectedKeys.every(value => keys.includes(value))
+        if (!containAllKeys) { // if a required variable is missing, return
+            let missingKeys = this.expectedKeys.filter(value => !keys.includes(value))
+            return { message: `Value: ${this.node.name}\nThe query is missing the following required variables = ${missingKeys.join(', ')}` }
+        }
+
+        
+
         let types = this.values.map(d => d.type.value.toLowerCase())
         types = types.filter( (d,i) => types.indexOf(d) === i) 
         this.data.linkTypes = types
+
+        return
     }
 
     async fetchNodeFeatures() { // to be included directly on the main query
@@ -115,7 +131,7 @@ class Transform{
                 title: ref.title.value,
                 date: ref.date.value,
                 type: ref.type.value.toLowerCase(),
-                link: ref.link.value,
+                link: ref.link ? ref.link.value : ref.uri.value,
 
                 nodeName: ref.ego.value,
                 nodeContribution: [ ref.type.value.toLowerCase() ],
@@ -209,14 +225,15 @@ class Transform{
             let data_to_write = JSON.stringify(this.data, null, 4)
             fs.writeFileSync(path.join(__dirname, filename), data_to_write) 
         } catch(e) {
-            console.log(this.data)
             console.log(e)
         }
     }
 
     async getData() {
-        await this.fetchItems()
-        if (!this.values.length) return this.values;
+        let response = await this.fetchItems()
+        
+        if (response) 
+            return response
 
         await this.clean()  
         await this.transform()

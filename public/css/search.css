@@ -22,7 +22,7 @@
     left: 25%;
     top: 15%;
     width: 50%;
-    height: 70%;
+    max-height: 70%;
     position: absolute;
     z-index: 3;
     display: none;
@@ -30,6 +30,21 @@
     gap: 10px;
     flex-direction: column;
     box-shadow: 5px 5px 5px #ccc;
+}
+
+.import-form button {
+    height: 35px;
+    position: relative;
+    border: none;
+    background-color: #007bff;
+    width: fit-content;
+    left: 90%;
+    padding: 10px;
+    bottom: 10px;
+    border-radius: 5px;
+    font-size: 16px;
+    color: white;
+    cursor: pointer;
 }
 
 #topbar{

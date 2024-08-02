@@ -10,7 +10,7 @@ class Profile {
     async set() {
     
         let types = this.chart.data.getLinkTypes()
-        let nodes = this.chart.data.getNodesList()
+        let nodes = await this.chart.data.getNodesList()
         let dates = this.chart.data.getDates()
         let items = this.chart.data.getItems()
        

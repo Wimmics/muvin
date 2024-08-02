@@ -98,7 +98,7 @@ app.post(prefix + '/data/:app', async function(req, res) {
         try {
             let transform = TransformFactory.getTransform(req.params.app, data)
             result = await transform.getData()
-            if (!result) result = {"message": "There was an error while retrieving the data!"}
+            if (!result) result = {message: "An error occurred while retrieving the data. Please try again later."}
         } catch(error) {
             console.log(error)
         }
@@ -106,6 +106,42 @@ app.post(prefix + '/data/:app', async function(req, res) {
         res.send(JSON.stringify(result))
     }
    
+})
+
+app.post(prefix + '/clearcache/:app', async function(req, res) {
+    let folderPath = `data/${req.params.app}`
+
+    fs.readdir(folderPath, (err, files) => {
+        if (err) {
+          console.error(`Error reading the folder: ${err}`);
+          return;
+        }
+    
+        files.forEach(file => {
+            if (file.includes('nodes.json')) return;
+            
+            const filePath = path.join(folderPath, file);
+            fs.stat(filePath, (err, stat) => {
+                if (err) {
+                    console.error(`Error stating file: ${err}`);
+                    res.sendStatus(500)
+                    return;
+                }
+        
+                if (stat.isFile()) {
+                fs.unlink(filePath, err => {
+                    if (err) {
+                        console.error(`Error deleting file: ${err}`);
+                        res.sendStatus(500)
+                        return
+                    } 
+                })
+                } 
+            })
+        })
+      })
+    
+      res.sendStatus(200)
 })
 
 // About page 

@@ -180,6 +180,7 @@ class ContextMenu {
         function getGeneralOptions(values) {
             let options = []
             options.push({
+                id: 'all',
                 value: 'All (' + values.length + ')' ,
                 action: async () => {
                     _this.chart.data.load(values.filter(e => e.enabled))
@@ -187,6 +188,7 @@ class ContextMenu {
             })
 
             options.push({
+                id: 'ten',
                 value: 'First 10 collaborators (list order)',
                 action: async () => {
                     _this.chart.data.load(values.slice(0, 10))                    
@@ -199,12 +201,18 @@ class ContextMenu {
         function createList(values) {
             let data = getGeneralOptions(values).concat(values)
 
-            div.select('ul')
+            let listGroup = div.select('ul')
                 .selectAll('li')
                 .data(data)
                 .join(
                     enter => enter.append('li')
-                        .style('cursor', 'pointer')
+                            .style('display', 'flex')
+                            .style('gap', '10px')
+                            .style('cursor', 'pointer')
+                        .call(label => label.append('input')
+                            .attr('type', 'checkbox')
+                            .style('width', '15px')
+                            .attr('class', 'node-check'))
                         .call(label => label.append('tspan')
                             .attr('id', 'node')
                             .text(e => `${e.value} ${e.type ? '(' + e.type + ')' : ''}`))
@@ -220,7 +228,29 @@ class ContextMenu {
                             .text(e => e.values ? `(${e.values.length} items)` : '')),
                     exit => exit.remove()
                 )
-                .on('click', e => e.action ? e.action() : _this.chart.data.open([e]))
+               
+
+            div.select('button')
+                .on('click', e => {
+                    let selectedValues = []
+
+                    let selected = listGroup.selectAll('input')
+                        .filter(function() { return this.checked })
+
+                    selected.each(function() {
+                        let data = d3.select(this.parentNode).datum()
+                        
+                        if (data.id === 'all') selectedValues = selectedValues.concat(values)
+                        else if (data.id === 'ten') selectedValues = selectedValues.concat(values.slice(0, 10))
+                        else selectedValues.push(data)
+                    })
+
+                    _this.chart.data.load(selectedValues)
+
+                    listGroup.selectAll('input').property('checked', false)
+                    div.style('display', 'none')
+                    
+                })
         }
 
         function search() {

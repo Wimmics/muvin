@@ -32,23 +32,23 @@ class DataModel {
     async fetchData(node) {
         let body;
         if (this.query) {
-            body = { query: this.query, endpoint: this.endpoint, value: node.value, type: node.type} 
+            body = { query: this.query, endpoint: this.endpoint, value: node.value || node.name, type: node.type} 
         } else {
-            body = { value: node.value, type: node.type } 
+            body = { value: node.value || node.name, type: node.type } 
         }
 
-        fetch(this.route, {
+        let response = fetch(this.route, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(body)
         }).then(response => {
-            return response.text();
-        }).then(text => {
-            this.update(JSON.parse(text))
+            return response.json()
         }).catch(error => {
             // console.log(error)
             alert(error);
-        });
+        })
+
+        return response
     }
 
     async fetchNodesLabels(value) {
@@ -63,8 +63,6 @@ class DataModel {
         this.nodes = {}
         this.links = []
         this.linkTypes = []
-
-        window.open(this.chart.url, "_self") 
     }
 
     isEmpty() {
@@ -76,56 +74,78 @@ class DataModel {
         delete this.nodes[node];
         this.items = this.items.filter(d => d.node.key !== node)
 
-        this.updateTime()
-        this.open()
+        await this.load(await this.getNodesList())
+       
+    }
+
+    async reload() {
+        let nodes = await this.getNodesList()
+       
+        await this.clear()
+        await this.load(nodes)
     }
 
     async load(values) {    
 
         this.chart.showLoading()
 
-        values.forEach(node => this.fetchData(node))
+        let errormessages = []
+        let response;
+        for (let node of values) {   
+           
+            response = await this.fetchData(node)
+            
+            if (response && response.message) {
+                errormessages.push(response.message)
+            } else 
+                await this.update(response)
+        }
+
+        await this.updateTime()
+        await this.updateLinkTypes()
+        
+        await this.chart.update()
+
+        if (errormessages.length)
+            alert(errormessages.join('\n'))
        
     }
 
-    // This method was replaced by load() ; TODO: test the replacement on all use cases
-    async open(nodes) {
-        console.log('open() nodes = ', nodes)
+    // // This method was replaced by load() ; TODO: test the replacement on all use cases
+    // async open(nodes) {
 
-        if (this.query){
-            nodes.forEach(node => this.fetchData(node))
-            return
-        }
+    //     if (this.query){
+    //         nodes.forEach(node => this.fetchData(node))
+    //         return
+    //     }
 
-        let url = this.chart.url + '?'
+    //     let url = this.chart.url + '?'
 
-        // if (this.query) url += `endpoint=${this.endpoint}&query=${encodeURIComponent(this.query)}&` // for the visualizations launched from ldviz
+    //     // if (this.query) url += `endpoint=${this.endpoint}&query=${encodeURIComponent(this.query)}&` // for the visualizations launched from ldviz
 
-        let values = []
-        Object.keys(this.nodes).forEach(d => {
-            let v = `value=${this.nodes[d].name}`
-            if (this.nodes[d].type && this.chart.app !== 'wasabi')
-                v += `&type=${this.nodes[d].type}`
+    //     let values = []
+    //     Object.keys(this.nodes).forEach(d => {
+    //         let v = `value=${this.nodes[d].name}`
+    //         if (this.nodes[d].type && this.chart.app !== 'wasabi')
+    //             v += `&type=${this.nodes[d].type}`
 
-            values.push(v)
-        })
+    //         values.push(v)
+    //     })
 
-        if (nodes)
-            nodes.forEach(node => {
-                values.push('value=' + node.value + (node.type && this.chart.app !== 'wasabi' ? '&type=' + node.type : ''))
-            })
+    //     if (nodes)
+    //         nodes.forEach(node => {
+    //             values.push('value=' + node.value + (node.type && this.chart.app !== 'wasabi' ? '&type=' + node.type : ''))
+    //         })
 
-        url += values.join('&')
+    //     url += values.join('&')
 
-        window.open(url, "_self")
-    }
+    //     window.open(url, "_self")
+    // }
 
 
     // updates
 
     async update(data) {
-        
-        if (!Object.keys(data).includes('items')) return
         
         data.items.forEach(d => { d.year = +d.year })
         data.links.forEach(d => { d.year = +d.year })
@@ -133,19 +153,13 @@ class DataModel {
         this.items = this.items.concat(data.items)
         this.links = this.links.concat(data.links) 
         this.nodes[data.node.key] = data.node 
-       
-        this.linkTypes = data.linkTypes
-        this.colors.typeScale.domain(this.linkTypes)
 
         await this.updateCollaborations(data.node.key)
 
-        await this.updateTime()
-
-        console.log(this)
-        
-        this.chart.update()
-
+        return
     }
+
+
 
     async updateFilters(type, values) {
         this.filters[type] = values
@@ -157,6 +171,13 @@ class DataModel {
 
     getFocus() {
         return this.filters.focus
+    }
+
+    async updateLinkTypes() {
+        this.linkTypes = this.items.map(d => d.type)
+        this.linkTypes = this.linkTypes.filter( (d,i) => this.linkTypes.indexOf(d) === i)
+
+        this.colors.typeScale.domain(this.linkTypes)
     }
 
     async updateTime() {
@@ -175,27 +196,25 @@ class DataModel {
 
     async updateCollaborations(key) {
         
-        //Object.keys(this.nodes).forEach(async (key) => {
-            let items = this.items.filter(d => d.node.key === key)
-            let collaborators = items.map(d => d.contributors).flat()
+        let items = this.items.filter(d => d.node.key === key)
+        let collaborators = items.map(d => d.contributors).flat()
 
-            collaborators = collaborators.filter( (d,i) => collaborators.findIndex(e => e.key === d.key) === i && d.key !== key)
-            collaborators = collaborators.map(d => { 
-                let values = items.filter(e => e.contnames.includes(d.name))
-                return { 
-                    value: d.name, 
-                    type: d.category, 
-                    key: d.key, 
-                    //enabled: this.isNodeExplorable(d), 
-                    values: values
-                } 
-            })
+        collaborators = collaborators.filter( (d,i) => collaborators.findIndex(e => e.key === d.key) === i && d.key !== key)
+        collaborators = collaborators.map(d => { 
+            let values = items.filter(e => e.contnames.includes(d.name))
+            return { 
+                value: d.name, 
+                type: d.category, 
+                key: d.key, 
+                //enabled: this.isNodeExplorable(d), 
+                values: values
+            } 
+        })
 
-            this.nodes[key].collaborators = collaborators
-                
+        this.nodes[key].collaborators = collaborators
+            
 
-            await this.sortCollaborators('decreasing', key) // alpha, decreasing (number of shared items)
-        //})
+        await this.sortCollaborators('decreasing', key) // alpha, decreasing (number of shared items)
         
         
     }
@@ -294,7 +313,7 @@ class DataModel {
         return Object.keys(this.nodes);
     }
 
-    getNodesList() {
+    async getNodesList() {
         return Object.values(this.nodes)
     }
 
@@ -306,9 +325,9 @@ class DataModel {
         return this.nodes[d]
     }
 
-    getNodesOrder() {
-        return Object.keys(this.getNodesList())
-    }
+    // async getNodesOrder() {
+    //     return await Object.keys(this.getNodesList())
+    // }
 
     switchNodes(indexA, indexB) {
         let keys =  Object.keys(this.nodes)

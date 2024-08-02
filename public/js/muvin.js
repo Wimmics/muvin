@@ -43,8 +43,6 @@ class Muvin extends HTMLElement {
             })
         }
 
-        console.log("values = ", values)
-
 
         if (this.searchHidden) this.menu.hideSearchFor() 
 
@@ -145,18 +143,24 @@ class Muvin extends HTMLElement {
         //values.forEach(async (d) => await this.data.add(d))
     }
 
+
+    clear() {
+        this.shadowRoot.querySelector('.welcome-text').style.display = 'block'
+        this.shadowRoot.querySelector('#display-items-info').style.display = 'none'
+        this.menu.hideViewSettings()
+        this.legend.hide()
+        this.div.style('display', 'none')
+    }
+
+
     /**
      * Update the view when adding or removing a node from the network
      * @param {} focus An object defining the node on focus 
      */
     async update(focus){
-
+        
         if (this.data.isEmpty()) {
-            this.shadowRoot.querySelector('.welcome-text').style.display = 'block'
-            this.shadowRoot.querySelector('#display-items-info').style.display = 'none'
-            this.menu.hideViewSettings()
-            this.legend.hide()
-            this.div.style('display', 'none')
+            this.clear()
             return
         }
 
@@ -204,8 +208,14 @@ class Muvin extends HTMLElement {
             previousFocus.forEach(async (d) => await this.xAxis.computeDistortion(d))
             this.xAxis.setDistortion()
         }
-        else 
+        else {
+            if (this.visibleNodes.length > 10) { // over 10 nodes, hide items to reduce visual clutter (TODO: calibrate this information through a stylesheet)
+                this.showItems = false 
+            }
+            this.menu.toggleDisplayItems(this.showItems)
             this.draw()
+        }
+            
     }
 
     draw() {
@@ -412,9 +422,7 @@ class Muvin extends HTMLElement {
     }
    
 
-    clear() {
-        this.svg.selectAll('g').remove()
-    }
+   
 
 }
 
@@ -487,8 +495,9 @@ template.innerHTML = `
                     </div>
                 </div>
                     
-                <div >
+                <div style='gap:10px;'>
                     <button id="clear-network">Clear Network</button>
+                    <button id="clear-cache">Clear Cache and Reload</button>
                 </div>
             </div>
         </div>
@@ -509,6 +518,8 @@ template.innerHTML = `
                 <input class='search' type='text' id='ul-search' placeholder='Enter value here'></input>
             </div>
             <ul class='values' id='ul-multi'></ul>
+
+            <button type='button'>Submit</button>
         </div>
 
         <div id="loading">  
