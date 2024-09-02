@@ -63,13 +63,35 @@ class Menu{
     }
 
     async handleClearCache() {
-        if (confirm("Are you sure you want to clear the cached data and reload the visualization?")) {
-            let res =  await fetch(`${this.chart.baseUrl}/muvin/clearcache/${this.chart.app}`, { method: 'POST' })
+        let body = { hashCode: this.chart.hashCode }
+       
+        try {
+            let res =  await fetch(`${this.chart.baseUrl}/muvin/clearcache/${this.chart.app}`, { 
+                method: 'POST',
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(body) 
+            })
+            console.log("res = ", res)
+            
 
-            if (res.status == 200) {
-                await this.chart.data.reload()  
-            } else alert("Something went wrong! The cache was not cleared.")
+            if (res.status === 200)
+                Swal.fire({
+                    toast: true,               // Enable toast mode
+                    position: 'top-end',       // Position the toast in the top right corner
+                    icon: 'success',           // Type of icon (success, error, info, warning)
+                    title: 'Cache cleared', // Title of the toast
+                    showConfirmButton: false,  // Hide the confirm button
+                    timer: 3000,               // Duration in milliseconds (3000ms = 3 seconds)
+                    timerProgressBar: true,    // Show a progress bar indicating the timer
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer); // Pause the timer on hover
+                        toast.addEventListener('mouseleave', Swal.resumeTimer); // Resume the timer when the mouse leaves
+                    }
+                })
+            
 
+        } catch (e) {
+            alert(`An error occurred: ${e.message}. Please try again later.`)
         }
     }
 

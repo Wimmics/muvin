@@ -26,6 +26,7 @@ class Muvin extends HTMLElement {
 
         this.query = this.getAttribute("query")
         this.endpoint = this.getAttribute("endpoint")
+        this.hashCode = this.getAttribute("hashCode")
 
         let value = this.getAttribute("value")
         let type = this.getAttribute("type") // this is mainly used by CROBORA, as the data has a type and a label
@@ -43,9 +44,15 @@ class Muvin extends HTMLElement {
             })
         }
 
+        let appNodes = {'hal': 'author', 'wasabi': 'artist', 'crobora': 'keyword'}
 
-        if (this.searchHidden) this.menu.hideSearchFor() 
-
+        let welcomeMessage = ''
+        if (this.app === "preview" && !this.query)
+            welcomeMessage =  `<p>This page requires a SPARQL query and endpoint as parameter. Use it via <a href="https://dataviz.i3s.unice.fr/ldviz/">LDViz.</p>`
+        else if (this.app !== "preview")
+            welcomeMessage = `<p>Search for a ${appNodes[this.app]} to begin.</p>`
+        this.shadowRoot.querySelector('#message-app').innerHTML =  welcomeMessage
+            
         /////////
 
         this.baseUrl = ''
@@ -87,11 +94,14 @@ class Muvin extends HTMLElement {
 
         this.menu = new Menu()
         this.menu.init()
+
+        if (this.searchHidden || this.app === "preview") this.menu.hideSearchFor() 
         
         if (values.length) { 
             if (values.length > 10) { // over 10 nodes, hide items to reduce visual clutter (TODO: calibrate this information through a stylesheet)
                 this.showItems = false 
             }
+            this.showItems = false
             this.menu.toggleDisplayItems(this.showItems)
             this.data.load(values)
         } 
@@ -428,6 +438,8 @@ class Muvin extends HTMLElement {
 
 const template = document.createElement("template");
 template.innerHTML = `
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     
     <link rel="stylesheet" href="/muvin/css/header.css">
     <link rel="stylesheet" href="/muvin/css/dropdown.css">
@@ -443,6 +455,12 @@ template.innerHTML = `
     <div class='tooltip' id='node-tooltip'></div>
     <div class='tooltip' id='profile-tooltip'></div>
     
+    <div class='welcome-text'>
+        <h3>Welcome to <b>Muvin</b>. </h3>
+        
+        <div id='message-app'></div>
+    </div>
+
     <div class="menu">
         
         <h3>Muvin</h3>
@@ -497,7 +515,7 @@ template.innerHTML = `
                     
                 <div style='gap:10px;'>
                     <button id="clear-network">Clear Network</button>
-                    <button id="clear-cache">Clear Cache and Reload</button>
+                    <button id="clear-cache">Clear Cache</button>
                 </div>
             </div>
         </div>
@@ -527,9 +545,7 @@ template.innerHTML = `
             <p>Loading data...</p>
         </div>
 
-        <div class='welcome-text'>
-            <p>Welcome to <b>Muvin</b>. To begin the exploration, please search for a value above.</p>
-        </div>
+       
 
         
             <div class='legend'>  </div>

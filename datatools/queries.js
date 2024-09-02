@@ -4,18 +4,15 @@ const datasets = {
     wasabi: { 
         type: 'sparql',
         endpoint: "http://wasabi.inria.fr/sparql",
-        categories: ["performer", "producer", "author"],
 
-        prefixes: `
+        items: `
         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
         prefix dcterms: <http://purl.org/dc/terms/>
         prefix foaf:    <http://xmlns.com/foaf/0.1/>
         prefix schema:  <http://schema.org/>
         prefix wsb:     <http://ns.inria.fr/wasabi/ontology/>
-        prefix mo:      <http://purl.org/ontology/mo/>`,
-        
-        items: 
-        `
+        prefix mo:      <http://purl.org/ontology/mo/>
+
         select distinct ?uri ?id ?title ?date 
         (replace(str(?type), "http://ns.inria.fr/wasabi/ontology/", "") as ?type) 
         ?parentId ?parentName 
@@ -90,18 +87,15 @@ const datasets = {
     hal: {
         type: 'sparql',
         endpoint: "http://sparql.archives-ouvertes.fr/sparql",
-        categories: ["Conference Paper", "Journal Article", "Diploma", "Artwork", "Book / Book Section", "Gray Knowledge"],
-
-        prefixes: `
+        items:
+        `
         PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX hsc: <http://data.archives-ouvertes.fr/schema/>
         PREFIX foaf: <http://xmlns.com/foaf/0.1/>
         PREFIX org: <http://www.w3.org/ns/org#>
         PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-        `,
-        items:
-        `
-        select distinct ?uri ?title ?date ?type ?link ?ego ?alter
+
+        select distinct ?uri ?title ?date  ?link ?ego ?alter
         where {
                 bind ("$node" as ?ego)
 
@@ -129,7 +123,7 @@ const datasets = {
                 union
                 { ?uri dcterms:creator [hsc:person [foaf:name ?alter ] ] }
         
-            } limit 10000
+            } 
         `,
 
         nodeFeatures: `
@@ -156,7 +150,6 @@ const datasets = {
     crobora: {
         type: 'api',
         endpoint: "https://crobora.huma-num.fr/crobora-api/",
-        categories: ['france 2', 'arte', 'tf1', 'rai uno', 'rai due', 'canale 5', 'Web'],
 
         nodeNames: ['https://crobora.huma-num.fr/crobora-api/cluster/names', 'https://crobora.huma-num.fr/crobora-api/cluster/names2'],
         items: 'https://crobora.huma-num.fr/crobora-api/search/imagesOR?categories=$category&keywords=$value&options=illustration&options=location&options=celebrity&options=event'

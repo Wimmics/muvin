@@ -7,9 +7,10 @@ const path = require('path');
 
 const https = require("https")
 
-
 const { TransformFactory } = require('./datatools/transformFactory')
-
+const { datasets } = require('./datatools/queries')
+const sparql = require('./datatools/sparql_helper')
+const crypto = require('crypto')
 
 /**
  * HTTP node server
@@ -53,9 +54,20 @@ app.get(prefix, function (req, res) {
 
 // index page 
 app.get(prefix + '/:app', function (req, res) {
-    res.render('index', { app: req.params.app, params: req.query } );
+    let params = req.query // receive query and endpoint in the URL
+    if (datasets[req.params.app]) { // or is it from pre-defined apps
+        params = {
+            query: datasets[req.params.app].items,
+            endpoint: datasets[req.params.app].endpoint
+        }
+    }
+
+    params.hashCode = hash(req.body.query, req.body.endpoint)
+
+    res.render('index', { app: req.params.app, params: params } );
 })
 
+// route to retrieve pre-queries nodes (for hal, wasabi and crobora apps)
 app.get(prefix + '/data/:app/nodes', async function(req, res) {
     let parentdir = path.join(__dirname, 'data/')
    
@@ -72,55 +84,74 @@ app.get(prefix + '/data/:app/nodes', async function(req, res) {
         
     if (fs.existsSync(datafile)) {
         res.sendFile(datafile)
-    } else {
-        let transform = TransformFactory.getTransform(req.params.app)
-        let result = await transform.fetchNodeLabels()
+    } else if (datasets[req.params.app]) {
+        let endpoint = datasets[req.params.app].endpoint
+        let query = datasets[req.params.app].nodeNames
+
+        let result;
+        try {
+            result = await sparql.executeQuery(query, endpoint)
+    
+            if (!result.message) {
+                result = result.map( d => ( { value: d.value.value } )) 
+
+                let out = "[" + result.map(el => JSON.stringify(el, null, 4)).join(",") + "]";
+                fs.writeFileSync(datafile, out) 
+            }
+        } catch(e) {
+            result = { message: `An error occured: ${e.message}` }
+        }
+
         res.send(JSON.stringify(result))
+    } else {
+        res.status(404).send(`404: App "${req.params.app}" not found.`)
     }
 })
+
+function hash() {  
+    let string = Object.values(arguments).join('--')
+
+    return crypto.createHash('sha256').update(string).digest('hex')
+}
 
 app.post(prefix + '/data/:app', async function(req, res) {
    
-    let data = {value: req.body.value, type: req.body.type === 'undefined' ? undefined : req.body.type}
+    let data = { value: req.body.value, type: req.body.type === 'undefined' ? undefined : req.body.type }
 
+    let config = {}
     if (req.body.query) {
-        data.query = req.body.query, 
-        data.endpoint = req.body.endpoint
+        config.query = req.body.query, 
+        config.endpoint = req.body.endpoint
+        config.queryhash = req.body.hashCode
     }
 
-    let filename = `data/${req.params.app}/${data.value}${data.type ? '-' + data.type : ''}-data_vis.json`
-    
-    let datafile = path.join(__dirname, filename);
-    if (fs.existsSync(datafile))
-        res.sendFile(datafile);
-    else {
-        let result;
-        try {
-            let transform = TransformFactory.getTransform(req.params.app, data)
-            result = await transform.getData()
-            if (!result) result = {message: "An error occurred while retrieving the data. Please try again later."}
-        } catch(error) {
-            console.log(error)
-        }
-        
-        res.send(JSON.stringify(result))
+    let result;
+    try {
+        let transform = TransformFactory.getTransform(req.params.app, config)
+        await transform.createFolder()
+        result = await transform.getData(data)
+        if (!result) result = { message: "An error occurred while retrieving the data. Please try again later." }
+    } catch(error) {
+        result = { message: `An error occurred: ${error.message}` }
     }
-   
+    
+    res.send(JSON.stringify(result))
 })
 
 app.post(prefix + '/clearcache/:app', async function(req, res) {
-    let folderPath = `data/${req.params.app}`
+    
+    let folderpath = `data/${req.params.app}/${req.body.hashCode}`
 
-    fs.readdir(folderPath, (err, files) => {
+    // Read the directory contents
+    fs.readdir(folderpath, (err, files) => {
         if (err) {
           console.error(`Error reading the folder: ${err}`);
           return;
         }
     
         files.forEach(file => {
-            if (file.includes('nodes.json')) return;
             
-            const filePath = path.join(folderPath, file);
+            const filePath = path.join(folderpath, file);
             fs.stat(filePath, (err, stat) => {
                 if (err) {
                     console.error(`Error stating file: ${err}`);
@@ -140,53 +171,13 @@ app.post(prefix + '/clearcache/:app', async function(req, res) {
             })
         })
       })
-    
-      res.sendStatus(200)
+
+    res.sendStatus(200)
 })
 
 // About page 
 app.get(prefix + '/about', function (req, res) {
     res.render("pages/about");
-})
-
-app.get(prefix + '/testdata', function(req, res) {
-    let datafile = path.join(__dirname, "data/testdata.json");
-    if (fs.existsSync(datafile)) {
-        res.sendFile(datafile)
-    }
-    else {
-        let originaldata = path.join(__dirname, "data/wasabidata_vis.json");
-        let data = fs.readFileSync(originaldata)
-        data = JSON.parse(data)
-
-        let fArtists = [];
-        for ( let i = 0; i < 100; i++) {
-            let a = {'name': "artist"+i, id: i, audio: false}
-            fArtists.push(a)
-            data.artists[a.name] = a;
-        }
-
-        for (let d = 1967; d < 2017; d++) {
-            for (let a of fArtists) {
-                let n = Math.floor(Math.random() * 10) + 1;
-                for (let i = 0; i < n; i ++) {
-                    let item = {
-                        artist: { name: a.name, contribution: ['performer'] },
-                        collaborators: [a.name],
-                        year: d.toString(),
-                        type: 'song',
-                        audio: false
-                    }
-                    data.items.push(item)
-                    data.groupedItems.push(item)
-                }
-            }
-        }
-
-        fs.writeFileSync(datafile, JSON.stringify(data, null, 4))
-
-        res.send(JSON.stringify(data))
-    }
 })
 
 const port = 8020

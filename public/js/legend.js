@@ -20,7 +20,7 @@ class Legend {
             .attr('id', 'link-legend')
             
         this.svg.append('text')
-            .text(this.chart.app === 'crobora' ? 'Broadcaster' : 'Contribution Type')
+            .text(this.chart.app === 'crobora' ? 'Broadcaster' : 'Contribution Type') //TODO: feed from stylesheet
             .attr('font-size', this.fontSize)
             .attr('transform', `translate(0, 25)`)
 
@@ -55,7 +55,7 @@ class Legend {
         let itemWidth = d3.max(this.data, d => d.length * 12)
 
         let svg = this.svg
-            .attr('width', this.data.length * (itemWidth + this.itemRadius))
+            .attr('width', "100%")
             .attr('height', 70)
 
         this.group = svg.selectAll('g')

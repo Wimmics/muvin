@@ -23,20 +23,16 @@ class DataModel {
 
         Object.assign(this, obj)
 
-        if (!this.query) this.fetchNodesLabels(this.app)
+        if (this.app !== 'preview') this.fetchNodesLabels(this.app)
 
         this.route = this.chart.baseUrl + '/muvin/data/' + this.app
 
     }
 
-    async fetchData(node) {
-        let body;
-        if (this.query) {
-            body = { query: this.query, endpoint: this.endpoint, value: node.value || node.name, type: node.type} 
-        } else {
-            body = { value: node.value || node.name, type: node.type } 
-        }
 
+    async fetchData(node) {
+        let body = { query: this.query, endpoint: this.endpoint, value: node.value || node.name, type: node.type, hashCode: this.chart.hashCode } 
+        
         let response = fetch(this.route, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -44,7 +40,6 @@ class DataModel {
         }).then(response => {
             return response.json()
         }).catch(error => {
-            // console.log(error)
             alert(error);
         })
 
@@ -111,38 +106,6 @@ class DataModel {
        
     }
 
-    // // This method was replaced by load() ; TODO: test the replacement on all use cases
-    // async open(nodes) {
-
-    //     if (this.query){
-    //         nodes.forEach(node => this.fetchData(node))
-    //         return
-    //     }
-
-    //     let url = this.chart.url + '?'
-
-    //     // if (this.query) url += `endpoint=${this.endpoint}&query=${encodeURIComponent(this.query)}&` // for the visualizations launched from ldviz
-
-    //     let values = []
-    //     Object.keys(this.nodes).forEach(d => {
-    //         let v = `value=${this.nodes[d].name}`
-    //         if (this.nodes[d].type && this.chart.app !== 'wasabi')
-    //             v += `&type=${this.nodes[d].type}`
-
-    //         values.push(v)
-    //     })
-
-    //     if (nodes)
-    //         nodes.forEach(node => {
-    //             values.push('value=' + node.value + (node.type && this.chart.app !== 'wasabi' ? '&type=' + node.type : ''))
-    //         })
-
-    //     url += values.join('&')
-
-    //     window.open(url, "_self")
-    // }
-
-
     // updates
 
     async update(data) {
@@ -156,6 +119,7 @@ class DataModel {
 
         await this.updateCollaborations(data.node.key)
 
+        console.log(this)
         return
     }
 
@@ -174,7 +138,7 @@ class DataModel {
     }
 
     async updateLinkTypes() {
-        this.linkTypes = this.items.map(d => d.type)
+        this.linkTypes = this.items.map(d => d.type).filter(d => d)
         this.linkTypes = this.linkTypes.filter( (d,i) => this.linkTypes.indexOf(d) === i)
 
         this.colors.typeScale.domain(this.linkTypes)

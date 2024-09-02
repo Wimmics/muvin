@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const { datasets } = require('./queries')
+// const { datasets } = require('./queries')
 const sparql = require('./sparql_helper')
 
 const crypto = require('crypto')
@@ -15,64 +15,66 @@ class Transform{
         this.db = db
         this.values
 
-        this.query = config.query || datasets[this.db].items
-        this.endpoint = config.endpoint || datasets[this.db].endpoint
-        this.nodeQuery = datasets[this.db] ? datasets[this.db].nodeFeatures : null
-        this.prefixes = datasets[this.db] ? datasets[this.db].prefixes : ""
+        this.query = null
 
-        this.linkTypes = datasets[this.db] ? datasets[this.db].categories.map(d => d.toLowerCase()) : []
+        if (config) {
+            this.query = config.query
+            this.endpoint = config.endpoint,
+            this.queryhash = config.queryhash
+        } 
+        
+        // if (datasets[this.db]) {
+        //     this.nodeQuery = datasets[this.db].nodeFeatures
+        // } 
 
-        this.datapath = `../data/${this.db}`
+        
 
         this.data = {
             items: null,
             links: null,
-            linkTypes: this.linkTypes,
             node: null // incremental version
         }
 
-        this.node = { 
-            key: config.type ? this.hash(config.value, config.type) : this.hash(config.value),  
-            name: config.value, 
-            type: config.type 
-        }
+        this.expectedKeys = ['uri', 'title', 'date', 'ego', 'alter']
 
-        this.data.node = this.node
-
-        this.expectedKeys = ['uri', 'title', 'date', 'type', 'ego', 'alter']
 
     }
 
     async fetchItems() {
+
+        function endsWithLimitPattern(str) {
+            const regex = /\blimit \d+\b/i
+            return regex.test(str);
+        }
         
         // Dynamically find the special variable that needs to be replaced
         let variable = this.query.split(/[^A-Za-z0-9$]+/).find(v => v.startsWith('$'))
 
         // /\$value/g 
         // Dynamically build the regex
-        let regex = new RegExp("\\" + variable, "g");
+        let regex = new RegExp("\\" + variable, "g")
         
-        let query = this.prefixes + this.query.replace(regex, this.node.name)
-        query += ' offset $offset'
+        let query = this.query.replace(regex, this.data.node.name)
 
-        this.values = await sparql.executeQuery(query, this.endpoint)
+        let withOffset = !endsWithLimitPattern(query)
+        if (withOffset) // if the query does not have a limit by default, we loop to retrieve all matching data in the graph
+            query += 'limit 10000 offset $offset'
+
+        let result = await sparql.executeQuery(query, this.endpoint, withOffset)
+        if (result.message) return result
+        
+        this.values = result
 
         if (!this.values.length) 
-            return { message: `Value: ${this.node.name}\n The query did not return any results.`}
+            return { message: `Value: ${this.data.node.name}\n The query did not return any results.`}
 
         
         let keys = Object.keys(this.values[0]) // variables in the select
         let containAllKeys = this.expectedKeys.every(value => keys.includes(value))
         if (!containAllKeys) { // if a required variable is missing, return
             let missingKeys = this.expectedKeys.filter(value => !keys.includes(value))
-            return { message: `Value: ${this.node.name}\nThe query is missing the following required variables = ${missingKeys.join(', ')}` }
+            return { message: `Value: ${this.data.node.name}\nThe query is missing the following required variables = ${missingKeys.join(', ')}` }
         }
-
-        
-
-        let types = this.values.map(d => d.type.value.toLowerCase())
-        types = types.filter( (d,i) => types.indexOf(d) === i) 
-        this.data.linkTypes = types
 
         return
     }
@@ -80,9 +82,9 @@ class Transform{
     async fetchNodeFeatures() { // to be included directly on the main query
         if (!this.nodeQuery) return;
 
-        let query = this.prefixes + this.nodeQuery.replace(/\$node/g, this.node.name)
+        let query = this.nodeQuery.replace(/\$node/g, this.data.node.name)
 
-        let result = await sparql.sendRequest(sparql.getSparqlUrl(query.replace('$offset', 0), this.endpoint))
+        let result = await sparql.sendRequest(query.replace('$offset', 0), this.endpoint)
         let bindings;
         try{
             result = JSON.parse(result)
@@ -98,20 +100,7 @@ class Transform{
 
     }
 
-    async fetchNodeLabels() {
-        let query = this.queries.prefixes + this.queries.nodeNames
-        let data = await sparql.executeQuery(query, this.queries.url)
-        data = data.map( d => ( {value: d.value.value} )) 
 
-        await this.writeLabels(data)
-
-        return data
-    }
-
-    async writeLabels(data) {
-        let out = "[" + data.map(el => JSON.stringify(el, null, 4)).join(",") + "]";
-        fs.writeFileSync(path.join(__dirname, `${this.datapath}/nodes.json`), out) 
-    }
 
     async clean() {
         
@@ -126,17 +115,19 @@ class Transform{
             let alters = d.values.map(e => e.alter.value)
             alters = alters.filter( (e,i) => alters.indexOf(e) === i)
 
+            let type = ref.type ? ref.type.value.toLowerCase() : 'unknown'
+
             return {
                 id: ref.uri.value,
                 title: ref.title.value,
                 date: ref.date.value,
-                type: ref.type.value.toLowerCase(),
+                type: type,
                 link: ref.link ? ref.link.value : ref.uri.value,
 
                 nodeName: ref.ego.value,
-                nodeContribution: [ ref.type.value.toLowerCase() ],
+                nodeContribution: [ type ],
 
-                contributors: alters.map(e => ({ name: e, type: ref.type.value.toLowerCase() })),
+                contributors: alters.map(e => ({ name: e, type: type })),
             }
         })
    
@@ -169,7 +160,7 @@ class Transform{
                 node: {
                     name: item.nodeName,
                     type: item.nodeType,
-                    key: this.node.key,
+                    key: this.data.node.key,
                     contribution: item.nodeContribution
                 },
                 id: item.id,
@@ -196,7 +187,7 @@ class Transform{
                 let target = item.parentNodeName ? { name: item.parentNodeName, 
                                                     type: item.parentNodeType, 
                                                     key: item.parentNodeType ? this.hash(item.parentNodeName, item.parentNodeType) : this.hash(item.parentNodeName) } : 
-                                                            { name: item.nodeName, type: item.nodeContribution, key: this.node.key }
+                                                            { name: item.nodeName, type: item.nodeContribution, key: this.data.node.key }
     
 
                 let sourceKey = this.hash(item.id, year, source.name, source.type, target.name, target.type)
@@ -219,27 +210,81 @@ class Transform{
 
     }
 
-    async write() {
-        let filename = `${this.datapath}/${this.node.name}${this.node.type ? '-' + this.node.type : ''}-data_vis.json`
-        try {
-            let data_to_write = JSON.stringify(this.data, null, 4)
-            fs.writeFileSync(path.join(__dirname, filename), data_to_write) 
-        } catch(e) {
-            console.log(e)
-        }
+    async createFolder() {
+
+        let appdata = `../data/${this.db}`
+
+        if (!fs.existsSync(path.join(__dirname, appdata))) {
+            try {
+                fs.mkdirSync(path.join(__dirname, appdata), { recursive: true });
+            } catch(e) {
+                console.log(`Error while creating folder "${appdata}": ${e.message}.`)
+            }
+        } 
+
+        this.datapath = `${appdata}/${this.queryhash}`
+
+        if (!fs.existsSync(path.join(__dirname, this.datapath))) {
+            try {
+                fs.mkdirSync(path.join(__dirname, this.datapath), { recursive: true });
+            } catch(e) {
+                console.log(`Error while creating folder "${this.datapath}": ${e.message}.`)
+            }
+        } 
     }
 
-    async getData() {
-        let response = await this.fetchItems()
+    async write() {
+
+        let filepath = path.join(__dirname, `${this.datapath}/${this.getFileName()}`)
+       
+        try {
+            let data_to_write = JSON.stringify(this.data, null, 4)
+            fs.writeFileSync(filepath, data_to_write) 
+        } catch(e) {
+            console.error(`An error occurred while writing the data: ${e.message}`);
+            console.error("Stack trace:", e.stack);
+        }
+    }
+    
+
+    getFileName() {
+        if (this.data.node.type) {
+            return `${this.hash(this.data.node.name, this.data.node.type)}.json`    
+        } 
         
+        return `${this.hash(this.data.node.name)}.json`    
+        
+    }
+
+    async getData(args) {
+
+        this.data.node = { 
+            key: args.type ? this.hash(args.value, args.type) : this.hash(args.value),  
+            name: args.value, 
+            type: args.type 
+        }
+
+        let filepath = path.join(__dirname, `${this.datapath}/${this.getFileName()}`)
+    
+        // check if there is data in cache
+        if (fs.existsSync(filepath)) {
+            let data = fs.readFileSync(filepath)
+            data = JSON.parse(data)
+            return data
+        }
+                
+        // otherwise retrieve and transform data from endpoint
+        let response = await this.fetchItems()
+       
         if (response) 
             return response
 
         await this.clean()  
         await this.transform()
-        let nodeData = await this.fetchNodeFeatures()
-        await this.transformNode(nodeData)
-        if(this.db !== "demo") await this.write()
+        //let nodeData = await this.fetchNodeFeatures()
+        //await this.transformNode(nodeData)
+        
+        await this.write()
 
         return this.data
     }

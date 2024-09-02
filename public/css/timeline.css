@@ -27,7 +27,7 @@ body{
     text-align: center;
     width: 100vw;
     height: calc(100vh - 35px);
-    top: 35px;
+    top: 100px;
     position: absolute;
 }
 
