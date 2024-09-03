@@ -53,7 +53,7 @@ class Tooltip {
     setItemContent(d, id) {
         const itemName = `<b>${d.title} (${d.year})</b><br>`
         const type = `<b>Type:</b> ${d.type}`
-        const more = `<br><br>Click for more`
+        const more = `<br><br>Click to go to source`
 
         let keys = this.chart.data.getNodesKeys()
         
@@ -69,10 +69,11 @@ class Tooltip {
         let data = await this.chart.data.getItems()
         let values = data.filter(e => e.node.key === node.key && e.year === year && e.node.contribution.includes(d.key))
         let totalYear = data.filter(e => e.node.key === node.key && e.year === year)        
+        let percentage = ((values.length / totalYear.length) * 100).toFixed(2)
 
-        let content = `<b> ${node.name} (${year})</b><br>
-        <b>${totalYear.length}</b> items<br><br>
-        <b>${capitalizeFirstLetter(d.key)}</b>: <b>${values.length}</b> item${values.length > 1 ? 's' : ''}<br><br>
+        let content = `<b>${year}</b> (${node.name})<br><br>
+        <b>${totalYear.length}</b> items in total<br><br>
+        <b>${capitalizeFirstLetter(d.key)}</b>: <b>${values.length}</b> item${values.length === 1 ? '' : 's'} (<b>${percentage}%</b>)<br><br>
         Click to keep it highlighted`
 
         this.setContent(content, id)

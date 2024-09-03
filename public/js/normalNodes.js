@@ -28,14 +28,15 @@ class NormalNodes extends NodesGroup{
     async appendNodes() {
         // a group per item (e.g. an item == a song)
         this.group.selectAll('g.artist')
-            .selectAll('.doc')            
+            .selectAll('.doc')
+            .style('display', d => this.displayCircle(d))            
             .data(d => this.data.filter(e => e.node.key === d) )
             .join(
                 enter => enter.append('g')
                     .classed('doc', true)
                     .style('pointer-events', d => this.opacity(d) ? 'auto' : 'none')
                     .call(g => g.append('circle')
-                            .attrs(this.circleAttrs)),
+                            .attrs(this.circleAttrs) ),
                 update => update.style('pointer-events', d => this.opacity(d) ? 'auto' : 'none')
                     .call(g => g.select('circle')
                             .attrs(this.circleAttrs) ),

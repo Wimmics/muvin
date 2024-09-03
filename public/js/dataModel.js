@@ -145,6 +145,8 @@ class DataModel {
     }
 
     async updateTime() {
+        if (this.filters.timeFrom && this.filters.timeTo) return
+
         if (this.filters.focus) {
             let items = await this.getItems()
             this.dates = items.map(d => d.year)

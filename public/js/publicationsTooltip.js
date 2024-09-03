@@ -6,7 +6,7 @@ class PublicationsTooltip extends Tooltip{
     setItemContent(d, id) {
         const itemName = `<b>${d.title} (${d.year})</b><br>`
         const type = `<b>Document type:</b> ${d.type}`
-        const more = `<br><br>Click for more`
+        const more = `<br><br>Click to go to source`
 
         let keys = this.chart.data.getNodesKeys()
         

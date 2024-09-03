@@ -31,6 +31,8 @@ class NodesGroup {
             //display: d => this.opacity(d) ? 'block' : 'none'
         }
 
+        this.displayCircle = d => this.opacity(d) ? 'block' : 'none'
+
         this.contextmenu = new ContextMenu()
 
         // this.setUncertainPattern()
@@ -52,7 +54,7 @@ class NodesGroup {
         await this.appendNodes()
 
         this.group.selectAll('.doc')
-            .on('click', d3.contextMenu(d => this.contextmenu.getItemMenu()))
+            .on('click', d => window.open(d.link))
             .on('mouseenter', d => { let e = d3.event; this.mouseover(e, d, 'item') })
             .on('mouseleave', () => this.mouseout()) // set a timeout to ensure that mouseout is not triggered while rapidly changing the hover
 

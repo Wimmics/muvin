@@ -112,10 +112,10 @@ class Transform{
 
             let ref = d.values[0]
 
-            let alters = d.values.map(e => e.alter.value)
-            alters = alters.filter( (e,i) => alters.indexOf(e) === i)
+            let alters = d.values.map(e => e.alter ? e.alter.value : null)
+            alters = alters.filter( (e,i) => e && alters.indexOf(e) === i) // keep only unique and valide values
             
-            if (!alters.includes(ref.ego.value))
+            if (!alters.includes(ref.ego.value)) 
                 alters.push(ref.ego.value) // add the ego information (to support filter in the query)
 
             let type = ref.type ? ref.type.value.toLowerCase() : 'unknown'
