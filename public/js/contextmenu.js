@@ -19,7 +19,7 @@ class ContextMenu {
 
         if (this.chart.data.getNodesKeys().length > 1) {
             menu.push({ title: d => this.chart.data.getFocus() === d ? 'Release highlight' : 'Highlight network', 
-                        action: d => { 
+                        action: async(d) => { 
                             if (this.chart.data.getFocus() === d) {
                                 this.chart.data.updateFilters('focus', null)
                             }
@@ -28,7 +28,7 @@ class ContextMenu {
                                 this.chart.data.updateFilters('focus', d)
                             }
 
-                            this.chart.data.updateTime()
+                            await this.chart.data.updateTime()
                             this.chart.update()
                         }
                     })            

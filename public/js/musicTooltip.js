@@ -23,11 +23,11 @@ class MusicTooltip extends Tooltip{
         this.setContent(content, id); 
     }
 
-    setProfileContent(e, d, id) {
+    async setProfileContent(e, d, id) {
         let node = d[0].data.node 
         let year = this.chart.xAxis.invert(e.pageX, 1)
 
-        let data = this.chart.data.getItems()
+        let data = await this.chart.data.getItems()
         let values = data.filter(e => e.node.key === node.key && e.year === year && e.node.contribution.includes(d.key))
         let totalYear = data.filter(e => e.year === year)
 

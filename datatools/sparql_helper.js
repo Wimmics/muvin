@@ -53,7 +53,7 @@ async function executeQuery(query, endpoint, withOffset) {
 
 	let result
 	do {
-		console.log('offset = ', offset)
+		
 		result = await sendRequest( query.replace('$offset', offset), endpoint )
 	
 		if (result.message && !data.length) return result

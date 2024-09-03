@@ -17,12 +17,12 @@ class AreaGraph extends Profile {
         return this.area(d)
     }
 
-    getExtent() {
+    async getExtent() {
         let nestedItems = d3.nest()
             .key(d => d.node.key)
             .key(d => d.year)
             .key(d => d.type)
-            .entries(this.chart.data.getItems())
+            .entries(await this.chart.data.getItems())
 
         let counts = nestedItems.map(d => d.values.map(e => e.values.map(x => x.values.length))).flat()
         

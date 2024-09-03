@@ -323,8 +323,8 @@ class Muvin extends HTMLElement {
      * @param {*} d a link between two nodes 
      * @returns a boolean indicating whether that link is uncertain or not
      */
-    isUncertain(d) {        
-        let items = this.data.getItems().filter(a => a.id === d.item.id && a.year === d.year)
+    async isUncertain(d) {        
+        let items = await this.data.getItems().filter(a => a.id === d.item.id && a.year === d.year)
         let foundInSource = items.some(a => a.node.key === d.source)
         let foundIntarget = items.some(a => a.node.key === d.target)
 
@@ -391,7 +391,8 @@ class Muvin extends HTMLElement {
         let targets = this.data.links.filter(e => e.source.key === value || e.target.key === value).map(e => e.target.key === value ? e.source.key : e.target.key)
         targets =  targets.filter((e,i) => this.yAxis.values.includes(e) && targets.indexOf(e) === i)
 
-        let nodes = this.data.getItems().filter(e => {
+        let items = await this.data.getItems()
+        let nodes = items.filter(e => {
             let values = e.contributors.map(x => x.key)
             return values.includes(value) && values.some(a => targets.includes(a)) 
         })

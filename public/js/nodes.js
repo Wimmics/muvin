@@ -45,7 +45,7 @@ class NodesGroup {
     // draw the second level nodes of the network (e.g. documents, songs/albums)
     async draw() {
 
-        this.data = this.chart.data.getItems();
+        this.data = await this.chart.data.getItems();
         
         await this.computeRadius()
 

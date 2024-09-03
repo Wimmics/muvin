@@ -170,7 +170,7 @@ class NodeLinksGroup{
         let links = await this.getLinks()
         
         let linkedItems = links.map(d => d.item)
-        let selection = this.chart.data.getItems().filter(e => linkedItems.includes(e.id) && this.chart.isSelected(e.year))
+        let selection = await this.chart.data.getItems().filter(e => linkedItems.includes(e.id) && this.chart.isSelected(e.year))
         
         let data = []
 

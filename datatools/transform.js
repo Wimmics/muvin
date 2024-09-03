@@ -114,6 +114,9 @@ class Transform{
 
             let alters = d.values.map(e => e.alter.value)
             alters = alters.filter( (e,i) => alters.indexOf(e) === i)
+            
+            if (!alters.includes(ref.ego.value))
+                alters.push(ref.ego.value) // add the ego information (to support filter in the query)
 
             let type = ref.type ? ref.type.value.toLowerCase() : 'unknown'
 
@@ -153,8 +156,6 @@ class Transform{
                                                         type: item.parentNodeType } : null }
                                                         
             item.contributors = item.contributors.map(e => ({...e, key: e.category ? this.hash(e.name, e.category) : this.hash(e.name)}))
-            
-            // let nodeKey = item.nodeType ? this.hash(item.nodeName, item.nodeType) : this.hash(item.nodeName)
            
             let value = {
                 node: {

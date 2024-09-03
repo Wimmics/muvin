@@ -61,8 +61,8 @@ app.get(prefix + '/:app', function (req, res) {
             endpoint: datasets[req.params.app].endpoint
         }
     }
-
-    params.hashCode = hash(req.body.query, req.body.endpoint)
+    
+    params.hashCode = hash(params.query, params.endpoint)
 
     res.render('index', { app: req.params.app, params: params } );
 })

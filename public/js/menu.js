@@ -130,8 +130,8 @@ class Menu{
         this.div.select("#nodes-input").node().value = ''
     }
 
-    updateItemsSearch() {
-        this.data = this.chart.data.getItems()
+    async updateItemsSearch() {
+        this.data = await this.chart.data.getItems()
 
         let itemNames = this.data.map(d => d.title)
         itemNames = itemNames.filter((d,i) => itemNames.indexOf(d) === i)

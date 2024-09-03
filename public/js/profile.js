@@ -12,7 +12,7 @@ class Profile {
         let types = this.chart.data.getLinkTypes()
         let nodes = await this.chart.data.getNodesList()
         let dates = this.chart.data.getDates()
-        let items = this.chart.data.getItems()
+        let items = await this.chart.data.getItems()
        
         let itemsByYear = []
         nodes.forEach(node => { // each node is an object containing name, type and a contributions array
@@ -63,7 +63,7 @@ class Profile {
 
 
         this.heightScale = d3.scaleLinear()
-            .domain(this.getExtent())
+            .domain(await this.getExtent())
 
         this.area = d3.area()
             .x(d => this.chart.xAxis.scale(d.data.year) + this.chart.xAxis.step(d.data.year) / 2)

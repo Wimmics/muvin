@@ -15,6 +15,7 @@ class Legend {
         // color legend for links (i.e. collaboration type)
         this.linkLegend = this.div.append('div')
             .classed('link-legend', true)
+            .style('width', "100%")
 
         this.svg = this.linkLegend.append('svg')
             .attr('id', 'link-legend')
