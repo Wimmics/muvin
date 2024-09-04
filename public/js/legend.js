@@ -1,7 +1,7 @@
 class Legend {
     constructor() {
         this.itemRadius = 7
-        this.fontSize = '13px'
+        this.fontSize = 12
         this.left = 10
 
         this.chart = document.querySelector('#muvin')
@@ -53,20 +53,44 @@ class Legend {
 
     drawLinkLegend() {
 
-        let itemWidth = d3.max(this.data, d => d.length * 12)
+        this.svg.attr('width', "100%").attr('height', 70)
 
-        let svg = this.svg
-            .attr('width', "100%")
-            .attr('height', 70)
+        // Get the total width of the SVG container
+        let totalWidth = window.innerWidth
 
-        this.group = svg.selectAll('g')
+        // Calculate the total width needed by summing up the width of all text labels
+        let textWidths = this.data.map(d => {
+            let text = capitalizeFirstLetter(d);
+            return text.length * this.fontSize * .4;  // Estimate text width based on font size
+        });
+
+        // Total required width (including circles and some padding)
+        let totalRequiredWidth = textWidths.reduce((acc, width) => acc + width, 0) + this.data.length * (this.itemRadius * 2 + 10);
+
+        // Calculate the spacing between each item to evenly distribute them
+        let availableSpace = totalWidth - totalRequiredWidth;
+        let spacing = availableSpace / (this.data.length - 1);
+
+        // Center offset for text positioning relative to circles
+        let circleTextPadding = this.itemRadius + 10;
+            
+        // Ensure that `xPosition` values do not overlap
+        let currentX = this.left;
+
+        this.group = this.svg.selectAll('g')
             .data(this.data)
             .join(
                 enter => enter.append('g')
-                    .attr('transform', `translate(0, 35)`)
+                    // Calculate the x position by summing the widths and adding spacing
+                    .attr('transform', (d, i) => {
+                        let xPosition = currentX;
+                        currentX += textWidths[i] + this.itemRadius * 2 + spacing; // Move currentX to the next position
+                        return `translate(${xPosition}, 35)`;
+                    })
+
                     
                     .call(g => g.append('circle')
-                        .attr('cx', (d,i) => this.left + i * itemWidth)
+                        .attr('cx', 0)
                         .attr('cy', this.left)         
                         .attr('r', this.itemRadius)
                         .attr('fill', e => this.selected.includes(e) ? '#fff' : this.colors.typeScale(e) )
@@ -80,15 +104,14 @@ class Legend {
                     .call(g => g.append('text')
                         .attr('font-size', this.fontSize)
                         .attr('y', (_,i) => this.itemRadius * 2)
-                        .attr('x', (d,i) => this.left + (this.itemRadius * 2) + i * itemWidth)
+                        .attr('x', (d,i) => circleTextPadding)
                         .text(d => capitalizeFirstLetter(d))),
                 update => update
                     .call(g => g.select('circle')
-                        .attr('cx', (d,i) => this.left + i * itemWidth)
                         .attr('fill', e => this.selected.includes(e) ? '#fff' : this.colors.typeScale(e)) )
 
                     .call(g => g.select('text')
-                        .attr('x', (d,i) => this.left + (this.itemRadius * 2) + i * itemWidth)
+                        .attr('x', circleTextPadding)
                         .text(d => capitalizeFirstLetter(d))),
                 exit => exit.remove()
             )
