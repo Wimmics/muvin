@@ -13,7 +13,7 @@ const datasets = {
         prefix wsb:     <http://ns.inria.fr/wasabi/ontology/>
         prefix mo:      <http://purl.org/ontology/mo/>
 
-        select distinct ?uri ?id ?title ?date 
+        select distinct ?uri ?id ?title ?date ?type
         (replace(str(?type), "http://ns.inria.fr/wasabi/ontology/", "") as ?type) 
         ?parentId ?parentName 
         (replace(str(?parentType), "http://ns.inria.fr/wasabi/ontology/", "") as ?parentType) 
