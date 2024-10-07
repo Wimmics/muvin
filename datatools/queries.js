@@ -95,7 +95,7 @@ const datasets = {
         PREFIX org: <http://www.w3.org/ns/org#>
         PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 
-        select distinct ?uri ?title ?date  ?link ?ego ?alter
+        select distinct ?uri ?title ?date ?type ?link ?ego ?alter
         where {
                 bind ("$node" as ?ego)
 

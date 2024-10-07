@@ -15,7 +15,7 @@ class TimeAxis{
     async set() {
       
         this.values = this.chart.data.getDates()
-
+        
         let chartDimensions = this.chart.getDimensions()
         let chartWidth = this.chart.getDefaultWidth()
 

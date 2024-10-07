@@ -10,28 +10,38 @@ class CroboraTransform extends Transform{
     }
 
     async fetchItems() {
-        
+       
+
         let params = {
-            keywords: [ this.node.value ],
-            categories: [ this.node.type ],
+            keywords: [ this.data.node.name ],
+            categories: [ this.data.node.type ],
             options: ["illustration", "location", "celebrity", "event"]
         }
+        
 
-        this.values = await fetch("https://crobora.huma-num.fr/crobora-api/search/imagesOR", {
+        try {
+            let response = await fetch("https://crobora.huma-num.fr/crobora-api/search/imagesOR", {
                 method: "POST", 
                 headers: { "Content-Type": "application/json"},
-                body: JSON.stringify(params) })
-            .then(async function(response){
-                if(response.status >= 200 && response.status < 300){
-                return await response.text().then(data => {
-                    return JSON.parse(data)
-                })}
-                else return response
-            })
+                body: JSON.stringify(params)
+            });
+    
+    
+            if (!response.ok) {
+                return response;
+            }
+    
+            this.values = await response.json();
+    
+        } catch (error) {
+            return `Fetch failed: ${error}`
+        }
+        
+        return
         
     }
 
-    async fetchNodeFeatures() { 
+    async fetchNodeFeatures() { // TODO: review or delete
         let key = this.hash(this.node.value, this.node.type)
         this.data.node = {
             name: this.node.value,
@@ -62,7 +72,7 @@ class CroboraTransform extends Transform{
                 let vals = []
                 categories.forEach(key => {
                     if (d[key]) d[key].forEach( x => vals.push({ name: x, 
-                                                                type: this.linkTypes.includes(d.channel.toLowerCase()) ? d.channel.toLowerCase() : "web", 
+                                                                type: d.channel.toLowerCase() || "web", 
                                                                 category: key, 
                                                                 key: [x, key].join('-') } ))
                 })
@@ -74,10 +84,10 @@ class CroboraTransform extends Transform{
                 source: d.source,
                 title: d.image_title,
                 date: d.day_airing,
-                type: 'image',
+                type: d.channel.toLowerCase(),
                 
-                nodeName: this.node.value,
-                nodeType: this.node.type,
+                nodeName: this.data.node.name,
+                nodeType: this.data.node.type,
                 nodeContribution: [ d.channel.toLowerCase() ],
 
                 contributors: getContributors(),

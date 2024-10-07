@@ -81,25 +81,16 @@ class Legend {
             .data(this.data)
             .join(
                 enter => enter.append('g')
-                    // Calculate the x position by summing the widths and adding spacing
-                    .attr('transform', (d, i) => {
-                        let xPosition = currentX;
-                        currentX += textWidths[i] + this.itemRadius * 2 + spacing; // Move currentX to the next position
-                        return `translate(${xPosition}, 35)`;
-                    })
-
-                    
                     .call(g => g.append('circle')
                         .attr('cx', 0)
                         .attr('cy', this.left)         
                         .attr('r', this.itemRadius)
                         .attr('fill', e => this.selected.includes(e) ? '#fff' : this.colors.typeScale(e) )
                         .attr('stroke', d => d3.rgb(this.chart.getTypeColor(d)).darker())
-                        .style('cursor', 'pointer')
-                        .on('click', d => this.handleClick(d))
-                            .call(circle => circle.append('title')
-                                .text(e => `Click to display/hide items in this ${this.chart.app === 'crobora' ? 'channel' : 'category'}`))
-                        )
+                        .style('cursor', 'pointer') 
+                        
+                        .call(circle => circle.append('title')
+                            .text(e => `Click to display/hide items in this ${this.chart.app === 'crobora' ? 'channel' : 'category'}`)) )
                     
                     .call(g => g.append('text')
                         .attr('font-size', this.fontSize)
@@ -108,14 +99,24 @@ class Legend {
                         .text(d => capitalizeFirstLetter(d))),
                 update => update
                     .call(g => g.select('circle')
-                        .attr('fill', e => this.selected.includes(e) ? '#fff' : this.colors.typeScale(e)) )
+                        .attr('fill', e => this.selected.includes(e) ? '#fff' : this.colors.typeScale(e)) 
+                        .attr('stroke', d => d3.rgb(this.chart.getTypeColor(d)).darker()) )
 
                     .call(g => g.select('text')
                         .attr('x', circleTextPadding)
                         .text(d => capitalizeFirstLetter(d))),
                 exit => exit.remove()
             )
+            // Calculate the x position by summing the widths and adding spacing
+            .attr('transform', (d, i) => {
+                let xPosition = currentX;
+                currentX += textWidths[i] + this.itemRadius * 2 + spacing; // Move currentX to the next position
+                return `translate(${xPosition}, 35)`;
+            })
 
+        this.group.selectAll('circle')
+            .on('click', d => this.handleClick(d))
+            
             
     }
 

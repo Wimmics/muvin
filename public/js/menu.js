@@ -171,6 +171,7 @@ class Menu{
 
             this.chart.data.updateFilters('timeTo', +upperSlider.value)
             this.chart.data.updateFilters('timeFrom', +lowerSlider.value)
+            this.chart.data.updateTime()
             this.chart.update()
         }
 

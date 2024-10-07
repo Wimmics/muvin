@@ -119,7 +119,6 @@ class DataModel {
 
         await this.updateCollaborations(data.node.key)
 
-        console.log(this)
         return
     }
 
@@ -145,7 +144,7 @@ class DataModel {
     }
 
     async updateTime() {
-        if (this.filters.timeFrom && this.filters.timeTo) return
+        //if (this.filters.timeFrom && this.filters.timeTo) return
 
         if (this.filters.focus) {
             let items = await this.getItems()
@@ -154,7 +153,12 @@ class DataModel {
             this.dates = this.items.map(d => d.year)
         }
         
+        
         this.dates = this.dates.filter((d,i) => this.dates.indexOf(d) === i)
+
+        if (this.filters.timeFrom && this.filters.timeTo)
+            this.dates = this.dates.filter(d => d >= this.filters.timeFrom && d <= this.filters.timeTo)
+
         this.dates.sort()
 
         this.filters.timeFrom = this.dates[0]

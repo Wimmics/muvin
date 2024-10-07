@@ -267,6 +267,7 @@ class Transform{
 
         let filepath = path.join(__dirname, `${this.datapath}/${this.getFileName()}`)
     
+
         // check if there is data in cache
         if (fs.existsSync(filepath)) {
             let data = fs.readFileSync(filepath)
@@ -276,6 +277,7 @@ class Transform{
                 
         // otherwise retrieve and transform data from endpoint
         let response = await this.fetchItems()
+        
        
         if (response) 
             return response

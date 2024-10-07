@@ -9,10 +9,10 @@ class WasabiTransform extends Transform{
     }
 
     async transformNode(res) {
-        let key = this.hash(this.node.value)
+        let key = this.hash(this.data.node.name)
 
         if (!res.length) {
-            this.data.node = { key: key, name: this.node.value }
+            this.data.node = { key: key, name: this.data.node.name }
             return;
         }
 
@@ -67,9 +67,9 @@ class WasabiTransform extends Transform{
                 type: ref.type.value,
                 link: `https://wasabi.i3s.unice.fr/#/search/artist/${ref.parentId.value ? encodeURIComponent(ref.parentNodeName.value) : encodeURIComponent(ref.node.value)}/album/${ref.parentId.value ? encodeURIComponent(ref.parentName.value) : encodeURIComponent(ref.title.value)}${ref.parentId.value ? '/song/' + encodeURIComponent(ref.title.value) : '#'}`,
 
-                nodeName: this.node.value,
-                nodeType: this.node.type,
-                nodeLink: `https://wasabi.i3s.unice.fr/#/search/artist/${encodeURIComponent(this.node.value)}`,
+                nodeName: this.data.node.name,
+                nodeType: this.data.node.type,
+                nodeLink: `https://wasabi.i3s.unice.fr/#/search/artist/${encodeURIComponent(this.data.node.name)}`,
                 nodeContribution: egoRoles,
                 
                 parentId: ref.parentId ? ref.parentId.value : null,
