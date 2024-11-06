@@ -111,11 +111,13 @@ class DataModel {
     async update(data) {
         
         data.items.forEach(d => { d.year = +d.year })
-        data.links.forEach(d => { d.year = +d.year })
+        // data.links.forEach(d => { d.year = +d.year })
 
         this.items = this.items.concat(data.items)
-        this.links = this.links.concat(data.links) 
+        // this.links = this.links.concat(data.links) 
         this.nodes[data.node.key] = data.node 
+
+        await this.updateLinks()
 
         await this.updateCollaborations(data.node.key)
 
@@ -137,7 +139,7 @@ class DataModel {
     }
 
     async updateLinkTypes() {
-        this.linkTypes = this.items.map(d => d.type).filter(d => d)
+        this.linkTypes = this.items.map(d => d.type).filter(d => d).flat()
         this.linkTypes = this.linkTypes.filter( (d,i) => this.linkTypes.indexOf(d) === i)
 
         this.colors.typeScale.domain(this.linkTypes)
@@ -213,6 +215,38 @@ class DataModel {
 
     }
 
+    async updateLinks() {
+        console.log(this.items)
+        let nestedValues = d3.nest()
+            .key(d => d.id)
+            .entries(this.items)
+
+        console.log("nested items = ", nestedValues)
+        let jointItems = nestedValues.filter(d => d.values.length > 1)
+        console.log("jointItems = ", jointItems)
+
+        if (!jointItems.length) return
+
+        for (let item of jointItems) {
+           
+            for (let v1 of item.values) {
+                for (let v2 of item.values) {
+                    if (v1.node.key === v2.node.key) continue
+                    
+                    for (let type of v1.type) {
+                        this.links.push({
+                            source: v1.node,
+                            target: v2.node,
+                            type: type,
+                            item: item.key,
+                            year: v1.year
+                        })    
+                    }
+                }
+            }
+        }
+    }
+
     // checkers
 
     isNodeValid(node) {
@@ -255,20 +289,21 @@ class DataModel {
 
     getLinks() {
        
+        console.log("this links = ", this.links)    
         let links = this.links.filter(d => !this.filters.linkTypes.includes(d.type) )
       
         if (this.filters.timeFrom && this.filters.timeTo) 
             links = links.filter(d => d.year >= this.filters.timeFrom && d.year <= this.filters.timeTo)
 
-        let nodes = this.getNodesKeys()
+        //let nodes = this.getNodesKeys()
 
-        links = links.filter( (d,i) => links.findIndex(e => e.item === d.item && 
-                e.type === d.type &&
-                ((e.source.key === d.source.key && e.target.key === d.target.key) || (e.source.key === d.target.key && e.target.key === d.source.key)) &&
-                e.year === d.year) === i)
+        // links = links.filter( (d,i) => links.findIndex(e => e.item === d.item && 
+        //         e.type === d.type &&
+        //         ((e.source.key === d.source.key && e.target.key === d.target.key) || (e.source.key === d.target.key && e.target.key === d.source.key)) &&
+        //         e.year === d.year) === i)
 
-        links = links.filter( d => nodes.includes(d.source.key) && nodes.includes(d.target.key))
-        links = links.filter( d => d.source.key !== d.target.key)
+        //links = links.filter( d => nodes.includes(d.source.key) && nodes.includes(d.target.key))
+        //links = links.filter( d => d.source.key !== d.target.key)
        
         if (this.filters.focus) {
             links = links.filter(d => this.getItemById(d.item).contributors.some(e => e.key === this.filters.focus) )

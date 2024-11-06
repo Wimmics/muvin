@@ -106,6 +106,8 @@ class Muvin extends HTMLElement {
             this.data.load(values)
         } 
 
+        this.test()
+
     }
 
     showLoading() {
@@ -145,8 +147,8 @@ class Muvin extends HTMLElement {
                 // values = ['Marco Winckler', 'Philippe Palanque', 'Thiago Rocha Silva', 'Lucile Sassatelli', 'Célia Martinie', 'Aline Menin']
                 break;
             case 'wasabi':
-                //values = [{value: 'Queen'}, {value: 'Freddie Mercury'}, {value: 'David Bowie'}]
-                values = [{value: 'Queen'}]
+                values = [{value: 'Queen'}, {value: 'Freddie Mercury'}]
+                //values = [{value: 'Queen'}]
                 break;
         }
         this.data.load(values)

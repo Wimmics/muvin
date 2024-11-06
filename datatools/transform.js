@@ -138,76 +138,75 @@ class Transform{
 
     async transform() {
         let items = {}
-        let links = {}
-    
-        for (let item of this.values) {
+        //let links = {}
 
-            let year = item.parentDate ? item.parentDate.split('-')[0] : item.date.split('-')[0]
+        let nestedValues = d3.nest()
+            .key(d => d.uri.value)
+            .entries(this.values)
     
-            if (year === "0000") continue
-            
-            let parent = !item.parentId ? null : { id: item.parentId, 
-                                                    title: item.parentTitle, 
-                                                    date: item.parentDate,
-                                                    type: item.parentType, 
-                                                    year: year, 
-                                                    node: item.parentId ? { name: item.parentNodeName, 
-                                                        id: item.parentNodeId, 
-                                                        type: item.parentNodeType } : null }
-                                                        
-            item.contributors = item.contributors.map(e => ({...e, key: e.category ? this.hash(e.name, e.category) : this.hash(e.name)}))
-           
-            let value = {
-                node: {
-                    name: item.nodeName,
-                    type: item.nodeType,
-                    key: this.data.node.key,
-                    contribution: item.nodeContribution
-                },
-                id: item.id,
-                title: item.title,
-                date: item.date,
+        for (let item of nestedValues) {
+          
+            let ref = item.values[0] // takes the first one as reference for the unique information, such as name, year, etc.
+            let year = ref.date.value.split('-')[0] // keeps only the year
+
+            let ego = { name: ref.ego.value, type: ref.egoNature ? ref.egoNature.value : null }
+            ego.key = this.hash(ego.name, ego.type)
+
+            let alters = item.values.map(e => ({ name: e.alter ? e.alter.value : null, type: e.alterNature ? e.alterNature.value : null }) ) // retrieve all alters for a particular item
+            alters.push(ego) // add the ego information (to support filter in the query)
+            alters = alters.filter( (e,i) => e && alters.findIndex(x => x.name === e.name && x.type === e.type) === i) // keep only unique and valid values
+            alters = alters.map(e => ({...e, key: this.hash(e.name, e.type) })) // add a key to each alter
+
+            let types = item.values.map(e => e.type ? e.type.value : null) // identify all contribution types of ego in this item
+            types = types.filter( (d,i) => d && types.indexOf(d) === i)
+
+            ego.contribution = [...types]
+
+            const key = this.hash(item.key) 
+                
+            items[key]  = {
+                id: item.key,
+                node: ego,
+                title: ref.title.value,
+                date: ref.date.value,
                 year: year,
-                type: item.type,
-                contributors: item.contributors,
-                contnames: item.contributors.map(d => d.name),
-                parent: parent,
-                link: item.link, 
-                nodeLink: item.nodeLink  
+                type: types,
+                contributors: alters,
+                contnames: alters.map(d => d.name),
+                // parent: parent, //TODO: add through the query select
+                link: ref.link ? ref.link.value : null
+                //nodeLink: item.nodeLink  
             }
     
-            let key = this.hash(item.id)
-    
-            items[key] = {...value}
-    
-            for (let source of item.contributors) {
-                if (item.key === source.key) continue
+            // TODO: remove the link creation ; it will be treated on the client side
+            // for (let source of item.contributors) {
+            //     if (item.key === source.key) continue
 
                 
     
-                let target = item.parentNodeName ? { name: item.parentNodeName, 
-                                                    type: item.parentNodeType, 
-                                                    key: item.parentNodeType ? this.hash(item.parentNodeName, item.parentNodeType) : this.hash(item.parentNodeName) } : 
-                                                            { name: item.nodeName, type: item.nodeContribution, key: this.data.node.key }
+            //     let target = item.parentNodeName ? { name: item.parentNodeName, 
+            //                                         type: item.parentNodeType, 
+            //                                         key: item.parentNodeType ? this.hash(item.parentNodeName, item.parentNodeType) : this.hash(item.parentNodeName) } : 
+            //                                                 { name: item.nodeName, type: item.nodeContribution, key: this.data.node.key }
     
 
-                let sourceKey = this.hash(item.id, year, source.name, source.type, target.name, target.type)
-                let targetKey = this.hash(item.id, year, target.name, target.type, source.name, source.type)
+            //     let sourceKey = this.hash(item.id, year, source.name, source.type, target.name, target.type)
+            //     let targetKey = this.hash(item.id, year, target.name, target.type, source.name, source.type)
 
-                if (!links[sourceKey] && !links[targetKey])  
-                    links[sourceKey] = {
-                        source: source,
-                        target: target,
-                        year: year,
-                        type: source.type,
-                        item: value.id
-                    }
-            }       
+            //     if (!links[sourceKey] && !links[targetKey])  
+            //         links[sourceKey] = {
+            //             source: source,
+            //             target: target,
+            //             year: year,
+            //             type: source.type,
+            //             item: value.id
+            //         }
+            // }       
     
         }
 
         this.data.items = Object.values(items)
-        this.data.links = Object.values(links)
+        // this.data.links = Object.values(links)
 
     }
 
@@ -260,7 +259,7 @@ class Transform{
     async getData(args) {
 
         this.data.node = { 
-            key: args.type ? this.hash(args.value, args.type) : this.hash(args.value),  
+            key: this.hash(args.value, args.type),  
             name: args.value, 
             type: args.type 
         }
@@ -282,7 +281,7 @@ class Transform{
         if (response) 
             return response
 
-        await this.clean()  
+        // await this.clean()  
         await this.transform()
         //let nodeData = await this.fetchNodeFeatures()
         //await this.transformNode(nodeData)

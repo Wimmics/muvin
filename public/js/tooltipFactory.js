@@ -4,8 +4,8 @@ class TooltipFactory {
         switch (app) {
             case 'hal':
                 return new PublicationsTooltip() // tuned for publications data
-            case 'wasabi':
-                return new MusicTooltip() // tuned to display artist information from wasabi
+            // case 'wasabi':
+            //     return new MusicTooltip() // tuned to display artist information from wasabi
             case 'crobora':
                 return new ImageTooltip() // tuned to display images
             default:

@@ -9,7 +9,7 @@ class NodeLinksGroup{
 
     set() {
 
-        this.linkInfo = d => `${d.source.name} → ${d.target.name}\nItem: ${d.value.title}\nContribution: ${d.types.length ? d.types.join(', ') : ''}` 
+        this.linkInfo = d => { console.log(d); return `${d.source.name} → ${d.target.name}\nItem: ${d.item.title}\nContribution: ${d.type}`}  
         
         this.linkGenerator = d3.linkVertical()
             .x(d => d.x)
@@ -19,14 +19,16 @@ class NodeLinksGroup{
             "stroke": d => this.chart.getTypeColor(d.type),
             'stroke-width': 5,
             'fill': 'none',
-            'd': d => this.linkGenerator(d)
+            'd': d => this.linkGenerator(d),
+            'opacity': 1
         }
 
         this.strokeAttrs = {
             "stroke": d => d3.rgb(this.chart.getTypeColor(d.type)).darker(),
             'stroke-width': 7,
             'fill': 'none',
-            'd': d => this.linkGenerator(d)
+            'd': d => this.linkGenerator(d),
+            'opacity': 1
         }
     }
 
@@ -35,39 +37,50 @@ class NodeLinksGroup{
         const _this = this;
 
         let data = await this.getData()
+        console.log('data = ', data)
 
         let link = this.group.selectAll('.node-link')
             .data(data)
             .join(
                 enter => enter.append('g')
-                    .classed('node-link', true)
-                    .on('mouseenter', function(d) { _this.mouseover(d, this) })
-                    .on('mouseleave', () => this.mouseout())                    
-                    .call(g => g.append('title').text(this.linkInfo)),
-                update => update.call(g => g.select('title').text(this.linkInfo)),
+                    .classed('node-link', true),                   
+                    //.call(g => g.append('title').text(this.linkInfo)),
+                update => update, //.call(g => g.select('title').text(this.linkInfo)),
                 exit => exit.remove()
             )
             .call(g => g.attr('opacity', d => this.chart.isFreezeActive() ? (this.chart.isFrozen(d.value.id) ? 1 : 0) : 1  ))
 
+        // Set a constant offset value
+        const offset = 10; // Adjust this value based on the desired distance between paths
+
         link.selectAll('path.path-stroke')
-            .data(d => d.values)
+            .data(d => d.values.flat()) // Add an offset index to each path
             .join(
                 enter => enter.append('path')
-                    .attr('class', 'path-stroke')
-                    .attrs(this.strokeAttrs),
-                update => update.call(path => path.attrs(this.strokeAttrs)),
+                    .attr('class', 'path-stroke single-link'),
+                update => update,
                 exit => exit.remove()
             )
+            .attrs(this.strokeAttrs)
+            .attr('transform', (d,i) => `translate(${i * offset}, 0)`)
+            
 
         link.selectAll('path.path-link')
-            .data(d => d.values)
+            .data(d => d.values.flat()) // Add an offset index to each path
             .join(
                 enter => enter.append('path')
-                    .attr('class', 'path-link')
-                    .attrs(this.pathAttrs),
-                update => update.call(path => path.attrs(this.pathAttrs)),
+                    .attr('class', 'path-link single-link')
+                    .attrs(this.pathAttrs)
+                    .attr('transform', (d,i) => `translate(${i * offset}, 0)`)
+                    .call(path => path.append('title').text(this.linkInfo)),
+                update => update.call(path => path.attrs(this.pathAttrs)
+                        .attr('transform', (d,i) => `translate(${i * offset}, 0)`))
+                    .call(path => path.select('title').text(this.linkInfo)),
                 exit => exit.remove()
             )
+            .on('mouseenter', function(d) { _this.mouseover(d, this) })
+            .on('mouseleave', () => this.mouseout())
+            
                     
     }
     
@@ -80,24 +93,29 @@ class NodeLinksGroup{
             .transition()
             .duration(200)
             .attr('opacity', d => this.chart.isFreezeActive() ? (this.chart.isFrozen(d.value.id) ? 1 : 0) : 1 )
+
+        this.group.selectAll('.single-link')
+            .attr('opacity', 1)
     }
 
     highlightLinks(d) {
         this.group.selectAll('.node-link')
             .transition()
             .duration(200)
-            .attr('opacity', function(e) { return d3.select(this).datum().value.id === d.id ? 1 : 0 })  
+            .attr('opacity', function(e) { return d3.select(this).datum().key === d.id ? 1 : 0 })  
     }
 
     mouseover(d, elem) {        
         if (!this.chart.getTimeSelection()) return
 
-        this.group.selectAll('.node-link')
+        this.group.selectAll('.single-link')
             .transition()
             .duration(200)
-            .attr('opacity', function() { return this === elem ? 1 : 0 } )
+            .attr('opacity', e => e.source.key === d.source.key && e.target.key === d.target.key && e.type === d.type && e.item.id === d.item.id ? 1 : 0 )
 
-        let selected = e => e.id === d.value.id && e.year === d.value.year && (e.node.key === d.source.key || e.node.key === d.target.key)
+        console.log('hovered = ', d)
+        
+        let selected = e => e.id === d.item.id && e.year === d.item.year && ([d.source.key, d.target.key].includes(e.node.key))
         this.chart.group.selectAll('.item-circle')
             .attr('opacity', e => selected(e) ? 1 : .2 )
             .attr('stroke-width', e => selected(e) ? 2 : 1 )
@@ -122,9 +140,9 @@ class NodeLinksGroup{
     async getLinks() {
 
         // keep one link per node
-        let links = JSON.parse(JSON.stringify(this.chart.data.getLinks())) // make a local copy of the data to avoid propagating the modifications below
-
-        links = links.filter(d => this.chart.areItemsVisible(d.source.key) && this.chart.areItemsVisible(d.target.key) && this.chart.isSelected(+d.year))
+        let links = [...this.chart.data.getLinks()] // make a local copy of the data to avoid propagating the modifications below
+        
+        links = links.filter(d => this.chart.isSelected(d.year))
 
         // remove crossing links
         let nodes = this.chart.data.getNodesKeys()
@@ -158,7 +176,8 @@ class NodeLinksGroup{
             }
         }
 
-        return Object.values(temp);
+        console.log("links to draw = ", Object.values(temp))
+        return Object.values(temp)
 
     }
     /**
@@ -172,24 +191,41 @@ class NodeLinksGroup{
         let linkedItems = links.map(d => d.item)
         let selection = await this.chart.data.getItems()
         selection = selection.filter(e => linkedItems.includes(e.id) && this.chart.isSelected(e.year))
-        
+        console.log("selection = ", selection)
         let data = []
 
-        links.forEach(d => {
+        let nestedLinks = d3.nest()
+            .key(d => d.item)
+            .entries(links)
+
+        console.log(nestedLinks)
+
+        nestedLinks.forEach(d => {
+            console.log("d = ", d)
            
-            let nodesData = selection.filter(e =>  [d.source.key, d.target.key].includes(e.node.key) && e.id === d.item )
+            let nodesData = selection.filter(e => e.id === d.key )
+            console.log(nodesData)
         
 
-            for (let j = 0; j < nodesData.length - 1; j++) {
 
-                let sourceIndex = nodesData.findIndex(e => e.node.key === d.source.key)
+            //for (let j = 0; j < nodesData.length - 1; j++) {
+            //let types = d.type.filter( (e,i) => d.type.indexOf(e) === i).flat()
+            // let types = d.values.map(e => e.type).flat()
+            // types.sort( (a,b) => a.localeCompare(b))
+
+            d.values = d.values.map(e => {
+                console.log("e = ", e)
+                let sourceIndex = nodesData.findIndex(x => x.node.key === e.source.key)
                 let sData = nodesData[sourceIndex]
-                let source = this.chart.app === 'crobora' ? {x: sData.x - (this.chart.xAxis.scale(sData.year) * .01) + sData.r, y: sData.y + sData.r} : {x: sData.x, y: sData.y}
+                console.log("sData = ", sData)
+                let source = this.chart.app === 'crobora' ? {x: sData.x - (this.chart.xAxis.scale(sData.year) * .01) + sData.r, y: sData.y + sData.r} : 
+                    {x: sData.x, y: sData.y}
                 let sourceRadius = sData.r
 
-                let targetIndex = nodesData.findIndex(e => e.node.key === d.target.key)
+                let targetIndex = nodesData.findIndex(x => x.node.key === e.target.key)
                 let tData = nodesData[targetIndex]
-                let target = this.chart.app === 'crobora' ? {x: tData.x - (this.chart.xAxis.scale(tData.year) * .01) + tData.r, y: tData.y} : {x: tData.x, y: tData.y}
+                let target = this.chart.app === 'crobora' ? {x: tData.x - (this.chart.xAxis.scale(tData.year) * .01) + tData.r, y: tData.y} : 
+                    {x: tData.x, y: tData.y}
                 let targetRadius = tData.r
                 
                 if (source.y > target.y) {
@@ -200,31 +236,24 @@ class NodeLinksGroup{
                     target.y -= targetRadius
                 }
 
-
-                let types = d.type.filter( (e,i) => d.type.indexOf(e) === i).flat()
-                types.sort( (a,b) => a.localeCompare(b))
-
                 let values = []
-                types.forEach( (t,i) => {
-                    source.x += 5 * i
-                    target.x += 5 * i
-                    let link = {source: {...source}, target: {...target}}
+                e.type.forEach( (t,i) => {
 
-                    values.push({...link, type: t, stroke: '.stroke'})
-                    values.push({...link, type: t, stroke: ''})
+                    values.push( { source: { ...e.source.contribution.includes(t) ? e.source : e.target,  ...source}, 
+                        target: {...e.source.contribution.includes(t) ? e.target : e.source, ...target}, 
+                        type: t, 
+                        item: { ...nodesData[0] } 
+                    } )
                 })
 
-                data.push({ value: nodesData[j],
-                    source: d.source, 
-                    target: d.target, 
-                    types: types,
-                    values: values
-                })
+                return values
+            })
                 
-                
-            }
+            //}
         })
 
-        return data
+        console.log(nestedLinks)
+
+        return nestedLinks
     }
 }

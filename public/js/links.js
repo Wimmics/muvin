@@ -9,7 +9,7 @@ class LinksGroup {
     getData() {
         let isValid = d => this.chart.isNodeValid(d.source) && this.chart.isNodeValid(d.target) && !this.chart.isSelected(d.year)
         let data = this.chart.data.getLinks().filter(d => isValid(d) )
-
+        
         return data
     }
 
