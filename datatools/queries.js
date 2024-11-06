@@ -13,44 +13,26 @@ const datasets = {
         prefix wsb:     <http://ns.inria.fr/wasabi/ontology/>
         prefix mo:      <http://purl.org/ontology/mo/>
 
-        select distinct ?uri ?id ?title ?date ?type
-        (replace(str(?type), "http://ns.inria.fr/wasabi/ontology/", "") as ?type) 
-        ?parentId ?parentName 
-        (replace(str(?parentType), "http://ns.inria.fr/wasabi/ontology/", "") as ?parentType) 
-        ?parentDate ?parentNodeId ?parentNodeName 
-        ?ego ?egoRole 
-        ?alter ?alterRole where {
-            
-            bind ("$node" as ?ego)
+        select distinct ?uri ?title ?date (REPLACE(STR(?egoRole), ".*/", "") AS ?type) ?ego ?alter where {
 
-            { ?uri ?egoRole ?ego  }
-            union
-            { ?uri ?egoRole [ foaf:name ?ego ] }
-        
-            filter (?egoRole = schema:author || ?egoRole = mo:producer || ?egoRole = mo:performer)
+        { ?uri ?egoRole ?ego  }
+        union
+        { ?uri ?egoRole [ foaf:name ?ego ] }
 
-            ?uri dcterms:title ?title ; a ?type . filter (?type != wsb:Album) 
+        filter (?ego = "$node")
 
-            { ?uri schema:releaseDate ?date } union { ?uri schema:datePublished ?date }
+        filter (?egoRole = schema:author || ?egoRole = mo:producer || ?egoRole = mo:performer)
 
-            optional { ?uri mo:uuid ?id }
+        ?uri dcterms:title ?title ; a ?type . filter (?type != wsb:Album) 
 
-            optional { ?uri schema:album ?parentURI . 
-                    ?parentURI dcterms:title ?parentName ; 
-                                mo:uuid ?parentId ; 
-                                mo:performer ?parentNode ;
-                                a ?parentType .
-                    
-                ?parentNode mo:uuid ?parentNodeId ; foaf:name ?parentNodeName .
-                optional { ?parentURI schema:releaseDate ?parentDate } }
+        { ?uri schema:releaseDate ?date } union { ?uri schema:datePublished ?date }
+
+        { ?uri ?alterRole ?alter . filter ( ?alterRole = schema:author || ?alterRole = mo:producer)} 
+        union 
+        { ?uri ?alterRole [ foaf:name ?alter ] . filter (?alterRole = mo:performer) }
 
 
-            { ?uri ?alterRole ?alter . filter ( ?alterRole = schema:author || ?alterRole = mo:producer)} 
-            union 
-            { ?uri ?alterRole [ foaf:name ?alter ] . filter (?alterRole = mo:performer) }
-
-
-        } limit 10000 `,
+        } limit 10000`,
 
         nodeFeatures: `
         select distinct ?name ?uri (replace(str(?type), "http://ns.inria.fr/wasabi/ontology/", "") as ?type) ?birthDate ?deathDate ?memberOf ?memberFrom ?memberTo where {
