@@ -106,7 +106,7 @@ class Muvin extends HTMLElement {
             this.data.load(values)
         } 
 
-        this.test()
+        // this.test()
 
     }
 
