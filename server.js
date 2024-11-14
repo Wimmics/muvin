@@ -90,7 +90,7 @@ app.get(prefix + '/data/:app/nodes', async function(req, res) {
 
         let result;
         try {
-            result = await sparql.executeQuery(query, endpoint)
+            result = await sparql.executeQuery(query, endpoint, true)
     
             if (!result.message) {
                 result = result.map( d => ( { value: d.value.value } )) 

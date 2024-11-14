@@ -9,18 +9,6 @@ function prepare(query) {
     return query;
 }
 
-// async function sendRequest(url){
-    
-//     let result = await fetch(url).then(async function(response){
-//       if(response.status >= 200 && response.status < 300){
-//         return await response.text().then(data => {
-//           return data
-//       })}
-//       else return response
-//     })
-//     return result
-// }
-
 async function sendRequest(query, endpoint){
 	let url = endpoint + "?query=" + prepare(query); 
 
