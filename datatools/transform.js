@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-// const { datasets } = require('./queries')
+const { datasets } = require('./queries')
 const sparql = require('./sparql_helper')
 
 const crypto = require('crypto')
@@ -21,13 +21,11 @@ class Transform{
             this.query = config.query
             this.endpoint = config.endpoint,
             this.queryhash = config.queryhash
-        } 
+        } else {
+            this.endpoint = datasets[this.db].endpoint 
+        }
         
-        // if (datasets[this.db]) {
-        //     this.nodeQuery = datasets[this.db].nodeFeatures
-        // } 
-
-        
+        this.nodesQuery = datasets[this.db].nodeNames
 
         this.data = {
             items: null,
@@ -94,10 +92,6 @@ class Transform{
         }
 
         return bindings
-    }
-
-    async transformNode() {
-
     }
 
     async transform() {
@@ -194,6 +188,25 @@ class Transform{
         
     }
 
+    async getNodeLabels() {
+
+        let result;
+        try {
+            result = await sparql.executeQuery(this.nodesQuery, this.endpoint, true)
+            
+            if (!result.message) {
+                result = result.map( d => ( { value: d.value.value } )) 
+
+                // let out = "[" + result.map(el => JSON.stringify(el, null, 4)).join(",") + "]";
+                // fs.writeFileSync(datafile, out) 
+            }
+        } catch(e) {
+            result = { message: `An error occured: ${e.message}` }
+        }
+
+        return result
+    }
+
     async getData(args) {
 
         this.data.node = { 
@@ -233,6 +246,9 @@ class Transform{
         return crypto.createHash('sha256').update(string).digest('hex')
     }
 }
+
+// let test = new Transform('hal')
+// test.getNodeLabels()
 
 module.exports = {
     Transform: Transform

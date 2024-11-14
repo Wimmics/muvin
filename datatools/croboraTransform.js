@@ -1,7 +1,5 @@
 const { Transform } = require('./transform')
 
-const sparql = require('./sparql_helper')
-
 const fetch = require('node-fetch')
 
 class CroboraTransform extends Transform{
@@ -41,23 +39,22 @@ class CroboraTransform extends Transform{
         
     }
 
-    async fetchNodeFeatures() { // TODO: review or delete
-        let key = this.hash(this.node.value, this.node.type)
-        this.data.node = {
-            name: this.node.value,
-            type: this.node.type,
-            key: key
+    async getNodeLabels() {
+        
+        let data = [];
+        for (let query of this.nodesQuery) {
+            let res = await fetch(query, { 
+                method: 'GET',  
+                headers: { 'Accept': "application/sparql-results+json" } 
+            });
+        
+            if (res.ok) {  // Corrected from response.ok to res.ok
+                const jsonData = await res.json();  // Parse JSON data correctly
+                data = data.concat(jsonData);
+            } else {
+                console.error(`Request failed with status: ${res.status}`);
+            }
         }
-    }
-
-    async fetchNodeLabels() {
-        let data = []
-        for (let query of this.queries.nodeNames) {
-            let res = await sparql.sendRequest(query)
-            data = data.concat(JSON.parse(res))
-        }
-
-        await this.writeLabels(data)
 
         return data
     }
@@ -108,6 +105,7 @@ class CroboraTransform extends Transform{
 
 // let test = new CroboraTransform('crobora')
 // test.getData({ value: 'Angela Merkel', type: 'celebrity' })
+// test.getNodeLabels()
 
 module.exports = {
     CroboraTransform: CroboraTransform

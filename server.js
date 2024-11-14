@@ -85,24 +85,11 @@ app.get(prefix + '/data/:app/nodes', async function(req, res) {
     if (fs.existsSync(datafile)) {
         res.sendFile(datafile)
     } else if (datasets[req.params.app]) {
-        let endpoint = datasets[req.params.app].endpoint
-        let query = datasets[req.params.app].nodeNames
+        let transform = TransformFactory.getTransform(req.params.app)
+        let nodes = await transform.getNodeLabels()
 
-        let result;
-        try {
-            result = await sparql.executeQuery(query, endpoint, true)
-    
-            if (!result.message) {
-                result = result.map( d => ( { value: d.value.value } )) 
-
-                let out = "[" + result.map(el => JSON.stringify(el, null, 4)).join(",") + "]";
-                fs.writeFileSync(datafile, out) 
-            }
-        } catch(e) {
-            result = { message: `An error occured: ${e.message}` }
-        }
-
-        res.send(JSON.stringify(result))
+        fs.writeFileSync(datafile, JSON.stringify(nodes, null, 4))
+        res.send(JSON.stringify(nodes))
     } else {
         res.status(404).send(`404: App "${req.params.app}" not found.`)
     }
