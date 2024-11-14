@@ -31,7 +31,7 @@ class DataModel {
 
 
     async fetchData(node) {
-        console.log("sending node = ", node)
+      
         let body = { query: this.query, endpoint: this.endpoint, value: node.value || node.name, type: node.type, hashCode: this.chart.hashCode } 
         
         let response = fetch(this.route, {
@@ -158,13 +158,12 @@ class DataModel {
     }
 
     async updateTime() {
-        //if (this.filters.timeFrom && this.filters.timeTo) return
 
+        let items = await this.getItems()
         if (this.filters.focus) {
-            let items = await this.getItems()
             this.dates = items.map(d => d.year)
         } else {
-            this.dates = this.items.map(d => d.year)
+            this.dates = items.map(d => d.year)
         }
         
         
@@ -228,9 +227,7 @@ class DataModel {
             .key(d => d.id)
             .entries(this.items)
 
-        console.log("nested items = ", nestedValues)
         let jointItems = nestedValues.filter(d => d.values.length > 1)
-        console.log("jointItems = ", jointItems)
 
         if (!jointItems.length) return
 
@@ -298,21 +295,10 @@ class DataModel {
 
     getLinks() {
        
-        console.log("this links = ", this.links)    
         let links = this.links.filter(d => !this.filters.linkTypes.includes(d.type) )
       
         if (this.filters.timeFrom && this.filters.timeTo) 
             links = links.filter(d => d.year >= this.filters.timeFrom && d.year <= this.filters.timeTo)
-
-        //let nodes = this.getNodesKeys()
-
-        // links = links.filter( (d,i) => links.findIndex(e => e.item === d.item && 
-        //         e.type === d.type &&
-        //         ((e.source.key === d.source.key && e.target.key === d.target.key) || (e.source.key === d.target.key && e.target.key === d.source.key)) &&
-        //         e.year === d.year) === i)
-
-        //links = links.filter( d => nodes.includes(d.source.key) && nodes.includes(d.target.key))
-        //links = links.filter( d => d.source.key !== d.target.key)
        
         if (this.filters.focus) {
             links = links.filter(d => this.getItemById(d.item).contributors.some(e => e.key === this.filters.focus) )
@@ -365,6 +351,7 @@ class DataModel {
     }
 
     getAllDates() {
+       
         let values = this.items.map(d => +d.year)
         values = values.filter( (d,i) => values.indexOf(d) === i)
         values.sort()

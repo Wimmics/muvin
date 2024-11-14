@@ -165,28 +165,41 @@ class Menu{
 
     updateTimeFilter() {
 
-        const applyFilters = () => {
-            lowerLabel.innerHTML = +lowerSlider.value
-            upperLabel.innerHTML = +upperSlider.value
-
-            this.chart.data.updateFilters('timeTo', +upperSlider.value)
-            this.chart.data.updateFilters('timeFrom', +lowerSlider.value)
-            this.chart.data.updateTime()
-            this.chart.update()
-        }
-
         let extent = d3.extent(this.chart.data.getAllDates())
         let min = this.chart.data.getFiltersByType('timeFrom'),
             max = this.chart.data.getFiltersByType('timeTo');
 
         let lowerSlider = this.chart.shadowRoot.querySelector('#lower'),
             upperSlider = this.chart.shadowRoot.querySelector('#upper'),
-            lowerLabel = this.chart.shadowRoot.querySelector('#from-label'),
-            upperLabel = this.chart.shadowRoot.querySelector('#to-label');
+            lowerLabel = this.chart.shadowRoot.querySelector('#lower-value'),
+            upperLabel = this.chart.shadowRoot.querySelector('#upper-value');
 
-        lowerLabel.innerHTML = min
-        upperLabel.innerHTML = max
+        this.chart.shadowRoot.querySelector('#from-label').textContent = extent[0]
+        this.chart.shadowRoot.querySelector('#to-label').textContent = extent[1]
 
+        // Function to update dynamic labels and their positions
+        const updateLabels = () => {
+            // Update the dynamic labels with the current values
+            lowerLabel.textContent = lowerSlider.value;
+            upperLabel.textContent = upperSlider.value;
+    
+            // Get the width of the slider element (we are using the slider width instead of the parent container)
+            const lowerPos = (lowerSlider.value - lowerSlider.min) / (lowerSlider.max - lowerSlider.min) * 100;
+            const upperPos = (upperSlider.value - upperSlider.min) / (upperSlider.max - upperSlider.min) * 100;
+    
+            // Adjust the position of the labels to align with the slider handlers
+            lowerLabel.style.left = `calc(${lowerPos}% - ${lowerLabel.clientWidth / 2}px)`;  // Center label over the lower slider handle
+            upperLabel.style.left = `calc(${upperPos}% - ${(upperLabel.clientWidth / 2) + 20}px)`;  // Center label over the upper slider handle
+        };
+
+        const applyFilters = () => {
+            updateLabels()
+
+            this.chart.data.updateFilters('timeTo', +upperSlider.value)
+            this.chart.data.updateFilters('timeFrom', +lowerSlider.value)
+            this.chart.data.updateTime()
+            this.chart.update()
+        }
 
         d3.select(this.chart.shadowRoot.querySelector('#lower'))
             .attr('min', extent[0])
@@ -226,6 +239,8 @@ class Menu{
                 applyFilters()
             
             })
+
+        updateLabels()
             
     }
     

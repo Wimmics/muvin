@@ -503,6 +503,10 @@ template.innerHTML = `
                                     <input type="range" min="0" max="50" value="5" id="lower">
                                     <input type="range" min="0" max="50" value="45" id="upper">
                                 </span>
+
+                                <!-- Dynamic labels for current slider values -->
+                                <span id="lower-value" class="slider-value"></span>
+                                <span id="upper-value" class="slider-value"></span>
                             </div>
                             
                             <label class='time-info' id='to-label'> </label>

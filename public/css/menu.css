@@ -119,3 +119,16 @@
     gap: 50px;
     width: 85%;
 }
+
+.slider-value {
+    position: absolute;
+    top: 35px;
+    text-anchor: middle;
+}
+
+#lower-value {
+    left: 0;
+}
+#upper-value {
+    left: 90%;
+}

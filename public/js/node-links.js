@@ -117,8 +117,6 @@ class NodeLinksGroup{
             .duration(200)
             .attr('opacity', e => e.source.key === d.source.key && 
                 e.target.key === d.target.key && e.type === d.type && e.item.id === d.item.id ? 1 : .2 )
-
-        console.log('hovered = ', d)
         
         let selected = e => e.id === d.item.id && e.year === d.item.year && ([d.source.key, d.target.key].includes(e.node.key))
         this.chart.group.selectAll('.item-circle')
@@ -191,39 +189,7 @@ class NodeLinksGroup{
 
         return Object.values(temp)
 
-    }
-
-    async filterSymmetricRelationships(data) {
-        
-    
-        data.forEach(item => {
-            // Store unique relationships by creating a unique key for each combination
-            const uniqueRelationships = new Map();
-
-            const itemKey = item.key
-            const values = item.values.flat()
-    
-            values.forEach(relationship => {
-                const { source, target, symmetric } = relationship;
-                
-                // If the relationship is symmetric, create a sorted key to identify duplicates
-                const key = symmetric 
-                    ? [source.key, target.key].sort().join('-') 
-                    : `${source.key}-${target.key}`;
-    
-                // Add only if this key doesn't already exist in the map
-                if (!uniqueRelationships.has(key)) {
-                    uniqueRelationships.set(key, { ...relationship, key: itemKey });
-                }
-            })
-
-            item.values = Array.from(uniqueRelationships.values())
-        });
-    
-        // Convert the map values to an array to get the final filtered dataset
-        return data
-    }
-    
+    }  
     
 
     /**
@@ -233,8 +199,7 @@ class NodeLinksGroup{
     async getData() {
         
         let links = await this.getLinks()
-        console.log('links before = ', links)
-
+        
         let linkedItems = links.map(d => d.item)
         let selection = await this.chart.data.getItems()
         selection = selection.filter(e => linkedItems.includes(e.id) && this.chart.isSelected(e.year))
@@ -242,8 +207,6 @@ class NodeLinksGroup{
         let nestedLinks = d3.nest()
             .key(d => d.item)
             .entries(links)
-
-        console.log('nested before = ', JSON.parse(JSON.stringify(nestedLinks)))
 
         nestedLinks.forEach(d => {
             let nodesData = selection.filter(e => e.id === d.key )
@@ -270,25 +233,19 @@ class NodeLinksGroup{
                 }
                 
                 let values = []
-                // e.type.forEach( (t,i) => {
 
-                    values.push( { source: { ...e.source.contribution.includes(e.type) ? e.source : e.target,  ...source}, 
-                        target: {...e.source.contribution.includes(e.type) ? e.target : e.source, ...target}, 
-                        type: e.type, 
-                        item: { ...nodesData[0] },
-                        symmetric:  e.source.contribution.includes(e.type) && e.target.contribution.includes(e.type)
-                    } )
-                // })
+                values.push( { source: { ...e.source.contribution.includes(e.type) ? e.source : e.target,  ...source}, 
+                    target: {...e.source.contribution.includes(e.type) ? e.target : e.source, ...target}, 
+                    type: e.type, 
+                    item: { ...nodesData[0] },
+                    symmetric:  e.source.contribution.includes(e.type) && e.target.contribution.includes(e.type)
+                } )
 
                 return values
             })
         })
 
 
-        console.log(nestedLinks)
-
         return nestedLinks
-        // Example usage with your data
-        // return await this.filterSymmetricRelationships(nestedLinks);
     }
 }
