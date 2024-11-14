@@ -100,46 +100,9 @@ class Transform{
 
     }
 
-
-
-    async clean() {
-        
-        let nestedValues = d3.nest()
-            .key(d => d.uri.value)
-            .entries(this.values)
-
-        this.values = nestedValues.map(d => {
-
-            let ref = d.values[0]
-
-            let alters = d.values.map(e => e.alter ? e.alter.value : null)
-            alters = alters.filter( (e,i) => e && alters.indexOf(e) === i) // keep only unique and valide values
-            
-            if (!alters.includes(ref.ego.value)) 
-                alters.push(ref.ego.value) // add the ego information (to support filter in the query)
-
-            let type = ref.type ? ref.type.value.toLowerCase() : 'unknown'
-
-            return {
-                id: ref.uri.value,
-                title: ref.title.value,
-                date: ref.date.value,
-                type: type,
-                link: ref.link ? ref.link.value : ref.uri.value,
-
-                nodeName: ref.ego.value,
-                nodeContribution: [ type ],
-
-                contributors: alters.map(e => ({ name: e, type: type })),
-            }
-        })
-   
-    }
-
     async transform() {
         let items = {}
-        //let links = {}
-
+       
         let nestedValues = d3.nest()
             .key(d => d.uri.value)
             .entries(this.values)
@@ -148,6 +111,8 @@ class Transform{
           
             let ref = item.values[0] // takes the first one as reference for the unique information, such as name, year, etc.
             let year = ref.date.value.split('-')[0] // keeps only the year
+
+            if (year === "0000") continue
 
             let ego = { name: ref.ego.value, type: ref.egoNature ? ref.egoNature.value : null }
             ego.key = this.hash(ego.name, ego.type)
@@ -173,40 +138,13 @@ class Transform{
                 type: types,
                 contributors: alters,
                 contnames: alters.map(d => d.name),
-                // parent: parent, //TODO: add through the query select
+                parent: ref.parentId ? { name: ref.parentName.value, id: ref.parentId.value } : null,
                 link: ref.link ? ref.link.value : null
-                //nodeLink: item.nodeLink  
             }
-    
-            // TODO: remove the link creation ; it will be treated on the client side
-            // for (let source of item.contributors) {
-            //     if (item.key === source.key) continue
-
-                
-    
-            //     let target = item.parentNodeName ? { name: item.parentNodeName, 
-            //                                         type: item.parentNodeType, 
-            //                                         key: item.parentNodeType ? this.hash(item.parentNodeName, item.parentNodeType) : this.hash(item.parentNodeName) } : 
-            //                                                 { name: item.nodeName, type: item.nodeContribution, key: this.data.node.key }
-    
-
-            //     let sourceKey = this.hash(item.id, year, source.name, source.type, target.name, target.type)
-            //     let targetKey = this.hash(item.id, year, target.name, target.type, source.name, source.type)
-
-            //     if (!links[sourceKey] && !links[targetKey])  
-            //         links[sourceKey] = {
-            //             source: source,
-            //             target: target,
-            //             year: year,
-            //             type: source.type,
-            //             item: value.id
-            //         }
-            // }       
     
         }
 
         this.data.items = Object.values(items)
-        // this.data.links = Object.values(links)
 
     }
 
@@ -281,10 +219,7 @@ class Transform{
         if (response) 
             return response
 
-        // await this.clean()  
         await this.transform()
-        //let nodeData = await this.fetchNodeFeatures()
-        //await this.transformNode(nodeData)
         
         await this.write()
 

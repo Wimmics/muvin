@@ -11,12 +11,12 @@ class ImageTooltip extends Tooltip{
                 <br></div>`
 
         let content = `${image}
-                    <p>Archive: <b>${d.parent.title}</b></p>
-                    <p>Broadcast date: <b>${d.parent.date}</b></p>
+                    <p>Archive: <b>${d.parent.name}</b></p>
+                    <p>Broadcast date: <b>${d.date}</b></p>
                     <p><b>Broadcaster:</b> ${d.node.contribution.join(', ')}</p> 
                     <p><b>Keywords(s):</b>
                     <ul style='list-style-type: none;'>
-                    ${d.contributors.map(val => `<li title="${val.category}" style="display:flex; gap:10px;"> <img src="${this.chart.baseUrl}/muvin/images/${this.chart.app}/${val.category}-icon.svg" width="15px"></img>${capitalizeFirstLetter(val.name)}</li>` ).join('')}
+                    ${d.contributors.map(val => `<li title="${val.type}" style="display:flex; gap:10px;"> <img src="${this.chart.baseUrl}/muvin/images/${this.chart.app}/${val.type}-icon.svg" width="15px"></img>${capitalizeFirstLetter(val.name)}</li>` ).join('')}
                     </ul>
                     <br><br><p>Click for more</p>
                     `

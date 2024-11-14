@@ -31,6 +31,7 @@ class DataModel {
 
 
     async fetchData(node) {
+        console.log("sending node = ", node)
         let body = { query: this.query, endpoint: this.endpoint, value: node.value || node.name, type: node.type, hashCode: this.chart.hashCode } 
         
         let response = fetch(this.route, {
@@ -109,17 +110,28 @@ class DataModel {
     // updates
 
     async update(data) {
-        
-        data.items.forEach(d => { d.year = +d.year })
-        // data.links.forEach(d => { d.year = +d.year })
 
-        this.items = this.items.concat(data.items)
-        // this.links = this.links.concat(data.links) 
         this.nodes[data.node.key] = data.node 
+
+        await this.updateItems(data.items)
 
         await this.updateLinks()
 
         await this.updateCollaborations(data.node.key)
+
+        return
+    }
+
+    async updateItems(items) {
+        
+        if (items) { // if new items
+            items.forEach(d => { d.year = +d.year })
+            this.items = this.items.concat(items)
+        }
+
+        // sort items according to the order of nodes, to calculate links
+        let nodes = Object.keys(this.nodes)
+        this.items.sort( (a,b) => nodes.indexOf(a.node.key) - nodes.indexOf(b.node.key) )
 
         return
     }
@@ -175,13 +187,7 @@ class DataModel {
         collaborators = collaborators.filter( (d,i) => collaborators.findIndex(e => e.key === d.key) === i && d.key !== key)
         collaborators = collaborators.map(d => { 
             let values = items.filter(e => e.contnames.includes(d.name))
-            return { 
-                value: d.name, 
-                type: d.category, 
-                key: d.key, 
-                //enabled: this.isNodeExplorable(d), 
-                values: values
-            } 
+            return { ...d, values: values } 
         })
 
         this.nodes[key].collaborators = collaborators
@@ -216,7 +222,8 @@ class DataModel {
     }
 
     async updateLinks() {
-        console.log(this.items)
+        this.links = []
+
         let nestedValues = d3.nest()
             .key(d => d.id)
             .entries(this.items)
@@ -232,7 +239,7 @@ class DataModel {
             for (let v1 of item.values) {
                 for (let v2 of item.values) {
                     if (v1.node.key === v2.node.key) continue
-                    
+
                     for (let type of v1.type) {
                         this.links.push({
                             source: v1.node,
@@ -245,6 +252,8 @@ class DataModel {
                 }
             }
         }
+
+        return
     }
 
     // checkers
@@ -334,11 +343,7 @@ class DataModel {
         return this.nodes[d]
     }
 
-    // async getNodesOrder() {
-    //     return await Object.keys(this.getNodesList())
-    // }
-
-    switchNodes(indexA, indexB) {
+    async switchNodes(indexA, indexB) {
         let keys =  Object.keys(this.nodes)
         let temp = keys[indexA]
         keys[indexA] = keys[indexB]
@@ -348,6 +353,9 @@ class DataModel {
         keys.forEach(key => { keysOrder[key] = null })
 
         this.nodes = Object.assign(keysOrder, this.nodes)
+
+        await this.updateItems()
+        await this.updateLinks()
     }
 
     getDates() {

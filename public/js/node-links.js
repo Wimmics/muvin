@@ -9,7 +9,7 @@ class NodeLinksGroup{
 
     set() {
 
-        this.linkInfo = d => { console.log(d); return `${d.source.name} → ${d.target.name}\nItem: ${d.item.title}\nContribution: ${d.type}`}  
+        this.linkInfo = d => `${d.source.name} ${d.symmetric ? '↔' : '→' } ${d.target.name}\n\nItem: ${d.item.title}\n\nContribution Type: ${d.type}`  
         
         this.linkGenerator = d3.linkVertical()
             .x(d => d.x)
@@ -37,21 +37,24 @@ class NodeLinksGroup{
         const _this = this;
 
         let data = await this.getData()
-        console.log('data = ', data)
 
         let link = this.group.selectAll('.node-link')
             .data(data)
             .join(
                 enter => enter.append('g')
                     .classed('node-link', true),                   
-                    //.call(g => g.append('title').text(this.linkInfo)),
-                update => update, //.call(g => g.select('title').text(this.linkInfo)),
+                update => update, 
                 exit => exit.remove()
             )
             .call(g => g.attr('opacity', d => this.chart.isFreezeActive() ? (this.chart.isFrozen(d.value.id) ? 1 : 0) : 1  ))
 
         // Set a constant offset value
         const offset = 10; // Adjust this value based on the desired distance between paths
+        const transform = (d, i, nodes) => {
+            const totalPaths = nodes.length;
+            const centralOffset = (totalPaths - 1) / 2;
+            return `translate(${(i - centralOffset) * offset}, 0)`;
+        }
 
         link.selectAll('path.path-stroke')
             .data(d => d.values.flat()) // Add an offset index to each path
@@ -62,7 +65,7 @@ class NodeLinksGroup{
                 exit => exit.remove()
             )
             .attrs(this.strokeAttrs)
-            .attr('transform', (d,i) => `translate(${i * offset}, 0)`)
+            .attr('transform', transform)
             
 
         link.selectAll('path.path-link')
@@ -71,17 +74,16 @@ class NodeLinksGroup{
                 enter => enter.append('path')
                     .attr('class', 'path-link single-link')
                     .attrs(this.pathAttrs)
-                    .attr('transform', (d,i) => `translate(${i * offset}, 0)`)
+                    .attr('transform', transform)
                     .call(path => path.append('title').text(this.linkInfo)),
                 update => update.call(path => path.attrs(this.pathAttrs)
-                        .attr('transform', (d,i) => `translate(${i * offset}, 0)`))
+                        .attr('transform', transform))
                     .call(path => path.select('title').text(this.linkInfo)),
                 exit => exit.remove()
             )
             .on('mouseenter', function(d) { _this.mouseover(d, this) })
             .on('mouseleave', () => this.mouseout())
             
-                    
     }
     
     hide() {
@@ -95,6 +97,8 @@ class NodeLinksGroup{
             .attr('opacity', d => this.chart.isFreezeActive() ? (this.chart.isFrozen(d.value.id) ? 1 : 0) : 1 )
 
         this.group.selectAll('.single-link')
+            .transition()
+            .duration(200)
             .attr('opacity', 1)
     }
 
@@ -111,7 +115,8 @@ class NodeLinksGroup{
         this.group.selectAll('.single-link')
             .transition()
             .duration(200)
-            .attr('opacity', e => e.source.key === d.source.key && e.target.key === d.target.key && e.type === d.type && e.item.id === d.item.id ? 1 : 0 )
+            .attr('opacity', e => e.source.key === d.source.key && 
+                e.target.key === d.target.key && e.type === d.type && e.item.id === d.item.id ? 1 : .2 )
 
         console.log('hovered = ', d)
         
@@ -140,7 +145,7 @@ class NodeLinksGroup{
     async getLinks() {
 
         // keep one link per node
-        let links = [...this.chart.data.getLinks()] // make a local copy of the data to avoid propagating the modifications below
+        let links = JSON.parse(JSON.stringify(this.chart.data.getLinks())) // make a local copy of the data to avoid propagating the modifications below
         
         links = links.filter(d => this.chart.isSelected(d.year))
 
@@ -152,34 +157,75 @@ class NodeLinksGroup{
             let s = nodes.indexOf(d.source.key)
             let t = nodes.indexOf(d.target.key)
 
-            let key = `${s}-${t}-${d.item}`
-            if (temp[key])
-                temp[key].type.push(d.type)
-            else {
-                d.type = [d.type]
+            let key = `${s}-${t}-${d.item}-${d.type}`
+            let alternativeKey = `${t}-${s}-${d.item}-${d.type}`
+            if (!temp[key] && !temp[alternativeKey]){
                 temp[key] = d
             } 
         })
 
-        let vertices = Object.keys(temp)
-        let items = links.map(d => d.item)
-        let indices = Object.keys(nodes)
+        let vertices = Object.keys(temp); // keys of links (source-target-item)
+        let items = Object.values(temp).map(d => d.item) // keys of items
+        let types =  Object.values(temp).map(d => d.type)
 
+        let indices = Object.keys(nodes); // keys of nodes
         for (let i of items) {
-            for (let x of indices) {
-                for (let y of indices) {
-                    for (let z of indices) {
-                        if (vertices.includes(`${x}-${z}-${i}`) && vertices.includes(`${x}-${y}-${i}`) && vertices.includes(`${y}-${z}-${i}`))
-                            delete temp[`${x}-${z}-${i}`]
+            for (let t of types) {
+                for (let x of indices) {
+                    for (let y of indices) {
+                        for (let z of indices) {
+                            // Check for the transitivity condition: x → y, y → z, and x → z all exist
+                            if (
+                                vertices.includes(`${x}-${z}-${i}-${t}`) && // shortcut link
+                                vertices.includes(`${x}-${y}-${i}-${t}`) && // first part of transitivity
+                                vertices.includes(`${y}-${z}-${i}-${t}`)    // second part of transitivity
+                            ) {
+                                // Delete only the direct link that "skips" the intermediate node y
+                                delete temp[`${x}-${z}-${i}-${t}`];
+                            }
+                        }
                     }
                 }
             }
         }
 
-        console.log("links to draw = ", Object.values(temp))
         return Object.values(temp)
 
     }
+
+    async filterSymmetricRelationships(data) {
+        
+    
+        data.forEach(item => {
+            // Store unique relationships by creating a unique key for each combination
+            const uniqueRelationships = new Map();
+
+            const itemKey = item.key
+            const values = item.values.flat()
+    
+            values.forEach(relationship => {
+                const { source, target, symmetric } = relationship;
+                
+                // If the relationship is symmetric, create a sorted key to identify duplicates
+                const key = symmetric 
+                    ? [source.key, target.key].sort().join('-') 
+                    : `${source.key}-${target.key}`;
+    
+                // Add only if this key doesn't already exist in the map
+                if (!uniqueRelationships.has(key)) {
+                    uniqueRelationships.set(key, { ...relationship, key: itemKey });
+                }
+            })
+
+            item.values = Array.from(uniqueRelationships.values())
+        });
+    
+        // Convert the map values to an array to get the final filtered dataset
+        return data
+    }
+    
+    
+
     /**
      * Function to compute the second level links of the network based on the nodes in focus
      * @returns an array containing the links
@@ -187,73 +233,62 @@ class NodeLinksGroup{
     async getData() {
         
         let links = await this.getLinks()
-        
+        console.log('links before = ', links)
+
         let linkedItems = links.map(d => d.item)
         let selection = await this.chart.data.getItems()
         selection = selection.filter(e => linkedItems.includes(e.id) && this.chart.isSelected(e.year))
-        console.log("selection = ", selection)
-        let data = []
 
         let nestedLinks = d3.nest()
             .key(d => d.item)
             .entries(links)
 
-        console.log(nestedLinks)
+        console.log('nested before = ', JSON.parse(JSON.stringify(nestedLinks)))
 
         nestedLinks.forEach(d => {
-            console.log("d = ", d)
-           
             let nodesData = selection.filter(e => e.id === d.key )
-            console.log(nodesData)
-        
+            if (nodesData.length <= 1) return
 
-
-            //for (let j = 0; j < nodesData.length - 1; j++) {
-            //let types = d.type.filter( (e,i) => d.type.indexOf(e) === i).flat()
-            // let types = d.values.map(e => e.type).flat()
-            // types.sort( (a,b) => a.localeCompare(b))
-
-            d.values = d.values.map(e => {
-                console.log("e = ", e)
-                let sourceIndex = nodesData.findIndex(x => x.node.key === e.source.key)
-                let sData = nodesData[sourceIndex]
-                console.log("sData = ", sData)
-                let source = this.chart.app === 'crobora' ? {x: sData.x - (this.chart.xAxis.scale(sData.year) * .01) + sData.r, y: sData.y + sData.r} : 
+            
+            d.values = d.values.map( e => {
+               
+                let sData = nodesData.find(x => x.node.key === e.source.key)
+                let source = this.chart.app === 'crobora' ? {x: sData.x + sData.r, y: sData.y} : 
                     {x: sData.x, y: sData.y}
-                let sourceRadius = sData.r
 
-                let targetIndex = nodesData.findIndex(x => x.node.key === e.target.key)
-                let tData = nodesData[targetIndex]
-                let target = this.chart.app === 'crobora' ? {x: tData.x - (this.chart.xAxis.scale(tData.year) * .01) + tData.r, y: tData.y} : 
-                    {x: tData.x, y: tData.y}
-                let targetRadius = tData.r
-                
+               
+                let tData = nodesData.find(x => x.node.key === e.target.key)
+                let target = this.chart.app === 'crobora' ? {x: tData.x + tData.r, y: tData.y + tData.r} : 
+                    {x: tData.x, y: tData.y}     
+                    
                 if (source.y > target.y) {
-                    source.y -= sourceRadius
-                    target.y += targetRadius
+                    source.y -= sData.r
+                    target.y += tData.r
                 } else {
-                    source.y += sourceRadius
-                    target.y -= targetRadius
+                    source.y += sData.r
+                    target.y -= tData.r
                 }
-
+                
                 let values = []
-                e.type.forEach( (t,i) => {
+                // e.type.forEach( (t,i) => {
 
-                    values.push( { source: { ...e.source.contribution.includes(t) ? e.source : e.target,  ...source}, 
-                        target: {...e.source.contribution.includes(t) ? e.target : e.source, ...target}, 
-                        type: t, 
-                        item: { ...nodesData[0] } 
+                    values.push( { source: { ...e.source.contribution.includes(e.type) ? e.source : e.target,  ...source}, 
+                        target: {...e.source.contribution.includes(e.type) ? e.target : e.source, ...target}, 
+                        type: e.type, 
+                        item: { ...nodesData[0] },
+                        symmetric:  e.source.contribution.includes(e.type) && e.target.contribution.includes(e.type)
                     } )
-                })
+                // })
 
                 return values
             })
-                
-            //}
         })
+
 
         console.log(nestedLinks)
 
         return nestedLinks
+        // Example usage with your data
+        // return await this.filterSymmetricRelationships(nestedLinks);
     }
 }

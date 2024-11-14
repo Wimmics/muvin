@@ -31,7 +31,7 @@ class CroboraTransform extends Transform{
                 return response;
             }
     
-            this.values = await response.json();
+            this.values = await this.clean(await response.json())
     
         } catch (error) {
             return `Fetch failed: ${error}`
@@ -62,49 +62,55 @@ class CroboraTransform extends Transform{
         return data
     }
 
-    async clean() {
-        let cleanValues = this.values.map(d => d.records).flat()
+    async clean(data) {
+        let values = []
+
+        let cleanValues = data.map(d => d.records).flat()
 
         let categories = ['event', 'location', 'illustration', 'celebrity']
-        this.values = cleanValues.map(d => {
-        
-            let getContributors = () => {
-                let vals = []
-                categories.forEach(key => {
-                    if (d[key]) d[key].forEach( x => vals.push({ name: x, 
-                                                                type: d.channel.toLowerCase() || "web", 
-                                                                category: key, 
-                                                                key: [x, key].join('-') } ))
-                })
-                return vals
+
+        for (let d of cleanValues) {
+            
+            const alters = []
+            for (let key of categories) {
+                if (d[key]) {
+                    for (let value of d[key]) {
+                        alters.push({ name: value, nature: key });
+                    }
+                }
             }
 
-            return {
-                id: d._id,
-                source: d.source,
-                title: d.image_title,
-                date: d.day_airing,
-                type: d.channel.toLowerCase(),
-                
-                nodeName: this.data.node.name,
-                nodeType: this.data.node.type,
-                nodeContribution: [ d.channel.toLowerCase() ],
+            for (let alter of alters) {
+                values.push({
+                        uri: { value: d._id },
+                        ego: { value: this.data.node.name },
+                        egoNature: { value: this.data.node.type },
+                        type: { value: d.channel.toLowerCase() },
+                        title: { value: d.image_title },
+                        date: { value: d.day_airing },
+    
+                        link: { value: `https://crobora.huma-num.fr/crobora/document/${d.ID_document}` },
+                        alter: { value: alter.name },
+                        alterNature: { value: alter.nature },
 
-                contributors: getContributors(),
-                link: `https://crobora.huma-num.fr/crobora/document/${d.ID_document}`,
-                parentId: d.ID_document,
-                parentTitle: d.document_title,
-                parentDate: d.day_airing
+                        parentName: { value: d.document_title },
+                        parentId: { value: d.ID_document }
+                    })
             }
-        })
+         
+        }
+
+        return values
     }
 
 }
 
 
-// let test = new CroboraTransform()
+// let test = new CroboraTransform('crobora')
 // test.getData({ value: 'Angela Merkel', type: 'celebrity' })
 
 module.exports = {
     CroboraTransform: CroboraTransform
 }
+
+ 

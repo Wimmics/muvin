@@ -11,8 +11,8 @@ class TransformFactory extends Transform {
 
     static getTransform(app, data) {
         switch (app) {
-            case 'hal':
-                return new HALTransform(app, data)
+            // case 'hal':
+            //     return new HALTransform(app, data)
             // case 'wasabi':
             //     return new WasabiTransform(app, data)
             case 'crobora':

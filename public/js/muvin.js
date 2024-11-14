@@ -138,8 +138,9 @@ class Muvin extends HTMLElement {
             case 'hal':
                 //values = [{value: 'Aline Menin'}]
                 values = [
-                    //{value: 'Aline Menin'}, 
+                    {value: 'Aline Menin'}, 
                     {value: 'Marco Winckler'}, 
+                    {value: 'Olivier Corby'}
                     //{value: 'Alain Giboin'}, 
                     //{value: 'Philippe Palanque'}
                     //{value: "Anne-Marie Déry-Pinna"}
@@ -147,7 +148,7 @@ class Muvin extends HTMLElement {
                 // values = ['Marco Winckler', 'Philippe Palanque', 'Thiago Rocha Silva', 'Lucile Sassatelli', 'Célia Martinie', 'Aline Menin']
                 break;
             case 'wasabi':
-                values = [{value: 'Queen'}, {value: 'Freddie Mercury'}]
+                values = [{value: 'Queen'}, {value: 'Freddie Mercury'}, {value: "David Bowie"}]
                 //values = [{value: 'Queen'}]
                 break;
         }
@@ -574,8 +575,11 @@ template.innerHTML = `
                         
                         <g id="membership-links-group"></g>
                         <g id='link-group'></g>
+                        
+
                         <g id='nodes-group'></g>
                         <g id='ticks-group'></g>
+
                         <g id='x-slider'>
                             <rect class='marker move'></rect>
                             <rect id='top-button' class='slider-button move'></rect>
@@ -587,10 +591,10 @@ template.innerHTML = `
                             <image id="slider-down" ></image>
                         </g>
 
+                        <g id='nodeLinks-group'> </g>
+
                     
-                        <g id='nodeLinks-group'> 
-                            
-                        </g>
+                        
                     </g>
                 </svg>
             </div>

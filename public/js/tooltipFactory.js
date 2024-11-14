@@ -2,8 +2,8 @@ class TooltipFactory {
 
     static getTooltip(app) {
         switch (app) {
-            case 'hal':
-                return new PublicationsTooltip() // tuned for publications data
+            // case 'hal':
+            //     return new PublicationsTooltip() // tuned for publications data
             // case 'wasabi':
             //     return new MusicTooltip() // tuned to display artist information from wasabi
             case 'crobora':

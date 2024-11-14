@@ -131,8 +131,6 @@ class ContextMenu {
         return menu
     }
 
-    // TODO: chackboxes to select multiple values and load them at once
-    // TODO: see how to reuse the dynamic query from ldviz to set the incremental exploration
     openMenuSearch(d, values) {
        
         const _this = this;
@@ -215,7 +213,7 @@ class ContextMenu {
                             .attr('class', 'node-check'))
                         .call(label => label.append('tspan')
                             .attr('id', 'node')
-                            .text(e => `${e.value} ${e.type ? '(' + e.type + ')' : ''}`))
+                            .text(e => `${e.name} ${e.type ? '(' + e.type + ')' : ''}`))
                         .call(label => label.append('tspan')
                             .attr('id', 'item-count')
                             .text(e => e.values ? `(${e.values.length} items)` : '')
@@ -223,7 +221,7 @@ class ContextMenu {
                         ,
                     update => update
                         .call(label => label.select('tspan#node')
-                            .text(e => `${e.value} ${e.type ? '(' + e.type + ')' : ''} `))
+                            .text(e => `${e.name} ${e.type ? '(' + e.type + ')' : ''} `))
                         .call(label => label.select('tspan#item-count')
                             .text(e => e.values ? `(${e.values.length} items)` : '')),
                     exit => exit.remove()
@@ -244,7 +242,7 @@ class ContextMenu {
                         else if (data.id === 'ten') selectedValues = selectedValues.concat(values.slice(0, 10))
                         else selectedValues.push(data)
                     })
-
+                    console.log('selectedValues = ', selectedValues)
                     _this.chart.data.load(selectedValues)
 
                     listGroup.selectAll('input').property('checked', false)

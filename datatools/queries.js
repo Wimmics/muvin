@@ -13,7 +13,7 @@ const datasets = {
         prefix wsb:     <http://ns.inria.fr/wasabi/ontology/>
         prefix mo:      <http://purl.org/ontology/mo/>
 
-        select distinct ?uri ?title ?date (REPLACE(STR(?egoRole), ".*/", "") AS ?type) ?ego ?alter where {
+        select distinct ?uri ?title ?date (REPLACE(STR(?egoRole), ".*/", "") AS ?type) ?ego ?alter ?parentId ?parentName where {
 
         { ?uri ?egoRole ?ego  }
         union
@@ -27,35 +27,16 @@ const datasets = {
 
         { ?uri schema:releaseDate ?date } union { ?uri schema:datePublished ?date }
 
-        { ?uri ?alterRole ?alter . filter ( ?alterRole = schema:author || ?alterRole = mo:producer)} 
+        { ?uri schema:author ?alter } 
         union 
-        { ?uri ?alterRole [ foaf:name ?alter ] . filter (?alterRole = mo:performer) }
+        { ?uri mo:producer ?alter }
+        union
+        { ?uri mo:performer [ foaf:name ?alter ] }
+            
+        optional { ?uri schema:album ?parentId . ?parentId dcterms:title ?parentName . }
 
 
         } limit 10000`,
-
-        nodeFeatures: `
-        select distinct ?name ?uri (replace(str(?type), "http://ns.inria.fr/wasabi/ontology/", "") as ?type) ?birthDate ?deathDate ?memberOf ?memberFrom ?memberTo where {
-            bind ("$node" as ?name)
-
-            { ?uri a wsb:Artist_Person . ?uri foaf:name ?name }
-            union
-            { ?uri a wsb:Artist_Group . ?uri foaf:name ?name }
-            union
-            { ?uri a mo:MusicArtist . ?uri foaf:name ?name }
-
-            ?uri a ?type.
-
-            optional { { ?uri schema:foundingDate ?birthDate } union { ?uri schema:birthDate ?birthDate } }
-
-            optional { {?uri schema:dissolutionDate ?deathDate } union { ?uri schema:deathDate ?deathDate } }
-
-            optional { ?uri schema:members ?member . 
-                    ?member foaf:name ?memberOf . 
-                            optional { ?member schema:startDate ?memberFrom ; 
-                                    schema:endDate ?memberTo } }
-
-        } `,
 
         nodeNames: `SELECT distinct ?a ?value WHERE {
             { ?a a wsb:Artist_Person } union { ?a a wsb:Artist_Group } union { ?a a  mo:MusicArtist}
@@ -79,11 +60,11 @@ const datasets = {
 
         select distinct ?uri ?title ?date ?type ?link ?ego ?alter
         where {
-                bind ("$node" as ?ego)
-
                 { ?uri dcterms:creator [hsc:person [foaf:name ?ego ] ] }
                 union
                 { ?uri dcterms:creator [foaf:name ?ego ] }
+
+                filter (?ego = "$node")
 
                 ?uri dcterms:title ?title ; 
                     dcterms:type [ dc:identifier ?typeId ] ; 
@@ -106,20 +87,6 @@ const datasets = {
                 { ?uri dcterms:creator [hsc:person [foaf:name ?alter ] ] }
         
             } 
-        `,
-
-        nodeFeatures: `
-            select distinct ?uri ?name ?topic  where {
-                bind ("$node" as ?name)
-                
-                ?p a hsc:Author ;
-                    hsc:person ?uri .
-                
-                ?uri foaf:name ?name .
-                
-                optional { ?uri foaf:interest [ skos:prefLabel ?topic ] . filter langMatches(lang(?topic), 'en') }
-    
-            }
         `,
 
         nodeNames: `SELECT distinct ?value WHERE {
