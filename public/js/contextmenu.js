@@ -173,7 +173,7 @@ class ContextMenu {
             let options = []
             options.push({
                 id: 'all',
-                value: 'All (' + values.length + ')' ,
+                name: 'All (' + values.length + ')' ,
                 action: async () => {
                     _this.chart.data.load(values.filter(e => e.enabled))
                 }
@@ -181,7 +181,7 @@ class ContextMenu {
 
             options.push({
                 id: 'ten',
-                value: 'First 10 collaborators (list order)',
+                name: 'First 10 collaborators (list order)',
                 action: async () => {
                     _this.chart.data.load(values.slice(0, 10))                    
                 }

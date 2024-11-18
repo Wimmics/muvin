@@ -51,10 +51,26 @@ class NodeLinksGroup{
         // Set a constant offset value
         const offset = 10; // Adjust this value based on the desired distance between paths
         const transform = (d, i, nodes) => {
-            const totalPaths = nodes.length;
+        
+            // Step 1: Normalize the source-target pairs (make undirected paths equivalent)
+            let normalizePair = (a, b) => a < b ? `${a}-${b}` : `${b}-${a}`;
+            let currentPair = normalizePair(d.source.key, d.target.key);
+
+            // Step 2: Normalize all pairs from nodes
+            let pairs = nodes.map(node => { 
+                let datum = d3.select(node).datum();
+                return normalizePair(datum.source.key, datum.target.key);
+            });
+
+            // Step 3: Count how many times the current pair appears
+            let totalPaths = pairs.filter(pair => pair === currentPair).length;
+
+            // Step 4: Calculate centralOffset for centering
             const centralOffset = (totalPaths - 1) / 2;
-            return `translate(${(i - centralOffset) * offset}, 0)`;
-        }
+        
+            // Step 5: Return the transformation (no need to transform if there is only one unique link)
+            return totalPaths === 1 ? `translate(0, 0)` : `translate(${(i - centralOffset) * offset}, 0)`;
+        };
 
         link.selectAll('path.path-stroke')
             .data(d => d.values.flat()) // Add an offset index to each path

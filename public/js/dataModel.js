@@ -215,7 +215,7 @@ class DataModel {
                     if (a.enabled && b.enabled) return a.value.localeCompare(b.value)
                     if (a.enabled) return -1
                     if (b.enabled) return 1 
-                    return a.value.localeCompare(b.value)
+                    return a.name.localeCompare(b.name)
                 }) 
         }
 
