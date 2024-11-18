@@ -25,7 +25,7 @@ class Transform{
             this.endpoint = datasets[this.db].endpoint 
         }
         
-        this.nodesQuery = datasets[this.db].nodeNames
+        this.nodesQuery = datasets[this.db] ? datasets[this.db].nodeNames : null
 
         this.data = {
             items: null,

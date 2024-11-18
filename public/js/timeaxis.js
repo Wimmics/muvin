@@ -99,12 +99,16 @@ class TimeAxis{
         return itemsPerYear.find(e => +e.key === value)
     }
 
-    async computeDistortion(d) {
-        
+    noItems(d) {
         let res = this.getItemsByTime(d)
         let values = res ? res.values : []
-       
-        if (d3.sum(values.filter(e => this.chart.getNodeSelection() ? this.chart.isSelected(e.node) && e.year === d : e.year === d), e => e.values.length) === 0) return;
+        let filteredValues = values.filter(e => this.chart.getNodeSelection() ? this.chart.isSelected(e.node.key) && e.year === d : e.year === d)  
+        return d3.sum(filteredValues, e => e.values.length) === 0
+    }
+
+    async computeDistortion(d) {
+    
+        if (this.noItems(d)) return;
 
         let index = this.focus.indexOf(d)
         if (index !== -1) this.focus.splice(index, 1)

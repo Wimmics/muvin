@@ -10,7 +10,7 @@ class NodesAxis {
         this.freeze = false
 
         this.SETTINGS = `${this.chart.baseUrl}/muvin/images/settings.svg`
-        this.NETWORK = `${this.chart.baseUrl}/muvin/images/network.svg`
+        this.NETWORK = `${this.chart.baseUrl}/muvin/images/plus.svg`
 
         this.EXPAND = `${this.chart.baseUrl}/muvin/images/expand.svg`
         this.MINIMIZE = `${this.chart.baseUrl}/muvin/images/minimize.svg`
@@ -58,6 +58,8 @@ class NodesAxis {
     async setDistortion(d) {
         
         if (this.values.length === 1 || !d) return
+
+        this.chart.sndlinks.hide()
 
         let distortion = () => new Promise( (resolve, reject) => {
             let pos = this.defaultScale(d)
@@ -179,19 +181,19 @@ class NodesAxis {
                     .style('cursor', 'pointer')
                     .attr('opacity', 1)
 
+                    // Draw a rectangle that contains the node
                     .call(g => g.append('rect')
                         .attr('fill', rectFill)
                         .attr('rx', 15)
                         .attr('width', rectwidth)
                         .attr('height', rectheight)
                         .attr('x', rectwidth * -.05)
-                        // .style('display', d => this.chart.areItemsVisible(d) ? 'block' : 'none')
                         .on('click', d => this.setDistortion(d))
                         .on('mouseover', d => { let e = d3.event; this.mouseover(e, d) })
                         .on('mouseout', () => this.mouseout())
                     )
    
-
+                    // Draw the name of the node
                     .call(g => g.append('text')
                         .text(d => this.data[d].name)
                         .attr('class', 'title')
@@ -204,6 +206,7 @@ class NodesAxis {
                         .style('pointer-events', 'none')
                     )
 
+                    // Draw the icon for the crobora application, each category has an associated icon
                     .call(g => g.append('svg:image')
                         .attr('xlink:href', d => iconPath(d))
                         .attr('class', 'type-icon')
@@ -214,28 +217,16 @@ class NodesAxis {
                         // .style('display', d => this.chart.areItemsVisible(d) && this.chart.app === 'crobora' ? 'block' : 'none')
                         .call(image => image.append('title').text(d => this.data[d].type))
                     )
-                        
+                    
+                    // Draw a + sign next to the node to open the associated menu
                     .call(g => g.append('svg:image')
-                        .attr('xlink:href', this.SETTINGS)
+                        .attr('xlink:href', this.NETWORK)
                         .attr('class', 'circle-plus')
                         .attr('width', iconsize)
                         .attr('height', iconsize)
                         .attr('x', rectwidth)
-                        .attr('y', rectheight / 3 - iconsize / 2)
-                        // .style('display', d => this.chart.areItemsVisible(d) ? 'block' : 'none')
+                        .attr('y', rectheight / 2 - iconsize / 2)
                         .on('click', d3.contextMenu(d => this.contextmenu.getNodeMenu(d)))
-                        .call(image => image.append('title').text('Click to get more options'))
-                    )
-                    
-                    .call(g => g.append('svg:image')
-                        .attr('xlink:href', this.NETWORK)
-                        .attr('class', 'circle-network')
-                        .attr('width', iconsize)
-                        .attr('height', iconsize)
-                        .attr('x', rectwidth)
-                        .attr('y', rectheight / 3 + iconsize / 2)
-                        // .style('display', d => this.chart.areItemsVisible(d) && !this.chart.searchHidden ? 'block' : 'none')
-                        .on('click', d3.contextMenu(d => this.contextmenu.getNetworkMenu(d)))
                         .call(image => image.append('title').text('Click to get more options'))
                     )
                     ,
@@ -246,18 +237,11 @@ class NodesAxis {
                         .style('font-size', function(d) { return getFontSize(d, this.getComputedTextLength())})
                     )
                     .call(g => g.select('.circle-plus')
-                        // .style('display', d => this.chart.areItemsVisible(d) ? 'block' : 'none')
                         .on('click', d3.contextMenu(d => this.contextmenu.getNodeMenu(d)))
                     )
 
-                    .call(g => g.select('.circle-network')
-                        // .style('display', d => this.chart.areItemsVisible(d) && !this.chart.searchHidden ? 'block' : 'none')
-                        .on('click', d3.contextMenu(d => this.contextmenu.getNetworkMenu(d)))
-                    )
-                    
                     .call(g => g.select('rect').transition().duration(500)
                         .attr('fill', rectFill)
-                        // .style('display', d => this.chart.areItemsVisible(d) ? 'block' : 'none') 
                     )
 
                     .call(g => g.select('.type-icon').attr('xlink:href', d => iconPath(d))
@@ -334,10 +318,7 @@ class NodesAxis {
         this.chart.nodes.highlightNodeItems(this.frozenNodes.snd)
 
         if (this.chart.getTimeSelection())
-            group.selectAll('.node-link')
-                .transition('focus-links')
-                .duration(500)
-                .attr('opacity', e => e.source.key === d || e.target.key === d ? 1 : 0)
+            this.chart.sndlinks.highlightLinks(d)
 
     }
 

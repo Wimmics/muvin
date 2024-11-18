@@ -76,13 +76,21 @@ class NodesGroup {
      */
      opacity(d) {
         let key = d.node.key
-        
-        if (this.chart.getNodeSelection() && !this.chart.isNodeVisible(key)) return 0
-        if (this.chart.isFreezeActive() && !this.chart.isFrozen(d.id)) return 0.1
 
-        if (this.chart.areItemsVisible(key)) return 1
-        if (this.chart.getTimeSelection() && this.chart.isSelected(key)) return 1
-        if (this.chart.areItemsVisible(key) && this.chart.getTimeSelection() && this.chart.isSelected(d.year)) return 1
+        if (!this.chart.drawItems()) { // by default, items should be hidden
+            if (this.chart.isSelected(d.year)) return 1 // exception: the given year is selected
+            if (this.chart.getNodeSelection() && this.chart.isSelected(key)) {
+                if (this.chart.areItemsVisible(key)) return 1 // exception: the given node is selected and its items are visible
+            }
+        }
+
+        if (!this.chart.drawItems() && !this.chart.isSelected(d.year)) return 0 // by default, items are hidden and the year is not selected
+        if (this.chart.getNodeSelection() && !this.chart.isNodeVisible(key)) return 0 // there is a node selected but the user chose not to display the items of that node, or the item do not belong to the selected node
+        if (this.chart.isFreezeActive() && !this.chart.isFrozen(d.id)) return 0.1 
+
+        if (this.chart.areItemsVisible(key)) return 1 // display if the items are visible for the given node
+        if (this.chart.getTimeSelection() && this.chart.isSelected(key)) return 1 // display if there is a node selected and the item belong to that node
+        if (this.chart.areItemsVisible(key) && this.chart.getTimeSelection() && this.chart.isSelected(d.year)) return 1 // display if items are visible for the given node and there 
         if (!this.chart.getTimeSelection() && this.chart.getNodeSelection() && this.chart.isSelected(key)) return 1
 
         return 0
@@ -145,7 +153,7 @@ class NodesGroup {
 
     reverse() {
         this.group.selectAll('.item-circle')
-            .attr('opacity', d => this.chart.isFreezeActive() ? (this.chart.isFrozen(d.id) ? 1 : .1) : (this.chart.drawItems() ? 1 : 0) )
+            .attr('opacity', d => this.chart.isFreezeActive() ? (this.chart.isFrozen(d.id) ? 1 : .1) : this.opacity(d) ) 
             .attr('stroke-width', 1)
             .attr('fill', this.chart.getItemColor())
 

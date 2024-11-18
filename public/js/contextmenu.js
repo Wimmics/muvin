@@ -17,6 +17,12 @@ class ContextMenu {
     getNodeMenu(d) {
         let menu = []
 
+        if (d.nodeLink) 
+            menu.push({
+                title: 'Go to source',
+                action: d => window.open(d.nodeLink)
+            })
+
         if (this.chart.data.getNodesKeys().length > 1) {
             menu.push({ title: d => this.chart.data.getFocus() === d ? 'Release highlight' : 'Highlight network', 
                         action: async(d) => { 
@@ -55,19 +61,7 @@ class ContextMenu {
             }
         })
 
-        if (d.nodeLink) 
-            menu.push({
-                title: 'Go to source',
-                action: d => window.open(d.nodeLink)
-            })
-
-       
-        return menu
-    }
-
-    getNetworkMenu(d) {
-        let menu = []
-
+        
         let keys = this.chart.data.getNodesKeys()
         if (keys.length > 1)
             menu.push({
@@ -127,7 +121,7 @@ class ContextMenu {
                 action: (d) => this.openMenuSearch(d, collaborators)
             })
         }
-
+       
         return menu
     }
 
@@ -242,7 +236,7 @@ class ContextMenu {
                         else if (data.id === 'ten') selectedValues = selectedValues.concat(values.slice(0, 10))
                         else selectedValues.push(data)
                     })
-                    console.log('selectedValues = ', selectedValues)
+                    
                     _this.chart.data.load(selectedValues)
 
                     listGroup.selectAll('input').property('checked', false)

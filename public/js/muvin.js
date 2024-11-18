@@ -106,7 +106,7 @@ class Muvin extends HTMLElement {
             this.data.load(values)
         } 
 
-        // this.test()
+        //this.test()
 
     }
 
@@ -127,6 +127,9 @@ class Muvin extends HTMLElement {
      */
     async test() {
         let values = [];
+
+        this.showItems = false
+        this.menu.toggleDisplayItems(this.showItems)
         
         switch(this.app) {
             case 'crobora':
@@ -257,12 +260,17 @@ class Muvin extends HTMLElement {
         this.draw()
     }
 
+    /**
+     * Verify whether the global option for drawing items is active
+     * 
+     * @returns true or false
+     */
     drawItems() {
         return this.showItems
     }
 
     areItemsVisible(key) {
-        return this.showItems && this.visibleItems.includes(key)
+        return this.visibleItems.includes(key)
     }
 
     displayItems(d) {
@@ -369,6 +377,12 @@ class Muvin extends HTMLElement {
         return this.xAxis.focus.length;
     }
 
+    /**
+     * Verify whether a node or a time period is selected
+     * 
+     * @param {d} d data record 
+     * @returns true or false
+     */
     isSelected(d) {
         return this.yAxis.focus === d || this.xAxis.focus.includes(+d)
     }

@@ -87,7 +87,7 @@ class NodeLinksGroup{
     }
     
     hide() {
-        this.group.selectAll('.node-link').attr('opacity', 0)
+        this.group.selectAll('.node-link').attr('opacity', 0) 
     }
 
     reverse() {
@@ -103,10 +103,10 @@ class NodeLinksGroup{
     }
 
     highlightLinks(d) {
-        this.group.selectAll('.node-link')
+        this.group.selectAll('.single-link')
             .transition()
             .duration(200)
-            .attr('opacity', function(e) { return d3.select(this).datum().key === d.id ? 1 : 0 })  
+            .attr('opacity', e => (d.id ? e.item.id === d.id : e.nodes.includes(d)) ? 1 : 0.2)  
     }
 
     mouseover(d, elem) {        
@@ -234,11 +234,13 @@ class NodeLinksGroup{
                 
                 let values = []
 
+                let item = { ...nodesData[0] }
                 values.push( { source: { ...e.source.contribution.includes(e.type) ? e.source : e.target,  ...source}, 
                     target: {...e.source.contribution.includes(e.type) ? e.target : e.source, ...target}, 
                     type: e.type, 
-                    item: { ...nodesData[0] },
-                    symmetric:  e.source.contribution.includes(e.type) && e.target.contribution.includes(e.type)
+                    item: item,
+                    symmetric:  e.source.contribution.includes(e.type) && e.target.contribution.includes(e.type),
+                    nodes: item.contributors.map(x => x.key)
                 } )
 
                 return values

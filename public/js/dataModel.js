@@ -22,6 +22,7 @@ class DataModel {
         }
 
         Object.assign(this, obj)
+        console.log(this)
 
         if (this.app !== 'preview') this.fetchNodesLabels(this.app)
 
