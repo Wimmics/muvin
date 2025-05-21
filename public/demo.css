@@ -1,0 +1,174 @@
+* {
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0 !important;
+}
+
+
+.menu{
+    height: 35px;
+    width: 100vw;
+    position: fixed;
+    top: 0;
+    left: 0;
+    transition: 0.5s;
+    padding: 10px;
+    display: flex;
+    background-color: rgb(44, 62, 80);
+    color: white;
+    z-index: 10;
+}
+
+.menu div.section {
+    border-left: 1px solid #fff;
+}
+
+.menu .closebtn {
+    position: absolute;
+    top: 0;
+    right: 25px;
+    font-size: 36px;
+    margin-left: 50px;
+}
+
+.menu h3{
+    text-align: center;
+    padding: 5px;
+}
+
+.menu-icon{
+    cursor: pointer;
+    position: relative;
+    left: 10px;
+    filter: brightness(0) invert(1);
+}
+
+.info-icon{
+    cursor:pointer; 
+    filter:brightness(0) invert(1);
+}
+
+.icon-container{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    height: 50%;
+    transition: .5s;
+}
+
+.settings{
+    width: 80%;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    gap: 50px;
+    left: 50px;
+    position: relative;
+    font-size: 13px;
+}
+
+.settings input,
+.settings select{
+    padding: 5px;
+    width: 100%;
+    position: relative;
+    border-radius: 5px;
+}
+
+.settings button{
+    border: none;
+    color: #000;
+    cursor: pointer;
+    left: 10px;
+    position: relative;
+    border-radius: 5px;
+}
+
+.settings button:hover{
+    background-color: #ccc;
+}
+
+.settings button:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.settings .checkbox{
+    display: flex;
+    justify-content: space-between;
+}
+
+.settings td{
+    font-size: 12px;
+    padding-bottom: 1em;
+}
+
+.settings div{
+    display: flex;
+}
+
+.settings label{
+    width: 180px;
+    padding: 10px;
+    position: relative;
+}
+
+.settings button {
+    width: 100px;
+}
+
+.settings tr{
+    position: relative;
+    top: 10px;
+}
+
+#view-options{
+    gap: 50px;
+    width: 85%;
+}
+
+.welcome-text {
+    height: calc(100vh - 35px);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* vertically center */
+    align-items: center;     /* horizontally center the inner box */
+    font-family: sans-serif;
+    text-align: left; /* keep text left-aligned inside */
+}
+
+.welcome-message {
+    width: 100%; /* or use 90% if you want some side margin */
+    max-width: 700px; /* control the max width of message */
+    padding: 1em;
+    background-color: #f7f7f9;
+    border-left: 4px solid #007acc;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.welcome-message p {
+    margin: 1em 0;
+}
+
+.welcome-message code,
+.welcome-message pre {
+    font-family: 'Courier New', Courier, Menlo, Consolas, monospace;
+    font-size: 0.95em;
+}
+
+.welcome-message code {
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+}
+
+.welcome-message pre {
+    padding: 1em;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: monospace;
+    white-space: pre-wrap;
+    margin: 0.5em 0;
+}
+
+  

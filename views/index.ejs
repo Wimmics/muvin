@@ -5,73 +5,46 @@
     <title>Muvin</title>
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+    <script src="/muvin/lib/d3.min.js"></script>
 
+    <link rel="stylesheet" href="/muvin/demo.css">
+    <script src="/muvin/demo.js"></script>
 
-    <script src="/muvin/lib/d3.min.js" ></script>
-    <script src="/muvin/lib/d3-array.v2.min.js"></script>
-    <script src="/muvin/lib/d3-selection-multi.v0.4.min.js"></script>
-    <script src="/muvin/lib/d3-color@3.js"></script>
-    <script src="/muvin/lib/d3-interpolate@3.js"></script>
-    <script src="/muvin/lib/d3-scale-chromatic@3.js"></script>
-
-    <script src="/muvin/lib/fisheye.js"></script>
-    <script src='/muvin/lib/d3-context-menu/d3-context-menu.js'></script>
-    <link rel='stylesheet' href='/muvin/lib/d3-context-menu/d3-context-menu.css' />
-
-    <script src="/muvin/js/utils.js"></script>
-    <script src="/muvin/js/legend.js"></script>
-    <script src="/muvin/js/menu.js"></script>
-    <script src="/muvin/js/dataModel.js"></script>
-    
-    <script src="/muvin/js/timeScale.js"></script>
-    <script src="/muvin/js/timeaxis.js"></script>
-
-
-    <script src="/muvin/js/nodesaxis.js"></script>
-    
-    <script src="/muvin/js/profile.js"></script>
-    <script src="/muvin/js/profileAreaChart.js"></script>
-    <script src="/muvin/js/profileStreamGraph.js"></script>
-
-    <script src="/muvin/js/links.js"></script>
-    <script src="/muvin/js/node-links.js"></script>
-
-    <script src="/muvin/js/contextmenu.js"></script>
-
-    <script src="/muvin/js/nodes.js"></script>
-    <script src="/muvin/js/imagesNodes.js"></script>
-    <script src="/muvin/js/normalNodes.js"></script>
-
-    <script src="/muvin/js/tooltip.js"></script>
-    <script src="/muvin/js/publicationsTooltip.js"></script>
-    <script src="/muvin/js/musicTooltip.js"></script>
-    <script src="/muvin/js/imageTooltip.js"></script>
-    <script src="/muvin/js/tooltipFactory.js"></script>
-
-    <script src="/muvin/js/muvin.js" type="module"></script>
+    <link rel="stylesheet" href="/muvin/vis-muvin.css">
+    <script type="module" src="/muvin/vis-muvin.bundle.js"></script>
 </head>
 
 <body>
-    <vis-muvin id="muvin" app=<%= locals.app %> ></vis-muvin>
+    <div class="menu">
+    
+        <h3>Muvin</h3>
+    
+        <div id='menu-items' class='settings' >
+            <div id="search-for" class='section'>
+                <label>Search for</label>
+                <datalist id='nodes-list'></datalist>
+                <input type="text" list='nodes-list' id="nodes-input" placeholder="Type here...">
+                <button id="search-go">Go</button>
+            </div>
+    
+            <div>
+                <button id="clear-cache">Clear Cache</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="visualization" style="display:none;">
+        <vis-muvin height="100vh" width="100vw" id="muvin" app=<%= locals.app %> ></vis-muvin>
+    </div>
+
+    <div class='welcome-text'></div>
 
     <script>
 
         let locals = <%- JSON.stringify(locals) %>;
-        console.log("locals = ", locals)
 
-        let muvin = document.querySelector("#muvin")
-
-        // Treats parameters from CROBORA (keeping like this because a change would require modifying crobora's code)
-        if (locals.params) {
-
-            Object.keys(locals.params).forEach(p => {
-                let value = locals.params[p]
-                if (Array.isArray(value))
-                    value = value.join('--')
-
-                muvin.setAttribute(p, value)
-            }) 
-        }
+        const navigationBar = new Demo()
+        navigationBar.init()
 
     </script>
 </body>

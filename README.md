@@ -1,50 +1,192 @@
 # Muvin
 
-## To run the visualization on your machine
- - Clone the repertory
- - Open the folder on a terminal
- - Install the necessary packages with **npm install**
- - Run the server with **npm start**
+**Muvin** is a web component for visualizing egocentric networks over time. It works with data retrieved via SPARQL queries or precomputed SPARQL results.
 
-## To run Muvin in a docker container
+---
 
-- Build the docker container as **docker build . -t muvin**
-- Run the image as **docker run -p 8020:8020 -d muvin**
+## 📦 Installation
 
+```bash
+npm install muvin
+```
 
-## To play with Muvin 
+---
 
-Open the application on the browser at http://localhost:8020/muvin/
+## 🚀 Usage
 
-## You can explore data from any SPARQL endpoint by including your queries in the queries.js file
- 1. Prepare a query that returns data describing a list of items through at least the following variables
-  - *?id:* a unique value identifying the item, typically the associated URI.
-  - *?artist:* the person to whom the item belongs. It is represented as a node in the network.
-  - *?name:* the label of the item, e.g. the title of a paper or the name of a song
-  - *?date:* the release or publication date of the item
-  - *?type:* the type of item, e.g. in scientific data, it can be the publication type (conference or journal articles)
-  - *?contributors:* the list of collaborators of the item, e.g. the co-authors. It should be provided as a string where different names are separated by "--", for instance:
-    - "collaborator1--collaborator2--collaborator3": this format provides a list of collaborators' names
-    - "collaborator1&&type1--collaborator2&&type2--collaborator3&&type3": this format provides the collaboration type for each collaborators, e.g. in music, each person can have a different role, such as performer, producer or composer.
-  - *?link:* (optional) a link to an external service, such as the data source
+### In Vanilla JavaScript
 
- 2. Prepare a query that returns the names of every node available in your database, see example in queries.js under nodeNames. This will be used to support the user on choosing a starting point for the visualization and on finding new nodes to include in the network.
+```html
+<vis-muvin height="100vh" width="100vw" id="muvin"></vis-muvin>
 
- 3. Prepare a query that returns information describing the nodes, see examples in queries.js under nodeFeatures. This will be used to describe the nodes, e.g. for artists you cna provide information regarding their birth and death dates and groups of which they were members, while for authors these information can describe the institutions of which they were members during their career.
+<script type="module">
+  import 'muvin';
 
- 4. Include your dataset in the application. Go to the muvin.js file, in the template definition (at the bottom of the page). Find the <\select> tag that defines the list of datasets available and include yours there. 
+  const muvin = document.querySelector("#muvin");
+  muvin.sparqlQuery = `SELECT * WHERE { ?s ?p ?o }`;
+  muvin.sparqlEndpoint = "https://your-sparql-endpoint.org/sparql";
 
- 5. Run the application. Muvin will automatically launch the nodeFeatures query when the dataset is selected, which also creates a folder based on the value of the <\option> tag used to identify your dataset. 
+  muvin.appendDataFromQuery([{ value: "YourValueHere" }]);
+</script>
+```
 
- ## Online demo
+---
 
- The visualization is available online at http://dataviz.i3s.unice.fr/muvin/
+### In React
 
- ## License
+```jsx
+import 'muvin';
+import { useEffect } from 'react';
 
- See the [LICENSE file](LICENSE).
+export default function MuvinComponent() {
+  useEffect(() => {
+    const muvin = document.querySelector("#muvin");
+    if (muvin) {
+      muvin.sparqlQuery = `SELECT * WHERE { ?s ?p ?o }`;
+      muvin.sparqlEndpoint = "https://your-sparql-endpoint.org/sparql";
+      muvin.appendDataFromQuery([{ value: "YourValueHere" }]);
+    }
+  }, []);
 
+  return <vis-muvin height="100vh" width="100vw" id="muvin"></vis-muvin>;
+}
+```
 
+---
 
+### In Angular
 
+Update `angular.json`:
 
+```json
+"assets": [
+  {
+    "glob": "**/*",
+    "input": "node_modules/muvin/",
+    "output": "/assets/muvin/"
+  }
+]
+```
+
+Component:
+
+```ts
+import { Component, AfterViewInit } from '@angular/core';
+import 'muvin';
+
+@Component({
+  selector: 'app-muvin',
+  template: '<vis-muvin height="100vh" width="100vw" id="muvin"></vis-muvin>',
+})
+export class MuvinComponent implements AfterViewInit {
+  ngAfterViewInit() {
+    const muvin = document.querySelector('#muvin') as any;
+    muvin.sparqlQuery = `SELECT * WHERE { ?s ?p ?o }`;
+    muvin.sparqlEndpoint = 'https://your-sparql-endpoint.org/sparql';
+    muvin.appendDataFromQuery([{ value: 'YourValueHere' }]);
+  }
+}
+```
+
+---
+
+## 🔍 Knowledge Graph Exploration with Muvin
+
+Muvin works with:
+
+- A SPARQL query (with a `$ego` placeholder)
+- Or precomputed SPARQL result objects
+
+### Required Variables in the Query
+
+| Variable  | Description                                  |
+|-----------|----------------------------------------------|
+| `?uri`    | Unique ID of the item                        |
+| `?title`  | Label for tooltips and filters               |
+| `?date`   | Year or date (`YYYY` or `YYYY-MM-DD`, etc.) |
+| `?type`   | Category (max 7 unique values for coloring)  |
+| `?link`   | URL for more info                            |
+| `?ego`    | The main entity being explored               |
+| `?alter`  | Related node identifier                      |
+
+### Example SPARQL Query Template
+
+```sparql
+SELECT DISTINCT ?uri ?title ?date ?type ?link ?ego ?alter WHERE {
+  BIND ("$ego" AS ?ego)
+  # Your custom graph pattern here
+}
+```
+
+---
+
+## ⚙️ Component Attributes
+
+- `sparqlQuery`: the query to run (must include `$ego`)
+- `sparqlEndpoint`: the URL of the SPARQL endpoint
+- `sparqlProxy`: optional proxy for CORS or caching
+
+---
+
+## 🛠 Methods
+
+### `appendDataFromQuery(values)`
+
+Runs the `sparqlQuery` for each given `$ego`.
+
+```js
+muvin.appendDataFromQuery([
+  { value: "http://example.org/person1" },
+  { value: "http://example.org/person2" }
+]);
+```
+
+### `loadSparqlResults(values, results)`
+
+Use precomputed query results.
+
+```js
+muvin.loadSparqlResults(
+  [{ value: "http://example.org/person1" }],
+  [[
+    {
+        "uri":   { "type": "uri", "value": "http://example.org/item1" },
+        "title": { "type": "literal", "value": "Item Title" },
+        "date":  { "type": "literal", "value": "2020" },
+        "type":  { "type": "literal", "value": "Book" },
+        "link":  { "type": "uri", "value": "http://example.org/item1" },
+        "ego":   { "type": "uri", "value": "http://example.org/person1" },
+        "alter": { "type": "uri", "value": "http://example.org/person2" }
+      }
+  ]]
+);
+```
+
+---
+
+## 🌐 Online Demo
+
+Explore a live version:  
+👉 [https://dataviz.i3s.unice.fr/muvin/](https://dataviz.i3s.unice.fr/muvin/)
+
+---
+
+## 🧠 Source Code
+
+GitHub: [https://github.com/Wimmics/muvin](https://github.com/Wimmics/muvin)
+
+---
+
+## 📝 Citation
+
+> Aline Menin, Michel Buffa, Maroua Tikat, Benjamin Molinet, Guillaume Pelerin, et al.  
+> *Incremental and multimodal visualization of discographies: exploring the WASABI music knowledge base*.  
+> WAC 2022 - Web Audio Conference 2022, Jul 2022, Cannes, France.  
+> DOI: [10.5281/zenodo.6767530](https://dx.doi.org/10.5281/zenodo.6767530)  
+> HAL: [hal-03748134](https://hal.science/hal-03748134v1)
+
+---
+
+## 📄 License
+
+Licensed under the [Apache 2.0 License](LICENSE).

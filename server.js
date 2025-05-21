@@ -1,188 +1,217 @@
+import fs from 'fs';
+import express from 'express';
+import bodyParser from 'body-parser';
+import path from 'path';
+import https from 'https';
+import crypto from 'crypto';
+import { fileURLToPath } from 'url';
 
 
-const fs = require('fs');
-const express = require('express');
-const bodyParser = require('body-parser');
-const path = require('path');
+// Get __dirname in ES Module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const https = require("https")
+import fetch from 'node-fetch'
 
-const { TransformFactory } = require('./datatools/transformFactory')
-const { datasets } = require('./datatools/queries')
-const sparql = require('./datatools/sparql_helper')
-const crypto = require('crypto')
+// import { TransformFactory } from './datatools/transformFactory.js';
+import { datasets } from './datatools/queries.js';
 
-/**
- * HTTP node server
- * Browser form send HTTP request to this node server
- * Send query to SPARQL endpoint and perform transformation 
- * 
- */
-const app = express()
+const app = express();
 
-// Pour accepter les connexions cross-domain (CORS)
+// CORS
 app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     next();
 });
-  
-// Pour les formulaires
-app.use(bodyParser.urlencoded({extended: true}));
+
+// Body parser
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-  
-// set the view engine to ejs
+
+// EJS views
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'))
+app.set('views', path.join(__dirname, 'views'));
 
-app.use(bodyParser.json());
-
-let prefix = '/muvin'
-
+let prefix = '/muvin';
+app.use(prefix, express.static(path.join(__dirname, 'dist')))
 app.use(prefix, express.static(path.join(__dirname, 'public')))
 
-// index page 
-app.get(prefix, function (req, res) {
+// About page
+app.get(prefix, (req, res) => {
     res.render('about');
-})
+});
 
-// // route for launching muvin through ldviz 
-// app.get(prefix + "/preview", async function(req, res) {
-//     res.render('index', req.query )
-// })
 
-// index page 
-app.get(prefix + '/:app', function (req, res) {
-    let params = req.query // receive query and endpoint in the URL
-    if (datasets[req.params.app]) { // or is it from pre-defined apps
-        params = {
-            query: datasets[req.params.app].items,
-            endpoint: datasets[req.params.app].endpoint
-        }
-    }
+// Main app entry
+app.get(prefix + '/app/:app', (req, res) => {
+
+    let query = datasets[req.params.app]?.items || req.query?.query
+    let endpoint = datasets[req.params.app]?.endpoint || req.query?.endpoint
     
-    params.hashCode = hash(params.query, params.endpoint)
+    res.render('index', 
+        { app: req.params.app, 
+          hashCode: hash(query, endpoint), 
+          query: query, 
+          endpoint: endpoint, 
+          proxy: `/muvin/sparql/${req.params.app}`,
+          value: req.query?.value,
+          type: req.query?.type,
+          token: req.query?.token
+        });
+});
 
-    res.render('index', { app: req.params.app, params: params } );
-})
+// SPARQL request
+app.get(prefix + '/sparql/:app', async function (req, res) {
+    try {
+        const endpoint = req.query.endpoint;
+        const query = req.query.query;
 
-// route to retrieve pre-queries nodes (for hal, wasabi and crobora apps)
-app.get(prefix + '/data/:app/nodes', async function(req, res) {
-    let parentdir = path.join(__dirname, 'data/')
-   
-    if (!fs.existsSync(parentdir)){
-        fs.mkdirSync(parentdir);
-    }
+        if (!endpoint || !query) {
+            return res.status(400).json({ error: 'Missing endpoint or query parameter' });
+        }
 
-    let dir = path.join(__dirname, `data/${req.params.app}/`)
-    if (!fs.existsSync(dir)){
-        fs.mkdirSync(dir);
-    }
+        let cacheFile = path.join(__dirname, `data/${req.params.app}/${hash(endpoint, query)}.json`)
+        if (fs.existsSync(cacheFile)) {
+            return res.sendFile(cacheFile)
+        }
 
-    let datafile = path.join(__dirname, `data/${req.params.app}/nodes.json`)
+        const response = await fetch(`${endpoint}?query=${encodeURIComponent(query)}`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/sparql-results+json' },
+        });
+
+        if (!response.ok) {
+            return res.status(response.status).json({
+                error: `SPARQL endpoint returned status ${response.statusText}`
+            });
+        }
+
+        const data = await response.json();
+
+        fs.mkdirSync(`data/${req.params.app}`, { recursive: true });
         
-    if (fs.existsSync(datafile)) {
-        res.sendFile(datafile)
-    } else if (datasets[req.params.app]) {
-        let transform = TransformFactory.getTransform(req.params.app)
-        let nodes = await transform.getNodeLabels()
+        console.log("Writing cache file:", cacheFile);
+        fs.writeFileSync(cacheFile, JSON.stringify(data, null, 2), 'utf-8');
 
-        fs.writeFileSync(datafile, JSON.stringify(nodes, null, 4))
-        res.send(JSON.stringify(nodes))
-    } else {
-        res.status(404).send(`404: App "${req.params.app}" not found.`)
+        res.json(data);
+    } catch (error) {
+        console.error('SPARQL proxy error:', error);
+        res.status(500).json({ error: 'Proxy error', detail: error.message });
     }
 })
 
-function hash() {  
-    let string = Object.values(arguments).join('--')
 
-    return crypto.createHash('sha256').update(string).digest('hex')
+
+// Nodes route
+app.get(prefix + '/:app/data/nodes', async (req, res) => {
+    const dir = path.join(__dirname, `data/${req.params.app}/`);
+    const datafile = path.join(dir, 'nodes.json');
+
+    fs.mkdirSync(dir, { recursive: true });
+
+    if (fs.existsSync(datafile)) {
+        res.sendFile(datafile);
+    } else if (datasets[req.params.app]) {
+        const nodes = await getNodesList(datasets[req.params.app].endpoint, datasets[req.params.app].nodeNames);
+        fs.writeFileSync(datafile, JSON.stringify(nodes, null, 4))
+        res.json(nodes);
+    } else {
+        res.status(404).send(`404: App "${req.params.app}" not found.`);
+    }
+})
+
+async function getNodesList(endpoint, query) {
+    const data = []
+    let offset = 0;
+    while (true) {
+        let json;
+
+        const pagedQuery = query.replace('$offset', offset);
+        const response = await fetch(`${endpoint}?query=${encodeURIComponent(pagedQuery)}`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/sparql-results+json' },
+        });
+    
+        if (!response.ok) {
+            return { message: `SPARQL endpoint returned status ${response.statusText} (${response.status})`}
+        } 
+
+        json = await response.json();
+
+        const bindings = json?.results?.bindings || [];
+        data.push(...bindings);
+        
+        if (bindings.length === 0 || bindings.length < 10000) break;
+        
+        offset += 10000;
+    }
+
+    return data.map( d => ( { value: d.value.value } )) 
 }
 
-app.post(prefix + '/data/:app', async function(req, res) {
-   
-    let data = { value: req.body.value, type: req.body.type === 'undefined' ? undefined : req.body.type }
+// Clear cache route
+app.post(prefix + '/clearcache/:app', async (req, res) => {
+    const folderpath = path.join(__dirname, `data/${req.params.app}`);
 
-    let config = {}
-    if (req.body.query) {
-        config.query = req.body.query, 
-        config.endpoint = req.body.endpoint
-        config.queryhash = req.body.hashCode
-    }
-
-    let result;
-    try {
-        let transform = TransformFactory.getTransform(req.params.app, config)
-        await transform.createFolder()
-        result = await transform.getData(data)
-        if (!result) result = { message: "An error occurred while retrieving the data. Please try again later." }
-    } catch(error) {
-        result = { message: `An error occurred: ${error.message}` }
-    }
-    
-    res.send(JSON.stringify(result))
-})
-
-app.post(prefix + '/clearcache/:app', async function(req, res) {
-    
-    let folderpath = `data/${req.params.app}/${req.body.hashCode}`
-
-    // Read the directory contents
     fs.readdir(folderpath, (err, files) => {
         if (err) {
-          console.error(`Error reading the folder: ${err}`);
-          return;
+            console.error(`Error reading folder: ${err}`);
+            return res.sendStatus(500);
         }
-    
+
         files.forEach(file => {
-            
+            if (file === 'nodes.json') return; // Skip this file
+
             const filePath = path.join(folderpath, file);
+
             fs.stat(filePath, (err, stat) => {
                 if (err) {
                     console.error(`Error stating file: ${err}`);
-                    res.sendStatus(500)
                     return;
                 }
-        
+
                 if (stat.isFile()) {
-                fs.unlink(filePath, err => {
-                    if (err) {
-                        console.error(`Error deleting file: ${err}`);
-                        res.sendStatus(500)
-                        return
-                    } 
-                })
-                } 
-            })
-        })
-      })
+                    fs.unlink(filePath, err => {
+                        if (err) console.error(`Error deleting file: ${err}`);
+                    });
+                }
+            });
+        });
 
-    res.sendStatus(200)
-})
+        res.sendStatus(200);
+    });
+});
 
-// About page 
-app.get(prefix + '/about', function (req, res) {
+// About route
+app.get(prefix + '/about', (req, res) => {
     res.render("pages/about");
-})
+});
 
-const port = 8020
-const portHTTPS = 8023
-
-app.listen(port, async () => { console.log(`HTTP Server started at port ${port}.`) })
-
-try {
-    let folderpath = '/etc/httpd/certificate/exp_20250808/'
-    var privateKey = fs.readFileSync( folderpath + 'dataviz_i3s_unice_fr.key' );
-    var certificate = fs.readFileSync( folderpath + 'dataviz_i3s_unice_fr_cert.crt' );
-    var ca = fs.readFileSync( folderpath + 'dataviz_i3s_unice_fr_AC.cer' );
-    var options = {key: privateKey, cert: certificate, ca: ca};
-    https.createServer( options, function(req,res)
-    {
-        app.handle( req, res );
-    } ).listen( portHTTPS, async () => { console.log(`HTTPS Server started at port ${portHTTPS}.`) } );
-} catch(e) {
-    console.log("Could not start HTTPS server")
+// Hash function
+function hash(...args) {
+    return crypto.createHash('sha256').update(args.join('--')).digest('hex');
 }
 
+// Start HTTP
+const port = 8020;
+app.listen(port, () => {
+    console.log(`✅ HTTP Server started on port ${port}`);
+});
+
+// Start HTTPS
+try {
+    const certPath = '/etc/httpd/certificate/exp_20250808/';
+    const options = {
+        key: fs.readFileSync(path.join(certPath, 'dataviz_i3s_unice_fr.key')),
+        cert: fs.readFileSync(path.join(certPath, 'dataviz_i3s_unice_fr_cert.crt')),
+        ca: fs.readFileSync(path.join(certPath, 'dataviz_i3s_unice_fr_AC.cer'))
+    };
+
+    https.createServer(options, app).listen(8023, () => {
+        console.log(`✅ HTTPS Server started on port 8023`);
+    });
+} catch (e) {
+    console.log("⚠️ Could not start HTTPS server:", e.message);
+}

@@ -1,6 +1,5 @@
-const { Transform } = require('./transform')
-
-const { CroboraTransform } = require('./croboraTransform')
+import { Transform } from './transform.js'
+import { CroboraTransform } from './croboraTransform.js'
 
 class TransformFactory extends Transform {
     constructor() {
@@ -17,6 +16,4 @@ class TransformFactory extends Transform {
     }
 }
 
-module.exports = {
-    TransformFactory: TransformFactory
-}
+export { TransformFactory }

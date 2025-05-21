@@ -1,114 +1,102 @@
-const { Transform } = require('./transform')
+import fetch from 'node-fetch'
+import { Transform } from './transform.js'
 
-const fetch = require('node-fetch')
-
-class CroboraTransform extends Transform{
+export class CroboraTransform extends Transform {
     constructor(app, data) {
         super(app, data)
     }
 
     async fetchItems() {
-       
-
-        let params = {
-            keywords: [ this.data.node.name ],
-            categories: [ this.data.node.type ],
+        const params = {
+            keywords: [this.data.node.name],
+            categories: [this.data.node.type],
             options: ["illustration", "location", "celebrity", "event"]
         }
-        
 
         try {
-            let response = await fetch("https://crobora.huma-num.fr/crobora-api/search/imagesOR", {
-                method: "POST", 
-                headers: { "Content-Type": "application/json"},
+            const response = await fetch("https://crobora.huma-num.fr/crobora-api/search/imagesOR", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(params)
-            });
-    
-    
+            })
+
             if (!response.ok) {
-                return response;
+                console.error(`Failed to fetch items: ${response.statusText}`)
+                return response
             }
-    
-            this.values = await this.clean(await response.json())
-    
+
+            const json = await response.json()
+            this.values = await this.clean(json)
+
         } catch (error) {
+            console.error(`Fetch failed: ${error}`)
             return `Fetch failed: ${error}`
         }
-        
-        return
-        
     }
 
     async getNodeLabels() {
-        
-        let data = [];
-        for (let query of this.nodesQuery) {
-            let res = await fetch(query, { 
-                method: 'GET',  
-                headers: { 'Accept': "application/sparql-results+json" } 
-            });
-        
-            if (res.ok) {  // Corrected from response.ok to res.ok
-                const jsonData = await res.json();  // Parse JSON data correctly
-                data = data.concat(jsonData);
-            } else {
-                console.error(`Request failed with status: ${res.status}`);
+        const data = []
+
+        for (const query of this.nodesQuery) {
+            try {
+                const res = await fetch(query, {
+                    method: 'GET',
+                    headers: { 'Accept': "application/sparql-results+json" }
+                })
+
+                if (!res.ok) {
+                    console.warn(`Request to ${query} failed with status: ${res.status}`)
+                    continue
+                }
+
+                const json = await res.json()
+                data.push(...json)
+
+            } catch (err) {
+                console.error(`Error fetching ${query}:`, err)
             }
         }
 
         return data
     }
 
-    async clean(data) {
-        let values = []
+    async clean(rawData) {
+        const records = rawData?.map(d => d.records)?.flat() ?? []
+        const categories = ['event', 'location', 'illustration', 'celebrity']
+        const values = []
 
-        let cleanValues = data.map(d => d.records).flat()
-
-        let categories = ['event', 'location', 'illustration', 'celebrity']
-
-        for (let d of cleanValues) {
-            
+        for (const d of records) {
             const alters = []
-            for (let key of categories) {
-                if (d[key]) {
-                    for (let value of d[key]) {
-                        alters.push({ name: value, nature: key });
-                    }
+
+            for (const category of categories) {
+                for (const name of d[category] ?? []) {
+                    alters.push({ name, nature: category })
                 }
             }
 
-            for (let alter of alters) {
+            for (const alter of alters) {
                 values.push({
-                        uri: { value: d._id },
-                        ego: { value: this.data.node.name },
-                        egoNature: { value: this.data.node.type },
-                        type: { value: d.channel.toLowerCase() },
-                        title: { value: d.image_title },
-                        date: { value: d.day_airing },
-    
-                        link: { value: `https://crobora.huma-num.fr/crobora/document/${d.ID_document}` },
-                        alter: { value: alter.name },
-                        alterNature: { value: alter.nature },
-
-                        parentName: { value: d.document_title },
-                        parentId: { value: d.ID_document }
-                    })
+                    uri: { value: d._id },
+                    ego: { value: this.data.node.name },
+                    egoNature: { value: this.data.node.type },
+                    type: { value: d.channel?.toLowerCase() ?? 'unknown' },
+                    title: { value: d.image_title },
+                    date: { value: d.day_airing },
+                    link: { value: `https://crobora.huma-num.fr/crobora/document/${d.ID_document}` },
+                    alter: { value: alter.name },
+                    alterNature: { value: alter.nature },
+                    parentName: { value: d.document_title },
+                    parentId: { value: d.ID_document }
+                })
             }
-         
         }
 
         return values
     }
-
 }
 
+// Example usage (commented out):
+// const transform = new CroboraTransform('crobora', { node: { name: 'Angela Merkel', type: 'celebrity' } })
+// transform.fetchItems()
 
-// let test = new CroboraTransform('crobora')
-// test.getData({ value: 'Angela Merkel', type: 'celebrity' })
-// test.getNodeLabels()
-
-module.exports = {
-    CroboraTransform: CroboraTransform
-}
-
- 
+export default CroboraTransform
