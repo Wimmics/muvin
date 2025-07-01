@@ -1,6 +1,13 @@
 node_modules/**
 package-lock.json
 
+demo/node_modules/**
+demo/package-lock.json  
+
+web-component/node_modules/**
+web-component/package-lock.json
+web-component/dist/**
+
 data/**
 dist/**
 
@@ -30,3 +37,4 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+

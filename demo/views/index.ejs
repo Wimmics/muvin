@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Muvin</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+    <script src="/muvin/lib/d3.min.js"></script>
+
+    <link rel="stylesheet" href="/muvin/demo.css">
+    <script src="/muvin/demo.js"></script>
+
+    <script type="module" src="/muvin/vis-muvin.js"></script>
+</head>
+
+<body>
+    <div class="menu">
+    
+        <h3>Muvin</h3>
+    
+        <div id='menu-items' class='settings' >
+            <div id="search-for" class='section'>
+                <label>Search for</label>
+                <datalist id='nodes-list'></datalist>
+                <input type="text" list='nodes-list' id="nodes-input" placeholder="Type here...">
+                <button id="search-go">Go</button>
+            </div>
+    
+            <div>
+                <button id="clear-cache">Clear Cache</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="visualization" style="display:none;">
+        <vis-muvin height="100vh" width="100vw" id="muvin" app=<%= locals.app %> ></vis-muvin>
+    </div>
+
+    <div class='welcome-text'></div>
+
+    <script>
+
+        let locals = <%- JSON.stringify(locals) %>;
+
+        //const navigationBar = new Demo()
+        //navigationBar.init()
+
+        //multiNodeQuery();
+
+        testProvData()
+
+        async function testProvData() {
+            document.getElementById('visualization').style.display = 'block';
+
+            let data = await fetch('/muvin/prov-data/muvin-diva-user.json').then(response => response.json());
+            console.log('SPARQL results:', data);
+
+            const muvin = document.querySelector('vis-muvin');
+            muvin.sparqlResults = data;
+                
+            let nodes = data.results.bindings.map(d => d.ego.value)
+            nodes = [...new Set(nodes)];
+            console.log('Unique nodes:', nodes);
+
+            muvin.launch(nodes);
+
+        }
+
+        async function multiNodeQuery() {
+            document.getElementById('visualization').style.display = 'block';
+
+            let query = `PREFIX dc: <http://purl.org/dc/elements/1.1/>
+            PREFIX dcterms: <http://purl.org/dc/terms/>
+            PREFIX hsc: <http://data.archives-ouvertes.fr/schema/>
+            PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+            PREFIX org: <http://www.w3.org/ns/org#>
+            PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+            select distinct  ?uri ?title ?date ?type  ?ego ?alter
+            where {
+                
+                ?person foaf:name ?ego . 
+                VALUES ?ego { "Aline Menin" "Marco Winckler" }
+
+                { ?uri dcterms:creator ?creator .
+                        ?creator hsc:person ?person . } 
+                union { ?uri dcterms:creator ?person }
+
+                ?uri dcterms:title ?title ;
+                    dcterms:type ?typeURI ;
+                    dcterms:issued ?date ;
+                    dcterms:identifier ?halId .
+
+                bind (IF(! STRSTARTS(?halId, "http"), concat("https://hal.science/", ?halId), "UNDEF" ) as ?link)
+
+                ?typeURI dc:identifier ?typeId .
+                bind ( if(?typeId in ("COMM", "POSTER", "PRESCONF", "UNDEFINED"),
+                            "Conference Paper",
+                    if(?typeId in ("ART"),
+                            "Journal Article",
+                        if(?typeId in ("ETABTHESE", "THESE", "HDR"),
+                                    "Diploma",
+                                if(?typeId in ("MAP", "PATENT", "SON", "VIDEO", "IMG"),
+                                        "Artwork",
+                                    if(?typeId in ("OUV", "COUV", "DOUV"),
+                                                "Book / Book Section",
+                                                "Gray Knowledge")))))
+                        as ?type)
+
+
+                optional { { ?uri dcterms:creator ?namedAlter . }
+                    union { ?uri dcterms:creator  ?alterCreator .
+                            ?alterCreator hsc:person ?namedAlter . }
+                            ?namedAlter foaf:name ?alter .
+                    }
+
+            }`
+
+            const url = `${locals.proxy}?endpoint=${locals.endpoint}&query=${encodeURIComponent(query)}`;
+
+            let data = await fetch(url).then(response => response.json())
+
+            console.log('SPARQL results:', data);
+            const muvin = document.querySelector('vis-muvin');
+            muvin.sparqlResults = data;
+            muvin.app = locals.app;
+            muvin.launch(['Aline Menin', 'Marco Winckler']);
+        }
+        
+
+
+        async function fetchData() {
+            document.getElementById('visualization').style.display = 'block';
+
+            let nodes = ['Aline Menin', 'Marco Winckler']
+            for (let node of nodes) {
+                let query = locals.query.replace("$node", node)
+                const url = `${locals.proxy}?endpoint=${locals.endpoint}&query=${encodeURIComponent(query)}`;
+
+                let data = await fetch(url).then(response => response.json())
+
+                console.log('SPARQL results:', data);
+                const muvin = document.querySelector('vis-muvin');
+                muvin.sparqlResults = data;
+                muvin.app = locals.app;
+                muvin.launch([node]);
+                
+            }
+        }
+        
+
+    </script>
+</body>
