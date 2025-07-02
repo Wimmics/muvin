@@ -225,6 +225,8 @@ class Muvin extends HTMLElement {
             this.xAxis.setDistortion()
         }
         else {
+            //this.data.updateFilters('timeTo', 20)
+            //this.chart.data.updateFilters('timeFrom', +this.lowerSlider.value)
             this.draw()
         }
 

@@ -80,7 +80,7 @@
             where {
                 
                 ?person foaf:name ?ego . 
-                VALUES ?ego { "Aline Menin" "Marco Winckler" }
+                VALUES ?ego { "Aline Menin" "Marco Winckler" "Sonia Chardonnel" "Fabien Gandon" }
 
                 { ?uri dcterms:creator ?creator .
                         ?creator hsc:person ?person . } 
@@ -124,7 +124,11 @@
             const muvin = document.querySelector('vis-muvin');
             muvin.sparqlResults = data;
             muvin.app = locals.app;
-            muvin.launch(['Aline Menin', 'Marco Winckler']);
+
+            let nodes = data.results.bindings.map(d => d.ego.value)
+            nodes = [...new Set(nodes)];
+            console.log('Unique nodes:', nodes);
+            muvin.launch(nodes);
         }
         
 

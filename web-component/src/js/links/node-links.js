@@ -33,7 +33,7 @@ class NodeLinksGroup{
         }
     }
 
-    // draw the second level links (e.g. links between second level nodes -- songs/documents)
+    // draw the second level links (e.g. links between items (e.g. publications) that share a common node)
     async draw() {
         const _this = this;
 
@@ -49,57 +49,103 @@ class NodeLinksGroup{
             )
             .call(g => g.attr('opacity', d => this.chart.isFreezeActive() ? (this.chart.isFrozen(d.value.id) ? 1 : 0) : 1  ))
 
-        // Set a constant offset value
-        const offset = 10; // Adjust this value based on the desired distance between paths
-        const transform = (d, i, nodes) => {
+        // Generate curved paths for each link
+        // This function generates a smooth curve between the source and target nodes
+        // It takes into account the number of siblings (links between the same source and target)
+        // to create a horizontal offset for each sibling link, making them visually distinct
+        function generateCurvedPath(d, i, siblings) {
+            const { source, target } = d;
+            
+            const normalize = (a, b) => a < b ? `${a}-${b}` : `${b}-${a}`;
+            const pairKey = normalize(source.key, target.key);
+            
+            const allSiblings = siblings.filter(sib =>
+                normalize(sib.source.key, sib.target.key) === pairKey
+            );
+            
+            const total = allSiblings.length;
+            
+            const x1 = source.x;
+            const y1 = source.y;
+            const x2 = target.x;
+            const y2 = target.y;
+
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            
+            if (total <= 1) {
+                // One link only — generate a default smooth curve with vertical bend
+                const curveStrength = 0.5; // 0.3–0.6 is usually nice
+                const cx1 = x1;
+                const cy1 = y1 + dy * curveStrength;
+                const cx2 = x2;
+                const cy2 = y2 - dy * curveStrength;
+
+                return `M${x1},${y1} C${cx1},${cy1} ${cx2},${cy2} ${x2},${y2}`;
+            }
+            
+            const index = allSiblings.indexOf(d);
+            const center = (total - 1) / 2;
+            const offsetIndex = index - center;
+            
+            const horizontalOffset = offsetIndex * 80; // customize as needed
+            
+            const controlX1 = x1 + horizontalOffset;
+            const controlX2 = x2 + horizontalOffset;
+            
+            return `M${x1},${y1} C${controlX1},${y1} ${controlX2},${y2} ${x2},${y2}`;
+        }
+              
         
-            // Step 1: Normalize the source-target pairs (make undirected paths equivalent)
-            let normalizePair = (a, b) => a < b ? `${a}-${b}` : `${b}-${a}`;
-            let currentPair = normalizePair(d.source.key, d.target.key);
-
-            // Step 2: Normalize all pairs from nodes
-            let pairs = nodes.map(node => { 
-                let datum = d3.select(node).datum();
-                return normalizePair(datum.source.key, datum.target.key);
-            });
-
-            // Step 3: Count how many times the current pair appears
-            let totalPaths = pairs.filter(pair => pair === currentPair).length;
-
-            // Step 4: Calculate centralOffset for centering
-            const centralOffset = (totalPaths - 1) / 2;
-        
-            // Step 5: Return the transformation (no need to transform if there is only one unique link)
-            return totalPaths === 1 ? `translate(0, 0)` : `translate(${(i - centralOffset) * offset}, 0)`;
-        };
-
         link.selectAll('path.path-stroke')
-            .data(d => d.values.flat()) // Add an offset index to each path
+            .data(d => d.values.flat())
             .join(
                 enter => enter.append('path')
-                    .attr('class', 'path-stroke single-link'),
-                update => update,
+                    .attr('class', 'path-stroke single-link')
+                    .attrs(this.strokeAttrs)
+                    .attr('d', function(d, i) {
+                        // Flatten siblings from same group
+                        const group = d3.select(this.parentNode).datum();
+                        const siblings = group.values.flat();
+                        return generateCurvedPath(d, i, siblings);
+                    })
+                    .call(path => path.append('title').text(this.linkInfo)),
+                update => update
+                    .call(path => path.attrs(this.strokeAttrs)
+                        .attr('d', function(d, i) {
+                            const group = d3.select(this.parentNode).datum();
+                            const siblings = group.values.flat();
+                            return generateCurvedPath(d, i, siblings);
+                        }))
+                    .call(path => path.select('title').text(this.linkInfo)),
                 exit => exit.remove()
             )
-            .attrs(this.strokeAttrs)
-            .attr('transform', transform)
-            
 
         link.selectAll('path.path-link')
-            .data(d => d.values.flat()) // Add an offset index to each path
+            .data(d => d.values.flat())
             .join(
                 enter => enter.append('path')
                     .attr('class', 'path-link single-link')
                     .attrs(this.pathAttrs)
-                    .attr('transform', transform)
+                    .attr('d', function(d, i) {
+                        // Flatten siblings from same group
+                        const group = d3.select(this.parentNode).datum();
+                        const siblings = group.values.flat();
+                        return generateCurvedPath(d, i, siblings);
+                    })
                     .call(path => path.append('title').text(this.linkInfo)),
-                update => update.call(path => path.attrs(this.pathAttrs)
-                        .attr('transform', transform))
+                update => update
+                    .call(path => path.attrs(this.pathAttrs)
+                        .attr('d', function(d, i) {
+                            const group = d3.select(this.parentNode).datum();
+                            const siblings = group.values.flat();
+                            return generateCurvedPath(d, i, siblings);
+                        }))
                     .call(path => path.select('title').text(this.linkInfo)),
                 exit => exit.remove()
             )
             .on('mouseenter', function(d) { _this.mouseover(d, this) })
-            .on('mouseleave', () => this.mouseout())
+            .on('mouseleave', () => this.mouseout());
             
     }
     
@@ -119,11 +165,25 @@ class NodeLinksGroup{
             .attr('opacity', 1)
     }
 
+    /**
+     * Highlights the links connected to a given node or item.
+     * 
+     * This function is typically called when hovering over a node or an item in the chart.
+     * If the input is an item, it checks for matching `id` and `type` to determine the links to highlight.
+     * If the input is a node, it checks whether the link includes the node.
+     * 
+     * @param {Object} d - The data object representing the node or item to highlight.
+     */
     highlightLinks(d) {
+
+        function isHighlighted(e) {
+            return d.id ? e.item.id === d.id && d.type.includes(e.type) : e.nodes.includes(d)
+        }
+
         this.group.selectAll('.single-link')
             .transition()
             .duration(200)
-            .attr('opacity', e => (d.id ? e.item.id === d.id : e.nodes.includes(d)) ? 1 : 0.2)  
+            .attr('opacity', e => isHighlighted(e) ? 1 : 0.1)  
     }
 
     mouseover(d, elem) {        
@@ -133,11 +193,11 @@ class NodeLinksGroup{
             .transition()
             .duration(200)
             .attr('opacity', e => e.source.key === d.source.key && 
-                e.target.key === d.target.key && e.type === d.type && e.item.id === d.item.id ? 1 : .2 )
+                e.target.key === d.target.key && e.type === d.type && e.item.id === d.item.id ? 1 : .1 )
         
         let selected = e => e.id === d.item.id && e.year === d.item.year && ([d.source.key, d.target.key].includes(e.node.key))
         this.chart.group.selectAll('.item-circle')
-            .attr('opacity', e => selected(e) ? 1 : .2 )
+            .attr('opacity', e => selected(e) ? 1 : .1 )
             .attr('stroke-width', e => selected(e) ? 2 : 1 )
 
         this.chart.profiles.downplay()
