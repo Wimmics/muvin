@@ -7,7 +7,7 @@ class NormalNodes extends NodesGroup{
 
         this.radius = {min: 3, max: 15, minFocus: 10, maxFocus: 30}
 
-        this.radiusScale = d3.scaleLog().range([this.radius.min, this.radius.max])
+        this.radiusScale = d3.scaleLinear().range([this.radius.min, this.radius.max])
     }
 
     set() {

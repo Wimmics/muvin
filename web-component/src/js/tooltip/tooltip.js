@@ -53,7 +53,6 @@ class Tooltip {
     // General implementations of the tooltips. For custom content, extend the class and overwrite the methods below 
 
     setItemContent(d, id) {
-        
         const itemName = `<b>${d.title} (${d.year})</b><br>`
         const type = `<b>Type:</b> ${d.type}`
         const more = `<br><br>Click to go to source`

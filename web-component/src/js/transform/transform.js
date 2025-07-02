@@ -35,58 +35,64 @@ async function treatRequest(query, endpoint, proxy, value) {
 }
 
 export async function transform(args, data) {
-    let items = {};
+    let items = []
     let name = (args.name || args.value || args).trim()
 
     let egoValues = data.filter(d => d.ego.value === name)
 
-    let nestedValues = d3.nest().key(d => d.uri.value).entries(egoValues);
-    
+    let nestedValues = d3.nest().key(d => d.date.value).entries(egoValues);
+
     let node = { name: name, type: args.type, key: await hash(name, args.type?.trim())}
     
     for (let item of nestedValues) {
-        let ref = item.values[0];
-        let values = item.values.filter(d => d.link ? d.link.value !== "UNDEF" : true)
         
-        let year = ref.date.value.split('-')[0];
-        if (year === "0000") continue;
+        let uriNested = d3.nest()
+            .key(d => d.uri.value)
+            .entries(item.values);
 
-        let ego = {...node}
+        for (let uriItem of uriNested) {
 
-        let alters = values.map(e => ({ name: e.alter?.value || null, type: e.alterNature?.value || null }));
-        if (!alters.some(d => d.name === ego.name))
-            alters.push(ego)
-        
-        alters = alters.filter((e, i) => e && alters.findIndex(x => x.name === e.name && x.type === e.type) === i);
-        alters = await Promise.all(
-            alters.map(async (e) => ({
-              ...e,
-              key: await hash(e.name, e.type),
-            }))
-        );
+            let ref = uriItem.values[0];
+            let values = uriItem.values.filter(d => d.link ? d.link.value !== "UNDEF" : true)
+            
+            let year = ref.date.value.split('-')[0];
+            if (year === "0000") continue;
 
-        let types = values.map(e => e.type?.value || null).filter((d, i, arr) => d && arr.indexOf(d) === i);
-        ego.contribution = [...types];
+            let ego = {...node}
+            
+            let alters = values.map(e => ({ name: e.alter?.value || null, type: e.alterNature?.value || null }));
+            if (!alters.some(d => d.name === ego.name))
+                alters.push(ego)
+            
+            alters = alters.filter((e, i) => e && alters.findIndex(x => x.name === e.name && x.type === e.type) === i);
+            alters = await Promise.all(
+                alters.map(async (e) => ({
+                ...e,
+                key: await hash(e.name, e.type),
+                }))
+            );
 
-        const key = await hash(item.key);
+            let types = values.map(e => e.type?.value || null).filter((d, i, arr) => d && arr.indexOf(d) === i);
+            ego.contribution = [...types];
 
-        items[key] = {
-            id: item.key,
-            node: ego,
-            title: ref.title.value,
-            date: ref.date.value,
-            year: year,
-            type: types,
-            contributors: alters,
-            contnames: alters.map(d => d.name),
-            parent: ref.parentId ? { name: ref.parentName.value, id: ref.parentId.value } : null,
-            link: ref.link?.value
-        };
+            items.push({
+                id: ref.uri.value,
+                node: ego,
+                title: ref.title.value,
+                date: ref.date.value,
+                year: year,
+                type: types,
+                contributors: alters,
+                contnames: alters.map(d => d.name),
+                parent: ref.parentId ? { name: ref.parentName.value, id: ref.parentId.value } : null,
+                link: ref.link?.value
+            })
+        }
     }
 
     return {
         node: node,
-        items: Object.values(items)
+        items: items
     }
 }
 

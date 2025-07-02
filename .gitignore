@@ -10,6 +10,7 @@ web-component/dist/**
 
 data/**
 dist/**
+demo/data/**
 
 # General
 .DS_Store

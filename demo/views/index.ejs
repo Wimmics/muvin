@@ -45,14 +45,14 @@
         //const navigationBar = new Demo()
         //navigationBar.init()
 
-        //multiNodeQuery();
+        // multiNodeQuery();
 
         testProvData()
 
         async function testProvData() {
             document.getElementById('visualization').style.display = 'block';
 
-            let data = await fetch('/muvin/prov-data/muvin-diva-user.json').then(response => response.json());
+            let data = await fetch('/muvin/prov-data/query_muvin5.json').then(response => response.json());
             console.log('SPARQL results:', data);
 
             const muvin = document.querySelector('vis-muvin');

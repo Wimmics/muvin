@@ -80,7 +80,6 @@ class DataModel {
 
     async update(data) {
         
-        console.log('DataModel = ', data)
         this.nodes[data.node.key] = data.node 
 
         await this.updateItems(data.items)
@@ -92,8 +91,6 @@ class DataModel {
         await this.updateTime()
 
         await this.updateLinkTypes()
-
-        console.log('links = ', this.links)
 
         return
     }
