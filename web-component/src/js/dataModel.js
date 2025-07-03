@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import { fetchAndTransform } from './transform/transform';
+import { treatRequest, transform } from './transform/transform';
 
 class DataModel {
     constructor(chart) {
@@ -54,21 +54,38 @@ class DataModel {
     }
 
     async load(values, body) {    
-
+        if (!values || !values.length) {
+            console.warn('No values provided to load data model')
+            return
+        }
+        
         this.chart.showLoading()
 
         let errormessages = []
-        
-        for (let node of values) {   
-            body.value = node.value || node.name
-            body.type = node.type
-            
-            let response = await fetchAndTransform(body)
+
+        const treatNode = async (node, body) => {
+            let response = await treatRequest(body)
            
             if (response && response.message) {
                 errormessages.push(response.message)
-            } else 
-                await this.update(response)
+            } else  {
+                let data = await transform(node, response, this.chart.encoding)
+                await this.update(data)
+            }
+        }
+
+        if (Array.isArray(values)) {
+            for (let node of values) {   
+                body.value = node.value || node.name || node
+                body.type = node.type
+
+                await treatNode(node, body)
+            }
+        } else if (typeof values === 'string') {
+            body.value = values
+            body.type = null
+
+            await treatNode(values, body)
         }
        
         if (errormessages.length)

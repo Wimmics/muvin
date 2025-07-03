@@ -45,11 +45,53 @@
         //const navigationBar = new Demo()
         //navigationBar.init()
 
-        // multiNodeQuery();
+        document.addEventListener('DOMContentLoaded', () => {
+            // incrementalHalApp();
+            // nonIncrementalHalApp();
+            divaTestApp()
+        });
 
-        testProvData()
 
-        async function testProvData() {
+        async function divaTestApp() {
+            let encoding = {
+                "nodes": {
+                    "ego": {"field": "ego"},
+                    "alter": {"field": "alter"},
+                },
+                "links": {
+                    "field": "uri",
+                    "browse": { "field": "link" },
+                    "title": { "field": "title" },
+                },
+                "timeline": {
+                    "field": "date"
+                },
+                "color": {
+                    "field": "type",
+                    "type": "nominal",
+                    "scale": {
+                        "domain": ["Click", "Transform Interaction", "Create Visualization", "Delete"],
+                        "range": ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"],
+                    },
+                    "legend": {
+                        "display": true, // default : true
+                        "title": "Interaction Type", // default : Link Type
+                    }
+                },
+                "size": {
+                    "field": "alter",
+                    "type": "quantitative",
+                    "scale": {
+                        "range": [10, 100],
+                        "type": "linear"
+                    },
+                    "legend": {
+                        "display": true,
+                        "title": "Number of Related Entities",
+                    }
+                }    
+            }
+
             document.getElementById('visualization').style.display = 'block';
 
             let data = await fetch('/muvin/prov-data/query_muvin5.json').then(response => response.json());
@@ -57,6 +99,7 @@
 
             const muvin = document.querySelector('vis-muvin');
             muvin.sparqlResults = data;
+            muvin.encoding = encoding;
                 
             let nodes = data.results.bindings.map(d => d.ego.value)
             nodes = [...new Set(nodes)];
@@ -66,8 +109,47 @@
 
         }
 
-        async function multiNodeQuery() {
+        async function nonIncrementalHalApp() {
             document.getElementById('visualization').style.display = 'block';
+
+            let encoding = {
+                "nodes": {
+                    "ego": {"field": "mainCharacter"},
+                    "alter": {"field": "myAlter"},
+                },
+                "links": {
+                    "field": "myLink",
+                    "browse": { "field": "link" },
+                    "title": { "field": "myTitle" },
+                },
+                "timeline": {
+                    "field": "myDate"
+                },
+                "color": {
+                    "field": "pubType",
+                    "type": "nominal",
+                    "scale": {
+                        "domain": null, // filled later
+                        "range": null, // filled later
+                    },
+                    "legend": {
+                        "display": true, // default : true
+                        "title": "Publication Type", // default : Link Type
+                    }
+                },
+                "size": {
+                    "field": "myAlter",
+                    "type": "quantitative",
+                    "scale": {
+                        "range": [10, 100],
+                        "type": "linear"
+                    },
+                    "legend": {
+                        "display": true,
+                        "title": "Number of Co-authors",
+                    }
+                }    
+            }
 
             let query = `PREFIX dc: <http://purl.org/dc/elements/1.1/>
             PREFIX dcterms: <http://purl.org/dc/terms/>
@@ -76,7 +158,9 @@
             PREFIX org: <http://www.w3.org/ns/org#>
             PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 
-            select distinct  ?uri ?title ?date ?type  ?ego ?alter
+            select distinct (?uri as ?myLink) (?title as ?myTitle) (?date as ?myDate) (?type as ?pubType) 
+                (?ego as ?mainCharacter) 
+                (?alter as ?myAlter)
             where {
                 
                 ?person foaf:name ?ego . 
@@ -125,10 +209,72 @@
             muvin.sparqlResults = data;
             muvin.app = locals.app;
 
-            let nodes = data.results.bindings.map(d => d.ego.value)
+            let types = data.results.bindings.map(d => d.pubType.value)
+            types = [...new Set(types)];
+            console.log('Unique types:', types);
+            encoding.color.scale.domain = types;
+            encoding.color.scale.range = d3.schemeCategory10.slice(0, types.length);
+
+            muvin.encoding = encoding;
+
+            let nodes = data.results.bindings.map(d => d.mainCharacter.value)
             nodes = [...new Set(nodes)];
             console.log('Unique nodes:', nodes);
+
             muvin.launch(nodes);
+        }
+
+        async function incrementalHalApp() {
+            document.getElementById('visualization').style.display = 'block';
+
+            let encoding = {
+                "nodes": {
+                    "ego": {"field": "ego"},
+                    "alter": {"field": "alter"},
+                },
+                "links": {
+                    "field": "uri",
+                    "browse": { "field": "link" },
+                    "title": { "field": "title" },
+                },
+                "timeline": {
+                    "field": "date"
+                },
+                "color": {
+                    "field": "type",
+                    "type": "nominal",
+                    "scale": {
+                        "domain": null, // filled later
+                        "range": null, // filled later
+                    },
+                    "legend": {
+                        "display": true, // default : true
+                        "title": "Publication Type", // default : Link Type
+                    }
+                },
+                "size": {
+                    "field": "alter",
+                    "type": "quantitative",
+                    "scale": {
+                        "range": [10, 100],
+                        "type": "linear"
+                    },
+                    "legend": {
+                        "display": true,
+                        "title": "Number of Co-authors",
+                    }
+                }    
+            }
+    
+            const muvin = document.querySelector('vis-muvin');
+         
+            muvin.app = locals.app;
+            muvin.sparqlQuery = locals.query;
+            muvin.sparqlEndpoint = locals.endpoint;
+            muvin.sparqlProxy = locals.proxy;
+            muvin.encoding = encoding;
+
+            muvin.launch("Aline Menin"); // or a list with the node as only element
         }
         
 

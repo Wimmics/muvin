@@ -97,6 +97,16 @@ class Muvin extends HTMLElement {
         return this.internalData.get(this)?.sparqlResults;
     }
 
+    set encoding(encoding) {
+        const data = this.internalData.get(this) || {};
+        data.encoding = encoding;
+        this.internalData.set(this, data);
+    }
+
+    get encoding() {
+        return this.internalData.get(this)?.encoding;
+    }
+
     async connectedCallback() {
         this.attachShadow({ mode: "open" })
 
@@ -255,7 +265,7 @@ class Muvin extends HTMLElement {
             this.incremental = false // if the webcomponent is used with sparqlResults, the incremental approach is deactivated. We assume that the user wants to visualize the data given in input.
             for (let value of values) {
                 console.log('Transforming data for value:', value)
-                const data = await transform(value, this.sparqlResults)
+                const data = await transform(value, this.sparqlResults, this.encoding)
                 await this.data.update(data)
             }
             await this.update()

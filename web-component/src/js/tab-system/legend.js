@@ -26,19 +26,19 @@ class Legend {
             .attr('id', 'link-legend')
             
         this.svg.append('text')
-            .text(this.chart.app === 'crobora' ? 'Broadcaster' : 'Contribution Type') //TODO: feed from stylesheet
             .attr('font-size', this.fontSize)
             .attr('transform', `translate(0, 25)`)
+            .attr('id', 'legend-title')
         
         this.svg.append('svg:image')
             .attr('xlink:href', `../assets/${questionIcon}`)
+            .attr('id', 'legend-help-icon')
             .attr('width', 15)
             .attr('height', 15)
             .attr('x', 110)
             .attr('y', 12)
             .style('cursor', 'pointer')
             .append('title')
-            .text(`Click on the circles to show/hide items in each ${this.chart.app === 'crobora' ? 'channel' : 'category'}`)
 
         this.hide()
         
@@ -50,10 +50,24 @@ class Legend {
         this.colors = chartData.colors
         this.data = chartData.linkTypes
 
+        this.svg.select('#legend-title')
+            .text(capitalizeFirstLetter(this.getLegendTitle()))
+
+        this.svg.select('#legend-help-icon')
+            .select('title')
+            .text(`Click on the circles to show/hide items in each ${this.getLegendTitle().toLowerCase()}`)
+
         this.drawLinkLegend()
 
-        this.show()
+        if (this.chart.encoding?.color?.legend?.display === false) 
+            this.hide()
+        else 
+            this.show()
 
+    }
+
+    getLegendTitle() {
+        return this.chart.encoding?.color?.legend?.title || 'Link Type'
     }
 
     drawLinkLegend() {
@@ -95,7 +109,7 @@ class Legend {
                         .style('cursor', 'pointer') 
                         
                         .call(circle => circle.append('title')
-                            .text(e => `Click to display/hide items in this ${this.chart.app === 'crobora' ? 'channel' : 'category'}`)) )
+                            .text(e => `Click to display/hide items in this ${this.getLegendTitle().toLowerCase()}`)) )
                     
                     .call(g => g.append('text')
                         .attr('font-size', this.fontSize)
