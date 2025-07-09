@@ -8,8 +8,6 @@ import { getTicksDistance, truncateText } from './utils.js'
 
 // Images
 import plusIcon from '../images/plus.svg'
-import upIcon from '../images/up.svg'
-import downIcon from '../images/down.svg'
 
 
 class NodesAxis {
@@ -24,10 +22,7 @@ class NodesAxis {
 
         this.tooltipId = 'node'
 
-        this.slider = d3.select(this.chart.shadowRoot.querySelector('#y-slider'))
-
         this.distortion = 4;
-        this.shift = 0;
 
         this.color = {focus: '#2C3E50', normal: '#f5f5f5'}
 
@@ -41,8 +36,8 @@ class NodesAxis {
         this.data = this.chart.data.getNodes()
         this.values = this.chart.data.getNodesKeys()
 
-        this.min = this.shift
-        this.max = dimensions.height - dimensions.top - dimensions.bottom - this.shift;
+        this.min = 0
+        this.max = dimensions.height - dimensions.top - dimensions.bottom;
 
         this.svg = this.div.select('svg')
             .attr('width', dimensions.left)
@@ -53,8 +48,6 @@ class NodesAxis {
             .padding(.7)
         
         this.defaultScale = d3.scalePoint().domain(this.values).range([this.min, this.max]).padding(.7)
-            
-        this.setSlider()
         
     }
 
@@ -95,42 +88,6 @@ class NodesAxis {
         })
     }
 
-    setSlider() {
-        let dimensions = this.chart.getDimensions()
-        let shift = 10, 
-            iconsize = 40,
-            x = -dimensions.left/2 - iconsize / 2;
-
-        this.slider.attr('transform', `translate(${dimensions.left - shift}, 10)`)
-            .style('display', 'none')
-
-        this.slider.selectAll('image')
-            .attr('width', iconsize)
-            .attr('height', iconsize)
-            .style('cursor', 'pointer')
-
-        // TODO: The following elements might not be used anymore, verify!
-        this.slider.select("#slider-up")
-            .attr('xlink:href', `../assets/${upIcon}`)
-            .attr('transform', `translate(${x}, ${-shift - iconsize / 2})`)
-            .on('click', () => {
-                
-                let index = this.values.indexOf(this.chart.getNodeSelection());
-                if (index === 0) return;
-                this.setDistortion(this.values[index - 1])
-            })
-
-        this.slider.select('#slider-down')
-            .attr('xlink:href', `../assets/${downIcon}`)
-            .attr('transform', `translate(${x}, ${dimensions.height - dimensions.bottom - dimensions.top - shift - 10})`)
-            .on('click', () => {
-                let index = this.values.indexOf(this.chart.getNodeSelection());
-                if (index === this.values.length - 1) return;
-                this.setDistortion(this.values[index + 1])
-            })
-
-    }
-
     setRange() {
         let point = this.scale(this.chart.data.nodes[0])
         this.rangePoints = this.tickDistances.map(d => { let v = point; point += d; return v; })
@@ -144,26 +101,11 @@ class NodesAxis {
     drawLabels() {
         const _this = this;
 
-        this.slider.style('display', this.focus ? 'block' : 'none')
-
         let dimensions = this.chart.getDimensions()
         
         let rectwidth = dimensions.left * .7
         let rectheight = 30
         let iconsize = 20
-
-        // let getFontSize = (d, l) => { // font size changes according to whether the node is focused on or not
-            
-        //     if (!this.focus || (this.focus && this.chart.areItemsVisible(d))) return '1em'
-        //     else if (this.focus && this.focus != d) return '.5em'
-
-        //     let direction = this.values.indexOf(d) - this.values.indexOf(this.focus)
-        //     let pos = this.scale(d), 
-        //         focusPos = this.scale(this.focus) + Math.sign(direction) * this.getStep(this.focus) ;
-
-        //     let p = pos > focusPos ? focusPos / pos : pos / focusPos;
-        //     return Math.min( (rectwidth * .8) / l, .8) * p  + "em"
-        // }
 
         let iconPath = d => this.chart.app === 'crobora' ? `${this.chart.baseUrl}/muvin/images/${this.chart.app}/${this.data[d].type}-icon.svg` : ''
         let rectFill = d => this.focus === d || this.chart.data.getFocus() === d ? this.color.focus : this.color.normal

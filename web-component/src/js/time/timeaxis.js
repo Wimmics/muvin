@@ -72,13 +72,13 @@ class TimeAxis{
             )
             .text(d => d)
             .attr('x', d => this.scale(d) + this.step(d) / 2)
-            .attr('y', dimensions.height - dimensions.bottom)
+            .attr('y', dimensions.height - dimensions.bottom - dimensions.top - 5)
             
         bottom.select('line')
             .attr('x1', dimensions.left)
             .attr('x2', this.range()[1])
-            .attr('y1', dimensions.height - dimensions.bottom - 20)
-            .attr('y2', dimensions.height - dimensions.bottom - 20)
+            .attr('y1', dimensions.height - dimensions.top - dimensions.bottom - 20)
+            .attr('y2', dimensions.height - dimensions.top - dimensions.bottom - 20)
             .attr('stroke', '#000')
 
         this.chart.group.selectAll('g.timeaxis')
