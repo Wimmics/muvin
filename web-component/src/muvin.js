@@ -15,7 +15,7 @@ import timesliderCSS from './css/timeslider.css';
 import contextMenuCSS from './css/d3-context-menu.css';
 
 // Local JavaScript modules
-import './js/utils.js';
+import { computePixelValue } from './js/utils.js';
 import DataModel from './js/dataModel.js';
 
 import TimeAxis from './js/time/timeaxis.js';
@@ -43,7 +43,7 @@ class Muvin extends HTMLElement {
         this.svg = null
         this.width = null
         this.height = null
-        this.margin = { top: 30, right: 50, bottom: 30, left: 150 }
+        this.margin = { top: 30, right: 50, bottom: 50, left: 150 }
 
         this.visibleNodes = null
         this.visibleItems = null
@@ -121,11 +121,9 @@ class Muvin extends HTMLElement {
         this.token = this.getAttribute("token") // for crobora, see to use it on the app side
 
         this.div = d3.select(this.shadowRoot.querySelector('div.timeline'))
-        this.defaultWidth = this.width = await this.computePixelValue('width')
-        this.height =  await this.computePixelValue('height')
-        
         this.svg = this.div.select('svg#chart')
-        this.svg.attr('height', this.height).attr('width', this.width)
+
+        this.updateDimensions() // set width and height of the chart
 
         this.group = this.svg.select('g#chart-group')
             .attr('transform', `translate(0, ${this.margin.top})`)
@@ -155,28 +153,20 @@ class Muvin extends HTMLElement {
         this.navBar.set()
     }
 
-    async computePixelValue(attr) {
-        const sizeStr = this.getAttribute(attr);
-        let pixelValue;
-      
-        if (sizeStr?.endsWith('vw')) {
-          const vw = parseFloat(sizeStr);
-          pixelValue = (vw / 100) * window.innerWidth;
-      
-        } else if (sizeStr?.endsWith('vh')) {
-          const vh = parseFloat(sizeStr);
-          pixelValue = (vh / 100) * window.innerHeight;
-          pixelValue *= .85
-      
-        } else if (sizeStr?.endsWith('px')) {
-          pixelValue = parseFloat(sizeStr);
-      
-        } else {
-          // fallback if invalid or missing
-          pixelValue = null;
+    updateDimensions() {
+        this.defaultWidth = this.width = computePixelValue('width', this.getAttribute("width"), this.parentElement) || 1200;
+        this.height =  computePixelValue('height', this.getAttribute("height"), this.parentElement) || 800;
+        this.height *= .9 // reduce height by 10% to leave space for the toolbar
+
+        if (this.getAttribute("width") === null) {
+            console.warn('No width specified for the chart. Using default value of 1200px.');
         }
-      
-        return pixelValue;
+        if (this.getAttribute("height") === null) {
+            console.warn('No height specified for the chart. Using default value of 800px.');
+        }
+
+        
+        this.svg.attr('height', this.height).attr('width', this.width)
     }
 
     clear() {
@@ -390,7 +380,12 @@ class Muvin extends HTMLElement {
 
     // return chart dimensions
     getDimensions() {
-        return { left: this.margin.left, right: this.margin.right, top: this.margin.top, bottom: this.margin.bottom, width: this.width, height: this.height }
+        return { left: this.margin.left, 
+            right: this.margin.right, 
+            top: this.margin.top, 
+            bottom: this.margin.bottom, 
+            width: this.width, 
+            height: this.height }
     }
 
     ////////

@@ -18,6 +18,15 @@
     z-index: 10;
 }
 
+#visualization {
+    width: 100%;
+    height: calc(100vh - 40px);
+    top: 60px;
+    position: relative;
+    overflow: hidden;
+    display: none; /* Hidden by default */
+}
+
 .menu div.section {
     border-left: 1px solid #fff;
 }
