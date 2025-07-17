@@ -103,7 +103,6 @@ body{
 }
 
 .nodes-panel{
-    position: fixed;
     background-color: white;
     left: 0;
 }

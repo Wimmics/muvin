@@ -202,8 +202,7 @@ class NodesAxis {
             )
             .call(g => g.transition().duration(500)
                 .attr('transform', d => {
-                    let y = this.scale(d) - rectheight / 2
-                    y = y < this.shift ? this.shift : y;
+                    let y = this.scale(d) + rectheight / 2
                     return `translate(10, ${y})`
                 }))
 

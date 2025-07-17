@@ -245,6 +245,9 @@ class Muvin extends HTMLElement {
     }
 
     async launch(values) {
+
+        this.updateDimensions()
+
         if (this.sparqlQuery && this.sparqlEndpoint) {
             this.showLoading()
             this.incremental = true // if the webcomponent is used with sparqlResults, the incremental approach is deactivated. We assume that the user wants to visualize the data given in input.

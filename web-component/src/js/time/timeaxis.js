@@ -26,7 +26,7 @@ class TimeAxis{
         this.timeScale.setDomain(this.values)
         this.timeScale.setStep(step)
         this.timeScale.setFocusLength(focusStep)
-        this.timeScale.setStartingPos(chartDimensions.left)
+        this.timeScale.setStartingPos(10)
         await this.timeScale.setMapping()
 
         let onFocus = this.timeScale.getFocus()

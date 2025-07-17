@@ -24,59 +24,62 @@ export async function treatRequest(args) {
     if (!result.length)
         return { message: `Value: ${args.value}\n The query did not return any results.` };
 
-    let keys = Object.keys(result[0]);
-    let containAllKeys = expectedKeys.every(d => keys.includes(d));
-    if (!containAllKeys) {
-        let missingKeys = expectedKeys.filter(d => !keys.includes(d));
-        return { message: `Value: ${args.value}\nThe query is missing the following required variables = ${missingKeys.join(', ')}` };
-    }
-
     return result
 }
 
 export async function transform(args, data, encoding) {
     let items = []
-    let name = (args.name || args.value || args).trim()
+    const name = (args.name || args.value || args).trim()
 
-    let egoField = encoding?.nodes?.ego?.field || 'ego';
-    let dateField = encoding?.timeline?.field || 'date';
-    let linkField = encoding?.links?.field || 'uri';
-    let alterField = encoding?.nodes?.alter?.field || 'alter';
-    let typeField = encoding?.color?.field || 'type';
-    let browseField = encoding?.links?.browse?.field || 'link';
-    let titleField = encoding?.links?.title?.field || 'title';
+    const nodeFields = encoding?.nodes?.field || 'ego';
+    const stepField = encoding?.temporal?.field || 'date';
+    const linkField = encoding?.links?.field || 'uri';
+    const typeField = encoding?.color?.field || 'type';
+    const browseField = encoding?.links?.browse?.field || 'link';
+    const titleField = encoding?.links?.title?.field || 'title';
 
-    if (!egoField || !dateField || !linkField || !alterField) {
-        return { message: `Value: ${name}\nThe encoding is missing one or more required fields: ego, date, link, alter.` };
+    if (!nodeFields || !stepField || !linkField) {
+        return { message: `Value: ${name}\nThe encoding is missing one or more required fields: ego, date, and link.` };
     }
 
-    console.log(egoField, dateField, linkField, alterField, typeField)  
+    const getNodesValues = (row, filterCriteria) => {
+        const getValue = (row, key) => {
+            return row?.[key]?.value
+        };
+        
+        let values = Array.isArray(nodeFields) 
+            ? nodeFields.map(f => getValue(row, f)).filter(Boolean)
+            : [ getValue(row, nodeFields) ]
 
-    let egoValues = data.filter(d => d[egoField].value === name)
+        if (filterCriteria)
+            values = values.map(d => d === filterCriteria)
+
+        return values
+    }
+
+    data = data.filter(d => d[stepField]) // keep only entries with a valid step value
+        .filter(d => browseField && d[browseField] ? d[browseField].value !== "UNDEF" : true) // keep only values with a valid browse url, if applicable
     
-    let nestedValues = d3.nest().key(d => d[dateField].value).entries(egoValues);
+    let egoValues = data.filter(d => getNodesValues(d, name)).flat() // data is treated per ego
+    
+    let nestedValues = d3.nest().key(d => d[stepField].value).entries(egoValues);
 
     let node = { name: name, type: args.type, key: await hash(name, args.type?.trim())}
     
-    for (let item of nestedValues) {
+    for (let step of nestedValues) {
         
         let uriNested = d3.nest()
             .key(d => d[linkField].value)
-            .entries(item.values);
+            .entries(step.values);
 
-        for (let uriItem of uriNested) {
+        for (let linkItem of uriNested) {
 
-            let ref = uriItem.values[0];
-            let values = uriItem.values.filter(d => browseField && d[browseField] ? d[browseField].value !== "UNDEF" : true)
-            
-            let year = ref[dateField].value.split('-')[0];
-            if (year === "0000") continue;
-
-            let ego = {...node}
-            
-            let alters = values.map(e => ({ name: e[alterField]?.value || null, type: e.alterNature?.value || null }));
-            if (!alters.some(d => d.name === ego.name))
-                alters.push(ego)
+            let ref = linkItem.values[0];
+            let values = linkItem.values;
+         
+            let alters = values.map(d => getNodesValues(d)).flat()
+            alters = [...new Set(alters)]
+            alters = alters.map(d => ({ name: d, type: null }))
             
             alters = alters.filter((e, i) => e && alters.findIndex(x => x.name === e.name && x.type === e.type) === i);
             alters = await Promise.all(
@@ -87,14 +90,15 @@ export async function transform(args, data, encoding) {
             );
 
             let types = values.map(e => e[typeField]?.value || null).filter((d, i, arr) => d && arr.indexOf(d) === i);
-            ego.contribution = [...types];
+
+            let ego = {... alters.find(d => d.name === name)}
+            ego.contribution = [...types]
 
             items.push({
                 id: ref[linkField].value,
                 node: ego,
                 title: ref[titleField].value,
-                date: ref[dateField].value,
-                year: year,
+                year: ref[stepField].value, // TODO: change the key to 'step'
                 type: types,
                 contributors: alters,
                 contnames: alters.map(d => d.name),
@@ -104,25 +108,26 @@ export async function transform(args, data, encoding) {
         }
     }
 
+    
     return {
         node: node,
         items: items
     }
 }
 
-export async function fetch(args) {
+// export async function fetch(args) {
 
-    return await treatRequest(args.query, args.endpoint, args.proxy, args.value);
+//     return await treatRequest(args.query, args.endpoint, args.proxy, args.value);
     
-    //if (response.message) return response
+//     //if (response.message) return response
   
-    // const data = await transform({
-    //     name: args.value.trim(),
-    //     type: args.type
-    // }, response);
+//     // const data = await transform({
+//     //     name: args.value.trim(),
+//     //     type: args.type
+//     // }, response);
 
-    // return data
-}
+//     // return data
+// }
 
 async function hash(...args) {
     const string = args.join('--');
