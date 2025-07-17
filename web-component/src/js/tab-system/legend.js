@@ -51,11 +51,11 @@ class Legend {
         this.data = chartData.linkTypes
 
         this.svg.select('#legend-title')
-            .text(capitalizeFirstLetter(this.getLegendTitle()))
+            .text(capitalizeFirstLetter(this.chart.getColorLabel()))
 
         this.svg.select('#legend-help-icon')
             .select('title')
-            .text(`Click on the circles to show/hide items in each ${this.getLegendTitle().toLowerCase()}`)
+            .text(`Click on the circles to show/hide items in each ${this.chart.getColorLabel().toLowerCase()}`)
 
         this.drawLinkLegend()
 
@@ -64,10 +64,6 @@ class Legend {
         else 
             this.show()
 
-    }
-
-    getLegendTitle() {
-        return this.chart.encoding?.color?.legend?.title || 'Link Type'
     }
 
     drawLinkLegend() {
@@ -109,7 +105,7 @@ class Legend {
                         .style('cursor', 'pointer') 
                         
                         .call(circle => circle.append('title')
-                            .text(e => `Click to display/hide items in this ${this.getLegendTitle().toLowerCase()}`)) )
+                            .text(e => `Click to display/hide items in this ${this.chart.getColorLabel().toLowerCase()}`)) )
                     
                     .call(g => g.append('text')
                         .attr('font-size', this.fontSize)

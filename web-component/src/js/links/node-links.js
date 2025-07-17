@@ -10,7 +10,7 @@ class NodeLinksGroup{
 
     set() {
 
-        this.linkInfo = d => `${d.source.name} ${d.symmetric ? '↔' : '→' } ${d.target.name}\n\nItem: ${d.item.title}\n\nContribution Type: ${d.type}`  
+        // this.linkInfo = d => `${this.chart.getItemLabel()}: ${d.item.title}\n\n${this.chart.getColorLabel()}: ${d.type}`  
         
         this.linkGenerator = d3.linkVertical()
             .x(d => d.x)
@@ -38,7 +38,7 @@ class NodeLinksGroup{
         const _this = this;
 
         let data = await this.getData()
-
+        console.log("data = ", data)
         let link = this.group.selectAll('.node-link')
             .data(data)
             .join(
@@ -101,25 +101,19 @@ class NodeLinksGroup{
             .data(d => d.values.flat())
             .join(
                 enter => enter.append('path')
-                    .attr('class', 'path-stroke single-link')
-                    .attrs(this.strokeAttrs)
-                    .attr('d', function(d, i) {
-                        // Flatten siblings from same group
-                        const group = d3.select(this.parentNode).datum();
-                        const siblings = group.values.flat();
-                        return generateCurvedPath(d, i, siblings);
-                    })
-                    .call(path => path.append('title').text(this.linkInfo)),
-                update => update
-                    .call(path => path.attrs(this.strokeAttrs)
-                        .attr('d', function(d, i) {
-                            const group = d3.select(this.parentNode).datum();
-                            const siblings = group.values.flat();
-                            return generateCurvedPath(d, i, siblings);
-                        }))
-                    .call(path => path.select('title').text(this.linkInfo)),
+                    .attr('class', 'path-stroke single-link'),
+                update => update,
                 exit => exit.remove()
             )
+            .attrs(this.strokeAttrs)
+            .attr('d', function(d, i) {
+                // Flatten siblings from same group
+                const group = d3.select(this.parentNode).datum();
+                const siblings = group.values.flat();
+                return generateCurvedPath(d, i, siblings);
+            })
+            // .on("mouseenter", d => this.chart.tooltip.setLinkContent(d, 'link'))
+            // .on("mouseleave", () => this.chart.tooltip.hide('link'))
 
         link.selectAll('path.path-link')
             .data(d => d.values.flat())
@@ -203,6 +197,8 @@ class NodeLinksGroup{
         this.chart.profiles.downplay()
         this.chart.fstlinks.downplay()
 
+        this.chart.tooltip.setLinkContent(d, 'link')
+
     }
 
     mouseout() {
@@ -214,13 +210,15 @@ class NodeLinksGroup{
 
         this.chart.profiles.reverseDownplay()
         this.chart.fstlinks.reverse()
+
+        this.chart.tooltip.hide('link')
     }
 
 
     async getLinks() {
 
         // keep one link per node
-        let links = JSON.parse(JSON.stringify(this.chart.data.getLinks())) // make a local copy of the data to avoid propagating the modifications below
+        let links = [ ...this.chart.data.getLinks()] // make a local copy of the data to avoid propagating the modifications below
         
         links = links.filter(d => this.chart.isSelected(d.year))
 

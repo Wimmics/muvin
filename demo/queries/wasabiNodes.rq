@@ -1,0 +1,8 @@
+prefix wsb:     <http://ns.inria.fr/wasabi/ontology/>
+prefix mo:      <http://purl.org/ontology/mo/>
+prefix foaf:    <http://xmlns.com/foaf/0.1/>
+
+SELECT distinct ?a ?value WHERE {
+    { ?a a wsb:Artist_Person } union { ?a a wsb:Artist_Group } union { ?a a  mo:MusicArtist}
+    ?a foaf:name ?value
+}

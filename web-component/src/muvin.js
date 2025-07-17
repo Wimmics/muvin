@@ -257,7 +257,6 @@ class Muvin extends HTMLElement {
             this.showLoading()
             this.incremental = false // if the webcomponent is used with sparqlResults, the incremental approach is deactivated. We assume that the user wants to visualize the data given in input.
             for (let value of values) {
-                console.log('Transforming data for value:', value)
                 const data = await transform(value, this.sparqlResults, this.encoding)
                 await this.data.update(data)
             }
@@ -491,6 +490,25 @@ class Muvin extends HTMLElement {
 
     releaseTimeFocus(d) {
         this.xAxis.setDistortion(d)
+    }
+
+
+    /// --- Handle encoding parsing
+
+    getColorLabel() {
+        return this.encoding?.color?.label || "Link Type"
+    }
+
+    getItemLabel() {
+        return this.encoding?.links?.label || "Item"
+    }
+
+    getTimeLabel() {
+        return this.encoding?.temporal?.label || "Time Unit"
+    }
+
+    getNodeLabel() {
+        return this.encoding?.nodes?.label || "Node"
     }
 }
 

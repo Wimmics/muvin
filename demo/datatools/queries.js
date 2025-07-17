@@ -59,9 +59,10 @@ PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 PREFIX org: <http://www.w3.org/ns/org#>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 
-select distinct  ?uri ?title ?date ?type ?link ?ego ?alter
+select distinct  ?uri ?title ?year ?type ?link ?ego ?alter
 where {
     BIND("$node" AS ?ego)
+    #BIND ("Aline Menin" AS ?ego)
     
     ?named foaf:name ?ego .
     { ?uri dcterms:creator ?creator .
@@ -72,6 +73,8 @@ where {
         dcterms:type ?typeURI ;
         dcterms:issued ?date ;
         dcterms:identifier ?halId .
+
+    bind (YEAR(?date) as ?year)
 
     bind (IF(! STRSTARTS(?halId, "http"), concat("https://hal.science/", ?halId), "UNDEF" ) as ?link)
 

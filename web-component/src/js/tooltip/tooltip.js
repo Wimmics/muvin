@@ -53,18 +53,18 @@ class Tooltip {
     // General implementations of the tooltips. For custom content, extend the class and overwrite the methods below 
 
     setItemContent(d, id) {
-        const itemName = `<b>${d.title} (${d.year})</b><br>`
-        const type = `<b>Type:</b> ${d.type}`
+        const itemName = `<b>${d.title} (${this.chart.getTimeLabel()} ${d.year})</b><br>`
+        const type = `<b>${this.chart.getColorLabel()}:</b> ${d.type}`
         const more = `<br><br>Click to go to source`
 
         let keys = this.chart.data.getNodesKeys()
-        let likedNodes = d.contributors.filter(e => e.key !== d.node.key && e.name)    
+        let linkedNodes = d.contributors.filter(e => e.key !== d.node.key && e.name)    
     
-        const contributors = () => `<b>${likedNodes.length} node(s):</b> ${likedNodes.map(val => keys.includes(val.key) ? `<b><i>${capitalizeFirstLetter(val.name)}</i></b>` : capitalizeFirstLetter(val.name)).join(', ')}`
+        const contributors = () => `<b>${linkedNodes.length} ${this.chart.getNodeLabel()}(s):</b> ${linkedNodes.map(val => keys.includes(val.key) ? `<b><i>${capitalizeFirstLetter(val.name)}</i></b>` : capitalizeFirstLetter(val.name)).join(', ')}`
 
         let content = `<b>${itemName}</b>`
 
-        if (likedNodes.length > 0) {
+        if (linkedNodes.length > 0) {
             content += contributors() + `<br><br>`
         }
 
@@ -75,16 +75,18 @@ class Tooltip {
 
     async setProfileContent(e, d, id) {
         let node = d[0].data.node
-        let year = this.chart.xAxis.invert(e.pageX, 1)
+        let time = this.chart.xAxis.invert(e.pageX, 1)
 
         let data = await this.chart.data.getItems()
-        let values = data.filter(e => e.node.key === node.key && e.year === year && e.node.contribution.includes(d.key))
-        let totalYear = data.filter(e => e.node.key === node.key && e.year === year)        
-        let percentage = ((values.length / totalYear.length) * 100).toFixed(2)
+        let values = data.filter(e => e.node.key === node.key && e.year === time && e.node.contribution.includes(d.key))
+        let count = data.filter(e => e.node.key === node.key && e.year === time)        
+        let percentage = ((values.length / count.length) * 100).toFixed(2)
 
-        let content = `<b>${year}</b> (${node.name})<br><br>
-        <b>${totalYear.length}</b> items in total<br><br>
-        <b>${capitalizeFirstLetter(d.key)}</b>: <b>${values.length}</b> item${values.length === 1 ? '' : 's'} (<b>${percentage}%</b>)<br><br>
+        let content = `<b>${this.chart.getTimeLabel()} ${time}</b> <br>
+        <b>${this.chart.getNodeLabel()}:</b> ${capitalizeFirstLetter(node.name)}<br><br>
+        <b>Count of ${this.chart.getItemLabel()}:</b><br>
+        <b>Total in this ${this.chart.getTimeLabel()}:</b> ${count.length}<br>
+        <b>For ${capitalizeFirstLetter(d.key)}</b>: <b>${values.length}</b> (<b>${percentage}%</b>)<br><br>
         Click to keep it highlighted`
 
         this.setContent(content, id)
@@ -99,6 +101,16 @@ class Tooltip {
             `
 
         this.setContent(content, id)
+    }
+
+    setLinkContent(d, id) {
+       
+        let content = `<strong>${this.chart.getItemLabel()}:</strong> ${d.item.title}<br>
+            <strong>${this.chart.getColorLabel()}:</strong> ${d.type}<br>
+            <strong>${this.chart.getNodeLabel()}:</strong> ${capitalizeFirstLetter(d.item.node.name)}`
+
+        this.setContent(content, id)
+        this.show(d3.event, id)
     }
 }
 

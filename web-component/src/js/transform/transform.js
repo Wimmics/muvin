@@ -42,7 +42,7 @@ export async function transform(args, data, encoding) {
         return { message: `Value: ${name}\nThe encoding is missing one or more required fields: ego, date, and link.` };
     }
 
-    const getNodesValues = (row, filterCriteria) => {
+    const getNodesValues = (row) => {
         const getValue = (row, key) => {
             return row?.[key]?.value
         };
@@ -51,20 +51,13 @@ export async function transform(args, data, encoding) {
             ? nodeFields.map(f => getValue(row, f)).filter(Boolean)
             : [ getValue(row, nodeFields) ]
 
-        if (filterCriteria)
-            values = values.map(d => d === filterCriteria)
-
         return values
     }
 
     data = data.filter(d => d[stepField]) // keep only entries with a valid step value
         .filter(d => browseField && d[browseField] ? d[browseField].value !== "UNDEF" : true) // keep only values with a valid browse url, if applicable
     
-    let egoValues = data.filter(d => getNodesValues(d, name)).flat() // data is treated per ego
-    
-    let nestedValues = d3.nest().key(d => d[stepField].value).entries(egoValues);
-
-    let node = { name: name, type: args.type, key: await hash(name, args.type?.trim())}
+    let nestedValues = d3.nest().key(d => d[stepField].value).entries(data);
     
     for (let step of nestedValues) {
         
@@ -75,13 +68,16 @@ export async function transform(args, data, encoding) {
         for (let linkItem of uriNested) {
 
             let ref = linkItem.values[0];
-            let values = linkItem.values;
+
+            let nodeValues = linkItem.values.map(d => getNodesValues(d)).flat()
+            let egoExists = nodeValues.some(d => d === name)
+            if (!egoExists)
+                continue
          
-            let alters = values.map(d => getNodesValues(d)).flat()
+            let alters = linkItem.values.map(d => getNodesValues(d)).flat()
             alters = [...new Set(alters)]
             alters = alters.map(d => ({ name: d, type: null }))
             
-            alters = alters.filter((e, i) => e && alters.findIndex(x => x.name === e.name && x.type === e.type) === i);
             alters = await Promise.all(
                 alters.map(async (e) => ({
                 ...e,
@@ -89,9 +85,10 @@ export async function transform(args, data, encoding) {
                 }))
             );
 
-            let types = values.map(e => e[typeField]?.value || null).filter((d, i, arr) => d && arr.indexOf(d) === i);
+            let egoValues = linkItem.values.filter(d => getNodesValues(d).includes(name) )
+            let types = egoValues.map(e => e[typeField]?.value || null)
 
-            let ego = {... alters.find(d => d.name === name)}
+            let ego = alters.find(d => d.name === name)
             ego.contribution = [...types]
 
             items.push({
@@ -107,10 +104,9 @@ export async function transform(args, data, encoding) {
             })
         }
     }
-
     
     return {
-        node: node,
+        node: items[0].node,
         items: items
     }
 }

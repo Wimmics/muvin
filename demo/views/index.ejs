@@ -41,6 +41,7 @@
     <script>
 
         let locals = <%- JSON.stringify(locals) %>;
+        console.log(locals)
 
         //const navigationBar = new Demo()
         //navigationBar.init()
@@ -48,22 +49,80 @@
         document.addEventListener('DOMContentLoaded', () => {
             // incrementalHalApp();
             // nonIncrementalHalApp();
-            divaTestApp()
+            // divaTestApp()
+            divaTestApp2()
         });
+
+        async function divaTestApp2() {
+            let encoding = {
+                "nodes": {
+                    "field": "user",
+                    "label": "User"
+                },
+                "links": {
+                    "field": "entityType",
+                    "title": { "field": "entityType" },
+                    "label": "Entity"
+                },
+                "temporal": {
+                    "field": "step",
+                    "label": "Step"
+                },
+                "color": {
+                    "field": "actionType",
+                    "type": "nominal",
+                    "label": "Action Type",
+                    "scale": {
+                        "domain": null,
+                        "range": null
+                    },
+                    "legend": {
+                        "display": true
+                    }
+                },
+                "size": {
+                    "field": "user",
+                    "type": "quantitative",
+                    "scale": {
+                        "range": [10, 100],
+                        "type": "linear"
+                    },
+                    "legend": {
+                        "display": true,
+                        "title": "Number of Related Entities"
+                    }
+                }    
+            }
+
+            document.getElementById('visualization').style.display = 'block';
+
+            let data = await fetch('/muvin/prov-data/query2-test.json').then(response => response.json());
+            console.log('SPARQL results:', data);
+
+            const muvin = document.querySelector('vis-muvin');
+            muvin.sparqlResults = data;
+            muvin.encoding = encoding;
+                
+            let nodes = data.results.bindings.map(d => d.user?.value).filter(Boolean)
+            nodes = [...new Set(nodes)];
+            console.log('Unique nodes:', nodes);
+
+            muvin.launch(nodes);
+
+        }
 
 
         async function divaTestApp() {
             let encoding = {
                 "nodes": {
-                    "ego": {"field": "ego"},
-                    "alter": {"field": "alter"},
+                    "field": [ "ego", "alter" ],
                 },
                 "links": {
                     "field": "uri",
                     "browse": { "field": "link" },
                     "title": { "field": "title" },
                 },
-                "timeline": {
+                "temporal": {
                     "field": "date"
                 },
                 "color": {
@@ -94,14 +153,14 @@
 
             document.getElementById('visualization').style.display = 'block';
 
-            let data = await fetch('/muvin/prov-data/query_muvin5.json').then(response => response.json());
+            let data = await fetch('/muvin/prov-data/query_muvin1.json').then(response => response.json());
             console.log('SPARQL results:', data);
 
             const muvin = document.querySelector('vis-muvin');
             muvin.sparqlResults = data;
             muvin.encoding = encoding;
                 
-            let nodes = data.results.bindings.map(d => d.ego.value)
+            let nodes = data.results.bindings.map(d => d.ego?.value).filter(Boolean)
             nodes = [...new Set(nodes)];
             console.log('Unique nodes:', nodes);
 
@@ -114,19 +173,18 @@
 
             let encoding = {
                 "nodes": {
-                    "ego": {"field": "mainCharacter"},
-                    "alter": {"field": "myAlter"},
+                    "field": ["ego", "alter"]
                 },
                 "links": {
                     "field": "myLink",
                     "browse": { "field": "link" },
-                    "title": { "field": "myTitle" },
+                    "title": { "field": "title" },
                 },
-                "timeline": {
-                    "field": "myDate"
+                "temporal": {
+                    "field": "year"
                 },
                 "color": {
-                    "field": "pubType",
+                    "field": "type",
                     "type": "nominal",
                     "scale": {
                         "domain": null, // filled later
@@ -138,7 +196,7 @@
                     }
                 },
                 "size": {
-                    "field": "myAlter",
+                    "field": "alter",
                     "type": "quantitative",
                     "scale": {
                         "range": [10, 100],
@@ -151,56 +209,9 @@
                 }    
             }
 
-            let query = `PREFIX dc: <http://purl.org/dc/elements/1.1/>
-            PREFIX dcterms: <http://purl.org/dc/terms/>
-            PREFIX hsc: <http://data.archives-ouvertes.fr/schema/>
-            PREFIX foaf: <http://xmlns.com/foaf/0.1/>
-            PREFIX org: <http://www.w3.org/ns/org#>
-            PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-
-            select distinct (?uri as ?myLink) (?title as ?myTitle) (?date as ?myDate) (?type as ?pubType) 
-                (?ego as ?mainCharacter) 
-                (?alter as ?myAlter)
-            where {
-                
-                ?person foaf:name ?ego . 
-                VALUES ?ego { "Aline Menin" "Marco Winckler" "Sonia Chardonnel" "Fabien Gandon" }
-
-                { ?uri dcterms:creator ?creator .
-                        ?creator hsc:person ?person . } 
-                union { ?uri dcterms:creator ?person }
-
-                ?uri dcterms:title ?title ;
-                    dcterms:type ?typeURI ;
-                    dcterms:issued ?date ;
-                    dcterms:identifier ?halId .
-
-                bind (IF(! STRSTARTS(?halId, "http"), concat("https://hal.science/", ?halId), "UNDEF" ) as ?link)
-
-                ?typeURI dc:identifier ?typeId .
-                bind ( if(?typeId in ("COMM", "POSTER", "PRESCONF", "UNDEFINED"),
-                            "Conference Paper",
-                    if(?typeId in ("ART"),
-                            "Journal Article",
-                        if(?typeId in ("ETABTHESE", "THESE", "HDR"),
-                                    "Diploma",
-                                if(?typeId in ("MAP", "PATENT", "SON", "VIDEO", "IMG"),
-                                        "Artwork",
-                                    if(?typeId in ("OUV", "COUV", "DOUV"),
-                                                "Book / Book Section",
-                                                "Gray Knowledge")))))
-                        as ?type)
-
-
-                optional { { ?uri dcterms:creator ?namedAlter . }
-                    union { ?uri dcterms:creator  ?alterCreator .
-                            ?alterCreator hsc:person ?namedAlter . }
-                            ?namedAlter foaf:name ?alter .
-                    }
-
-            }`
-
-            const url = `${locals.proxy}?endpoint=${locals.endpoint}&query=${encodeURIComponent(query)}`;
+            let query = locals.query.replace("$node", "Aline Menin")
+            console.log("query = ", query)
+            const url = `${locals.proxy}?endpoint=${locals.endpoint}&query=${encodeURIComponent(locals.query)}`;
 
             let data = await fetch(url).then(response => response.json())
 
@@ -209,7 +220,7 @@
             muvin.sparqlResults = data;
             muvin.app = locals.app;
 
-            let types = data.results.bindings.map(d => d.pubType.value)
+            let types = data.results.bindings.map(d => d.type.value)
             types = [...new Set(types)];
             console.log('Unique types:', types);
             encoding.color.scale.domain = types;
@@ -217,7 +228,7 @@
 
             muvin.encoding = encoding;
 
-            let nodes = data.results.bindings.map(d => d.mainCharacter.value)
+            let nodes = data.results.bindings.map(d => d.ego.value)
             nodes = [...new Set(nodes)];
             console.log('Unique nodes:', nodes);
 
@@ -229,16 +240,15 @@
 
             let encoding = {
                 "nodes": {
-                    "ego": {"field": "ego"},
-                    "alter": {"field": "alter"},
+                    "field": ["ego", "alter"]
                 },
                 "links": {
                     "field": "uri",
                     "browse": { "field": "link" },
                     "title": { "field": "title" },
                 },
-                "timeline": {
-                    "field": "date"
+                "temporal": {
+                    "field": "year"
                 },
                 "color": {
                     "field": "type",

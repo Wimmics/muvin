@@ -1,0 +1,48 @@
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX hsc: <http://data.archives-ouvertes.fr/schema/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX org: <http://www.w3.org/ns/org#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+select distinct  ?uri ?title ?year ?type ?link ?ego ?alter
+where {
+    BIND("$node" AS ?ego)
+    #BIND ("Aline Menin" AS ?ego)
+    
+    ?named foaf:name ?ego .
+    { ?uri dcterms:creator ?creator .
+            ?creator hsc:person ?named . } 
+    union { ?uri dcterms:creator ?named }
+
+    ?uri dcterms:title ?title ;
+        dcterms:type ?typeURI ;
+        dcterms:issued ?date ;
+        dcterms:identifier ?halId .
+
+    bind (YEAR(?date) as ?year)
+
+    bind (IF(! STRSTARTS(?halId, "http"), concat("https://hal.science/", ?halId), "UNDEF" ) as ?link)
+
+    ?typeURI dc:identifier ?typeId .
+    bind ( if(?typeId in ("COMM", "POSTER", "PRESCONF", "UNDEFINED"),
+                "Conference Paper",
+        if(?typeId in ("ART"),
+                "Journal Article",
+            if(?typeId in ("ETABTHESE", "THESE", "HDR"),
+                        "Diploma",
+                    if(?typeId in ("MAP", "PATENT", "SON", "VIDEO", "IMG"),
+                            "Artwork",
+                        if(?typeId in ("OUV", "COUV", "DOUV"),
+                                    "Book / Book Section",
+                                    "Gray Knowledge")))))
+            as ?type)
+
+
+    optional { { ?uri dcterms:creator ?namedAlter . }
+        union { ?uri dcterms:creator  ?alterCreator .
+                ?alterCreator hsc:person ?namedAlter . }
+                ?namedAlter foaf:name ?alter .
+        }
+
+}

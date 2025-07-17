@@ -1,0 +1,31 @@
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+prefix dcterms: <http://purl.org/dc/terms/>
+prefix foaf:    <http://xmlns.com/foaf/0.1/>
+prefix schema:  <http://schema.org/>
+prefix wsb:     <http://ns.inria.fr/wasabi/ontology/>
+prefix mo:      <http://purl.org/ontology/mo/>
+
+select distinct ?uri ?title ?date (REPLACE(STR(?egoRole), ".*/", "") AS ?type) ?ego ?alter ?parentId ?parentName where {
+
+    { ?uri ?egoRole ?ego  }
+    union
+    { ?uri ?egoRole [ foaf:name ?ego ] }
+
+    filter (?ego = "$node")
+
+    filter (?egoRole = schema:author || ?egoRole = mo:producer || ?egoRole = mo:performer)
+
+    ?uri dcterms:title ?title ; a ?type . filter (?type != wsb:Album) 
+
+    { ?uri schema:releaseDate ?date } union { ?uri schema:datePublished ?date }
+
+    { ?uri schema:author ?alter } 
+    union 
+    { ?uri mo:producer ?alter }
+    union
+    { ?uri mo:performer [ foaf:name ?alter ] }
+        
+    optional { ?uri schema:album ?parentId . ?parentId dcterms:title ?parentName . }
+
+
+} 

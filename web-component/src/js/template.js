@@ -10,6 +10,7 @@ template.innerHTML = `
 <div class='tooltip' id='item-tooltip'></div>
 <div class='tooltip' id='node-tooltip'></div>
 <div class='tooltip' id='profile-tooltip'></div>
+<div class='tooltip' id='link-tooltip'></div>
 
 
 <div class="vis">
