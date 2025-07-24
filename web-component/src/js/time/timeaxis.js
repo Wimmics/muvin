@@ -53,7 +53,7 @@ class TimeAxis{
             .attr('x', d => this.scale(d) + this.step(d) / 2)
 
         top.select('line')
-            .attr('x1', dimensions.left)
+            .attr('x1', 0)
             .attr('x2', this.range()[1])
             .attr('y1', 12)
             .attr('y2', 12)
@@ -75,7 +75,7 @@ class TimeAxis{
             .attr('y', dimensions.height - dimensions.bottom - dimensions.top - 5)
             
         bottom.select('line')
-            .attr('x1', dimensions.left)
+            .attr('x1', 0)
             .attr('x2', this.range()[1])
             .attr('y1', dimensions.height - dimensions.top - dimensions.bottom - 20)
             .attr('y2', dimensions.height - dimensions.top - dimensions.bottom - 20)
@@ -187,7 +187,7 @@ class TimeAxis{
         this.slider.select('.marker')
             .attr('width', this.step())
             .attr('height', dimensions.height - 10 - dimensions.bottom - dimensions.top)
-            .attr('x', dimensions.left)
+            .attr('x', 0)
             .attr('y', 8)
             .attr('fill', 'none')
             .attr('stroke', '#ccc')
@@ -199,12 +199,12 @@ class TimeAxis{
         this.slider.select('#top-button')
             .attr('height', 15)
             .attr('y', 8)
-            .attr('x', dimensions.left)
+            .attr('x', 0)
             .call(drag)
 
         this.slider.select('#bottom-button')
             .attr('height', 15)
-            .attr('x', dimensions.left)
+            .attr('x', 0)
             .attr('y', dimensions.height - 2 - dimensions.bottom - dimensions.top)
             .call(drag)
 
