@@ -2,79 +2,112 @@
 import * as sparql from './sparql_helper.js';
 import * as d3 from 'd3';
 
-export async function treatRequest(args) {
-    const expectedKeys = ['uri', 'title', 'date', 'ego', 'alter'];
+export async function treatRequest({
+    value, query, endpoint, proxy, 
+}) {
 
     function endsWithLimitPattern(str) {
         const regex = /\blimit \d+\b/i;
         return regex.test(str);
     }
     
-    let variable = args.query.split(/[^A-Za-z0-9$]+/).find(v => v.startsWith('$'));
+    let variable = query.split(/[^A-Za-z0-9$]+/).find(v => v.startsWith('$'));
     let regex = new RegExp("\\" + variable, "g");
-    let tunedQuery = args.query.replace(regex, args.value.trim());
+    let tunedQuery = query.replace(regex, value.trim());
 
     let withOffset = !endsWithLimitPattern(tunedQuery);
-    if (withOffset) tunedQuery += 'limit 10000 offset $offset';
+    if (withOffset) tunedQuery += 'limit 10000';
 
-    let result = await sparql.executeQuery(tunedQuery, args.endpoint, args.proxy, withOffset);
-    
-    if (result.message) return result;
+    let queryParam = `query=${encodeURIComponent(tunedQuery)}`
+    let url = `${endpoint}?${queryParam}` // default, if no proxy provided (might result in CORS issues)
+    if (proxy)
+        url = `${proxy}?endpoint=${endpoint}&${queryParam}` // proxy url sends the query from server side
 
-    if (!result.length)
-        return { message: `Value: ${args.value}\n The query did not return any results.` };
+    let result = await sparql.sendRequest(url)
+
+    if (result?.results?.bindings?.length === 0)
+        return { message: `Value: ${value}\n The query did not return any results.` };
 
     return result
 }
 
-export async function transform(args, data, encoding) {
-    let items = []
-    const name = (args.name || args.value || args).trim()
+function checkFieldValidity(vars, field) {
+    if (Array.isArray(field)) {
+        for (let f of field) {
+            if (!vars.includes(f)) {
+                throw new Error(`Invalid field: ${f}`);
+            }
+        }
+    } else if (!vars.includes(field)) {
+        throw new Error(`Invalid field: ${field}`);
+    }      
+}
 
-    const nodeFields = encoding?.nodes?.field || 'ego';
-    const stepField = encoding?.temporal?.field || 'date';
-    const linkField = encoding?.links?.field || 'uri';
-    const typeField = encoding?.color?.field || 'type';
-    const browseField = encoding?.links?.browse?.field || 'link';
-    const titleField = encoding?.links?.title?.field || 'title';
+export async function transform({
+    sparqlResults,
+    egoLabel,
+    nodesField,
+    temporalField,
+    eventsField,
+    colorField,
+    browseField,
+    titleField,
+    sizeField
+}) {
+  
+    let data = sparqlResults?.results?.bindings
 
-    if (!nodeFields || !stepField || !linkField) {
-        return { message: `Value: ${name}\nThe encoding is missing one or more required fields: ego, date, and link.` };
+    if (!data) {
+        console.error('Mising bindings.')
+        return
+    }        
+
+    egoLabel = egoLabel.trim() // remove extra spaces
+
+    if (!nodesField || !temporalField || !eventsField) {
+        console.error(`Encoding is missing one or more required fields: nodes, events, temporal.`)
+        return
     }
+
+    let vars = sparqlResults.head.vars
+    checkFieldValidity(vars, nodesField)
+    checkFieldValidity(vars, temporalField)
+    checkFieldValidity(vars, eventsField)
 
     const getNodesValues = (row) => {
         const getValue = (row, key) => {
             return row?.[key]?.value
         };
         
-        let values = Array.isArray(nodeFields) 
-            ? nodeFields.map(f => getValue(row, f)).filter(Boolean)
-            : [ getValue(row, nodeFields) ]
+        let values = Array.isArray(nodesField) 
+            ? nodesField.map(f => getValue(row, f)).filter(Boolean)
+            : [ getValue(row, nodesField) ]
 
         return values
     }
 
-    data = data.filter(d => d[stepField]) // keep only entries with a valid step value
-        .filter(d => browseField && d[browseField] ? d[browseField].value !== "UNDEF" : true) // keep only values with a valid browse url, if applicable
+    data = data.filter(d => d[temporalField]) // keep only entries with a valid temporal value
+        // .filter(d => browseField && d[browseField] ? d[browseField].value !== "UNDEF" : true) // keep only values with a valid browse url, if applicable
     
-    let nestedValues = d3.nest().key(d => d[stepField].value).entries(data);
+    let nestedValues = d3.nest().key(d => d[temporalField].value).entries(data);
     
-    for (let step of nestedValues) {
+    let items = [] // it will hold all items
+    for (let timeStep of nestedValues) {
         
         let uriNested = d3.nest()
-            .key(d => d[linkField].value)
-            .entries(step.values);
+            .key(d => d[eventsField].value)
+            .entries(timeStep.values);
 
-        for (let linkItem of uriNested) {
+        for (let eventItem of uriNested) {
 
-            let ref = linkItem.values[0];
+            let ref = eventItem.values[0];
 
-            let nodeValues = linkItem.values.map(d => getNodesValues(d)).flat()
-            let egoExists = nodeValues.some(d => d === name)
+            let nodeValues = eventItem.values.map(d => getNodesValues(d)).flat()
+            let egoExists = nodeValues.some(d => d === egoLabel)
             if (!egoExists)
                 continue
          
-            let alters = linkItem.values.map(d => getNodesValues(d)).flat()
+            let alters = eventItem.values.map(d => getNodesValues(d)).flat()
             alters = [...new Set(alters)]
             alters = alters.map(d => ({ name: d, type: null }))
             
@@ -85,45 +118,35 @@ export async function transform(args, data, encoding) {
                 }))
             );
 
-            let egoValues = linkItem.values.filter(d => getNodesValues(d).includes(name) )
-            let types = egoValues.map(e => e[typeField]?.value || null)
+            let egoValues = eventItem.values.filter(d => getNodesValues(d).includes(egoLabel) )
+            let types = egoValues.map(e => e[colorField]?.value || null)
 
-            let ego = alters.find(d => d.name === name)
+            let ego = alters.find(d => d.name === egoLabel)
             ego.contribution = [...types]
 
+            let size = ref[sizeField] && (!isNaN(ref[sizeField].value) && isFinite(ref[sizeField].value))
+                ? +ref[sizeField].value
+                : alters.length;
+
+            let browseLink = ref[browseField]?.value && ref[browseField]?.value !== 'UNDEF' ? ref[browseField]?.value : null
             items.push({
-                id: ref[linkField].value,
+                id: ref[eventsField].value,
                 node: ego,
                 title: ref[titleField].value,
-                year: ref[stepField].value, // TODO: change the key to 'step'
-                type: types,
+                year: ref[temporalField].value, // TODO: change the key to 'step'
+                type: [... new Set(types)],
                 contributors: alters,
-                contnames: alters.map(d => d.name),
                 parent: ref.parentId ? { name: ref.parentName.value, id: ref.parentId.value } : null,
-                link: ref[linkField]?.value
+                link: browseLink,
+                size: size
             })
         }
     }
     
-    return {
-        node: items[0].node,
-        items: items
-    }
+    return items
 }
 
-// export async function fetch(args) {
 
-//     return await treatRequest(args.query, args.endpoint, args.proxy, args.value);
-    
-//     //if (response.message) return response
-  
-//     // const data = await transform({
-//     //     name: args.value.trim(),
-//     //     type: args.type
-//     // }, response);
-
-//     // return data
-// }
 
 async function hash(...args) {
     const string = args.join('--');

@@ -53,9 +53,9 @@ class Tooltip {
     // General implementations of the tooltips. For custom content, extend the class and overwrite the methods below 
 
     setItemContent(d, id) {
-        const itemName = `<b>${d.title} (${this.chart.getTimeLabel()} ${d.year})</b><br>`
+        const itemName = `<b>${d.title}<br><br>${this.chart.getTimeLabel()}:</b> ${d.year}<br><br>`
         const type = `<b>${this.chart.getColorLabel()}:</b> ${d.type}`
-        const more = `<br><br>Click to go to source`
+        const more = d.link ? `Click to go to source` : `Source link not provided`
 
         let keys = this.chart.data.getNodesKeys()
         let linkedNodes = d.contributors.filter(e => e.key !== d.node.key && e.name)    
@@ -68,25 +68,40 @@ class Tooltip {
             content += contributors() + `<br><br>`
         }
 
-        content += `${type}${more}`
+        content += `${type}<br><br>${more}`
 
         this.setContent(content, id); 
     }
 
     async setProfileContent(e, d, id) {
         let node = d[0].data.node
-        let time = this.chart.xAxis.invert(e.pageX, 1)
+
+        // Calculate the time step being hovered
+        const svgRect = this.chart.svg.node().getBoundingClientRect();
+        const mouseX = e.pageX - svgRect.left;
+        const time = this.chart.xAxis.invert(mouseX);
 
         let data = await this.chart.data.getItems()
         let values = data.filter(e => e.node.key === node.key && e.year === time && e.node.contribution.includes(d.key))
         let count = data.filter(e => e.node.key === node.key && e.year === time)        
-        let percentage = ((values.length / count.length) * 100).toFixed(2)
+        let percentage = ((values.length / count.length) * 100).toFixed(0)
 
-        let content = `<b>${this.chart.getTimeLabel()} ${time}</b> <br>
+        let content = `<b>${this.chart.getTimeLabel()}: ${time}</b> <br>
         <b>${this.chart.getNodeLabel()}:</b> ${capitalizeFirstLetter(node.name)}<br><br>
-        <b>Count of ${this.chart.getItemLabel()}:</b><br>
-        <b>Total in this ${this.chart.getTimeLabel()}:</b> ${count.length}<br>
-        <b>For ${capitalizeFirstLetter(d.key)}</b>: <b>${values.length}</b> (<b>${percentage}%</b>)<br><br>
+        <table border="1" cellpadding="6">
+            <tr>
+                <td colspan="2"><strong>Count of ${this.chart.getItemLabel()}</strong></td>
+            </tr>
+            <tr>
+                <td><strong>Total:</strong></td>
+                <td>${count.length}</td>
+            </tr>
+            <tr>
+                <td><strong>${capitalizeFirstLetter(d.key)}:</strong></td>
+                <td><strong>${values.length}</strong> (<strong>${percentage}%</strong>)</td>
+            </tr>
+        </table><br>
+
         Click to keep it highlighted`
 
         this.setContent(content, id)

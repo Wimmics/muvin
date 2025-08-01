@@ -45,10 +45,8 @@ class Legend {
     }
 
     update() {
-
-        let chartData = this.chart.getData()
-        this.colors = chartData.colors
-        this.data = chartData.linkTypes
+        this.scale = this.chart.getColorScale()
+        this.data = this.scale.domain()
 
         this.svg.select('#legend-title')
             .text(capitalizeFirstLetter(this.chart.getColorLabel()))
@@ -100,8 +98,8 @@ class Legend {
                         .attr('cx', 0)
                         .attr('cy', this.left)         
                         .attr('r', this.itemRadius)
-                        .attr('fill', e => this.selected.includes(e) ? '#fff' : this.colors.typeScale(e) )
-                        .attr('stroke', d => d3.rgb(this.chart.getTypeColor(d)).darker())
+                        .attr('fill', e => this.selected.includes(e) ? '#fff' : this.scale(e) )
+                        .attr('stroke', d => d3.rgb(this.scale(d)).darker())
                         .style('cursor', 'pointer') 
                         
                         .call(circle => circle.append('title')
@@ -114,8 +112,8 @@ class Legend {
                         .text(d => capitalizeFirstLetter(d))),
                 update => update
                     .call(g => g.select('circle')
-                        .attr('fill', e => this.selected.includes(e) ? '#fff' : this.colors.typeScale(e)) 
-                        .attr('stroke', d => d3.rgb(this.chart.getTypeColor(d)).darker()) )
+                        .attr('fill', e => this.selected.includes(e) ? '#fff' : this.scale(e)) 
+                        .attr('stroke', d => d3.rgb(this.scale(d)).darker()) )
 
                     .call(g => g.select('text')
                         .attr('x', circleTextPadding)

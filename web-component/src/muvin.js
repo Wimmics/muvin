@@ -36,6 +36,75 @@ import NavBar from './js/tab-system/navbar.js'
 
 import { transform } from './js/transform/transform.js';
 
+import { createColorScale } from './js/lib/ColorScaleCalculator.js';
+
+/**
+ * Muvin is a custom web component that extends the HTMLElement class. 
+ * It is designed to visualize data in a timeline format with nodes, links, and profiles.
+ * The component supports SPARQL queries, endpoints, and results for data visualization.
+ * It provides methods for managing dimensions, updating views, handling focus, and encoding parsing.
+ * 
+ * @class Muvin
+ * @extends HTMLElement
+ * 
+ * @property {WeakMap} internalData - Internal storage for private attributes such as query, endpoint, etc.
+ * @property {string|null} sparqlQuery - SPARQL query string for data retrieval.
+ * @property {string|null} sparqlEndpoint - SPARQL endpoint URL for data retrieval.
+ * @property {string|null} sparqlProxy - Proxy URL for SPARQL queries.
+ * @property {Object|null} sparqlResults - Results from SPARQL queries.
+ * @property {Object|null} encoding - Encoding configuration for data visualization.
+ * @property {boolean} incremental - Flag indicating whether the component uses incremental data updates.
+ * @property {boolean} showItems - Flag indicating whether items are displayed.
+ * @property {Array|null} visibleNodes - List of currently visible nodes.
+ * @property {Array|null} visibleItems - List of currently visible items.
+ * @property {Array|null} visibleProfile - List of currently visible profiles.
+ * @property {Object} margin - Margins for the chart (top, right, bottom, left).
+ * @property {number|null} width - Width of the chart.
+ * @property {number|null} height - Height of the chart.
+ * @property {Object} svg - SVG element used for rendering the chart.
+ * 
+ * @method connectedCallback - Lifecycle method called when the component is added to the DOM.
+ * @method updateDimensions - Updates the dimensions of the chart based on attributes or parent element.
+ * @method clear - Clears the chart graphic elements and hides the toolbar.
+ * @method display - Displays the chart and toolbar.
+ * @method update - Updates the view when adding or removing a node from the network.
+ * @method reset - Resets the component and clears internal data.
+ * @method draw - Draws the chart elements such as profiles, nodes, and links.
+ * @method launch - Launches the visualization with provided values and SPARQL configurations.
+ * @method showLoading - Displays the loading indicator.
+ * @method hideLoading - Hides the loading indicator.
+ * @method updateItemsDisplay - Updates the display state of items.
+ * @method drawItems - Checks whether items should be drawn.
+ * @method areItemsVisible - Checks if a specific item is visible.
+ * @method displayItems - Adds an item to the visible items list.
+ * @method removeItems - Removes an item from the visible items list.
+ * @method isNodeVisible - Checks if a specific node is visible.
+ * @method isNodeValid - Checks if a node is valid based on the data model.
+ * @method displayNode - Adds a node to the visible nodes list.
+ * @method isProfileVisible - Checks if a specific profile is visible.
+ * @method displayProfile - Adds a profile to the visible profiles list.
+ * @method removeProfile - Removes a profile from the visible profiles list.
+ * @method isProfileActive - Checks if a profile is active based on visibility and selection.
+ * @method getColorScale - Generates a color scale based on encoding configuration.
+ * @method getDimensions - Retrieves the dimensions of the chart including margins, width, and height.
+ * @method getNodeSelection - Retrieves the currently selected node.
+ * @method updateVisibleNodes - Updates the list of visible nodes based on focus.
+ * @method getTimeSelection - Retrieves the currently selected time period.
+ * @method isSelected - Checks if a node or time period is selected.
+ * @method isFreezeActive - Checks if the freeze mode is active.
+ * @method isFrozen - Checks if a specific node is frozen.
+ * @method getConnectedNodes - Retrieves nodes connected to a selected node.
+ * @method isPlayable - Checks if a node has audio content.
+ * @method focusOnNode - Sets focus on a selected node.
+ * @method releaseNodeFocus - Releases focus from a selected node.
+ * @method focusOnTime - Sets focus on a selected time period.
+ * @method releaseTimeFocus - Releases focus from a selected time period.
+ * @method getDefaultEncoding - Retrieves the default encoding configuration.
+ * @method getColorLabel - Retrieves the label for the color encoding.
+ * @method getItemLabel - Retrieves the label for the item encoding.
+ * @method getTimeLabel - Retrieves the label for the time encoding.
+ * @method getNodeLabel - Retrieves the label for the node encoding.
+ */
 class Muvin extends HTMLElement {
     constructor () {
         super()
@@ -89,7 +158,7 @@ class Muvin extends HTMLElement {
 
     set sparqlResults(sparqlResults) {
         const data = this.internalData.get(this) || {};
-        data.sparqlResults = sparqlResults?.results?.bindings;
+        data.sparqlResults = sparqlResults;
         this.internalData.set(this, data);
     }   
 
@@ -138,12 +207,10 @@ class Muvin extends HTMLElement {
         this.yAxis = new NodesAxis(this) // axis formed by authors/artists names (nodes of the first level of the network)
 
         this.nodes = this.app === 'crobora' ? new ImageNodes(this) : new NormalNodes(this)
-        this.nodes.set()
         
         this.fstlinks = new LinksGroup(this)
         this.sndlinks = new NodeLinksGroup(this)
-        this.sndlinks.set()
-
+        
         this.profiles = new StreamGraph(this)
 
         this.tooltip = TooltipFactory.getTooltip(this.app, this)
@@ -154,8 +221,13 @@ class Muvin extends HTMLElement {
     }
 
     updateDimensions() {
-        this.defaultWidth = this.width = computePixelValue('width', this.getAttribute("width"), this.parentElement) || 1200;
-        this.height =  computePixelValue('height', this.getAttribute("height"), this.parentElement) || 800;
+        let width = computePixelValue('width', this.getAttribute("width"), this.parentElement)
+        this.height = computePixelValue('height', this.getAttribute("height"), this.parentElement)
+       
+        if (!this.height) this.height = 800
+        if (!width) this.defaultWidth = this.width = 1200
+        else this.defaultWidth = this.width = width
+
         this.height *= .9 // reduce height by 10% to leave space for the toolbar
 
         if (this.getAttribute("width") === null) {
@@ -165,8 +237,10 @@ class Muvin extends HTMLElement {
             console.warn('No height specified for the chart. Using default value of 800px.');
         }
 
+        if (this.height < 800) {
+            console.warn('For optimal display, the component height should be at least 800px.');
+        }
         
-        this.svg.attr('height', this.height).attr('width', this.width)
     }
 
     clear() {
@@ -185,7 +259,7 @@ class Muvin extends HTMLElement {
      * @param {} focus An object defining the node on focus 
      */
     async update(focus){
-        
+       
         if (this.data.isEmpty()) {
             this.clear()
             return
@@ -210,12 +284,16 @@ class Muvin extends HTMLElement {
 
         this.xAxis.set()
         this.yAxis.set()
-        await this.profiles.set()
-        
-        this.yAxis.drawLabels()
+        this.yAxis.drawLabels() // TODO: set should call these methods inside the class
         this.xAxis.drawLabels()
         this.xAxis.drawSlider()
 
+
+        await this.profiles.set()
+        this.nodes.set()
+        this.sndlinks.set()
+        
+        
         if (this.yAxis.focus && focus && this.yAxis.focus != focus) 
             this.yAxis.setDistortion(focus)
         else if (this.getTimeSelection()){
@@ -225,13 +303,18 @@ class Muvin extends HTMLElement {
             this.xAxis.setDistortion()
         }
         else {
-            //this.data.updateFilters('timeTo', 20)
-            //this.chart.data.updateFilters('timeFrom', +this.lowerSlider.value)
             this.draw()
         }
 
         this.navBar.update() // update elements of the nav bar
             
+    }
+
+    async reset() {
+        this.internalData.set(this, {});  // Reinitialize internal storage
+
+        this.clear()
+        await this.data.clear()
     }
 
     draw() {
@@ -247,26 +330,24 @@ class Muvin extends HTMLElement {
     async launch(values) {
 
         this.updateDimensions()
+        this.showItems = this.encoding?.events?.display ?? true
 
         if (this.sparqlQuery && this.sparqlEndpoint) {
             this.showLoading()
             this.incremental = true // if the webcomponent is used with sparqlResults, the incremental approach is deactivated. We assume that the user wants to visualize the data given in input.
-            await this.data.load(values, { query: this.sparqlQuery, endpoint: this.sparqlEndpoint, proxy: this.sparqlProxy, token: this.token } )
+            await this.data.load(values)
             await this.update()
         } else if (this.sparqlResults) {
             this.showLoading()
             this.incremental = false // if the webcomponent is used with sparqlResults, the incremental approach is deactivated. We assume that the user wants to visualize the data given in input.
             for (let value of values) {
-                const data = await transform(value, this.sparqlResults, this.encoding)
-                await this.data.update(data)
+                await this.data.addData(value, this.sparqlResults)
             }
             await this.update()
         }
     } 
     
-
     /// helpers
-
     isIncremental() {
         return this.incremental
     }
@@ -283,8 +364,6 @@ class Muvin extends HTMLElement {
         return this.token;
     }
 
-   
-
     getDefaultWidth() {
         return this.defaultWidth
     }
@@ -298,11 +377,6 @@ class Muvin extends HTMLElement {
         this.draw()
     }
 
-    /**
-     * Verify whether the global option for drawing items is active
-     * 
-     * @returns true or false
-     */
     drawItems() {
         return this.showItems
     }
@@ -355,32 +429,19 @@ class Muvin extends HTMLElement {
         return 0
     }
 
-    getItemColor() {
-        return this.data.colors.item;
+    getColorScale() {   
+        let defaultEncoding = this.getDefaultEncoding()
+
+        let colorRange = this.encoding?.color?.scale?.range || defaultEncoding.color.scale.range;
+        let scaleType = this.encoding?.color?.scale?.type || defaultEncoding.color.scale.type;
+
+        let options = { domain: this.data.getColorDomain(), 
+                        range: colorRange, 
+                        type: scaleType }
+
+        return createColorScale(options)
     }
-
-    getTypeValue(key) {
-        return this.data.linkTypes[key]
-    }
-
-    getTypeColor(key) {
-        return this.data.colors.typeScale(key)
-    }
-
-    /**
-     * 
-     * @param {*} d a link between two nodes 
-     * @returns a boolean indicating whether that link is uncertain or not
-     */
-    async isUncertain(d) {        
-        let items = await this.data.getItems().filter(a => a.id === d.item.id && a.year === d.year)
-        let foundInSource = items.some(a => a.node.key === d.source)
-        let foundIntarget = items.some(a => a.node.key === d.target)
-
-        return !(foundInSource && foundIntarget)
-    }
-
-    // return chart dimensions
+    
     getDimensions() {
         return { left: this.margin.left, 
             right: this.margin.right, 
@@ -492,23 +553,68 @@ class Muvin extends HTMLElement {
         this.xAxis.setDistortion(d)
     }
 
-
     /// --- Handle encoding parsing
 
+    getDefaultEncoding() {
+        return {
+            "description": "No description provided",
+            "nodes": {
+                "field": "ego",
+                "label": "Ego"
+            },
+            "events": {
+                "field": "uri",
+                "label": "Item",
+                "display": true,
+
+                "title": { "field": "title" },
+                "browse": { "field": "link" },
+            },
+            "temporal": {
+                "field": "date",
+                "label": "Time Unit"
+            },
+            "color": {
+                "field": "type",
+                "label": "Link Type",
+                "scale": {
+                    "type": "ordinal",
+                    "domain": null,
+                    "range": null
+                },
+                "legend": {
+                    "display": true
+                }
+            },
+            "size": {
+                "field": null, // Default is null as it uses the co-occurrence of events for size scale
+                "label": "Co-occurrence of interaction",
+                "scale": {
+                    "domain": null,
+                    "range": [3, 15],
+                    "type": "linear"
+                },
+                "legend": {
+                    "display": true
+                }
+            }    
+        }
+    }
+
     getColorLabel() {
-        return this.encoding?.color?.label || "Link Type"
+        return this.encoding?.color?.label || this.getDefaultEncoding().color.label
     }
 
     getItemLabel() {
-        return this.encoding?.links?.label || "Item"
+        return this.encoding?.events?.label || this.getDefaultEncoding().events.label
     }
 
     getTimeLabel() {
-        return this.encoding?.temporal?.label || "Time Unit"
+        return this.encoding?.temporal?.label || this.getDefaultEncoding().temporal.label
     }
 
     getNodeLabel() {
-        return this.encoding?.nodes?.label || "Node"
+        return this.encoding?.nodes?.label || this.getDefaultEncoding().nodes.label
     }
 }
 

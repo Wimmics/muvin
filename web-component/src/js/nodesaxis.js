@@ -241,12 +241,19 @@ class NodesAxis {
                 
         let group = d3.select(this.chart.shadowRoot.querySelector('#chart-group'))
 
+        let concernedData = group.selectAll('g.link').filter(e => e.source === d || e.target === d).data()
+        concernedData.sort((a,b) => +a.year - (+b.year))
+        for (let x of concernedData) {
+            console.log(x.year, x.values)
+        }
+
         group.selectAll('g.link')
             .transition()
             .duration(500)
             .attr('opacity', e => e.source === d || e.target === d ? 1 : 0)
 
         this.frozenNodes = await this.chart.getConnectedNodes(d)
+        console.log('frozenNodes = ', this.frozenNodes)
 
         group.selectAll('g.artist')
             .transition('focus-artist')

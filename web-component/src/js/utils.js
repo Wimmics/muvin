@@ -109,12 +109,15 @@ function truncateText(selection, width) {
 }
 
 function computePixelValue(dimension, value, parent) {
-  
+    
     let pixelValue = null;
       
     if (!value) return null;
     
-    if (value.endsWith('vw') && dimension === 'width') {
+    if (!isNaN(+value)) {
+        pixelValue = +value;
+    } 
+    else if (value.endsWith('vw') && dimension === 'width') {
         const vw = parseFloat(value);
         pixelValue = (vw / 100) * window.innerWidth;
     
@@ -127,9 +130,9 @@ function computePixelValue(dimension, value, parent) {
     
     } else if (value.endsWith('%')) {
         const percent = parseFloat(value);
-
         if (parent) {
             const parentRect = parent.getBoundingClientRect();
+            
             pixelValue = (percent / 100) 
             pixelValue *= dimension === 'width' ? parentRect.width : parentRect.height;
             if (pixelValue < 0 || pixelValue === 0) {

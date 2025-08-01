@@ -9,8 +9,9 @@ class Profile {
     }
 
     async set() {
-    
-        let types = this.chart.data.getLinkTypes()
+        
+        this.colorScale = this.chart.getColorScale()
+        let types = this.colorScale.domain()
         let nodes = await this.chart.data.getNodesList()
         let dates = this.chart.data.getDates()
         let items = await this.chart.data.getItems()
@@ -93,8 +94,8 @@ class Profile {
                 exit => exit.remove() 
             )
             .attr('d', function(d) { return _this.setArea(d, d3.select(this.parentNode).datum().node.key) })
-            .attr('fill', d => this.chart.getTypeColor(d.key))
-            .attr('stroke', d => d3.rgb(this.chart.getTypeColor(d.key)).darker())
+            .attr('fill', d => this.colorScale(d.key))
+            .attr('stroke', d => d3.rgb(this.colorScale(d.key)).darker())
             .attr('opacity', '1')
             .on('mouseenter', d => {let e = d3.event; this.mouseover(e, d); })
             .on('mousemove', d => {let e = d3.event; this.mouseover(e, d); })

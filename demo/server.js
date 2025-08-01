@@ -1,3 +1,5 @@
+import 'dotenv/config'; // this loads the .env variables
+
 import fs from 'fs';
 import express from 'express';
 import bodyParser from 'body-parser';
@@ -15,7 +17,7 @@ const __dirname = path.dirname(__filename);
 
 
 // import { TransformFactory } from './datatools/transformFactory.js';
-import { datasets } from './datatools/queries.js';
+// import { datasets } from './datatools/queries.js';
 
 const app = express();
 
@@ -47,25 +49,6 @@ app.get('/muvin/prov-data/:filename', (req, res) => {
 // About page
 app.get(prefix, (req, res) => {
     res.render('about');
-});
-
-
-// Main app entry
-app.get(prefix + '/app/:app', (req, res) => {
-
-    let query = datasets[req.params.app]?.items || req.query?.query
-    let endpoint = datasets[req.params.app]?.endpoint || req.query?.endpoint
-    
-    res.render('index', 
-        { app: req.params.app, 
-          hashCode: hash(query, endpoint), 
-          query: query, 
-          endpoint: endpoint, 
-          proxy: `/muvin/sparql/${req.params.app}`,
-          value: req.query?.value,
-          type: req.query?.type,
-          token: req.query?.token
-        });
 });
 
 // SPARQL request
@@ -108,10 +91,67 @@ app.get(prefix + '/sparql/:app', async function (req, res) {
     }
 })
 
+// Main app entry
+app.get(prefix + '/:app', (req, res) => {
 
+    res.render('index', 
+        { app: req.params.app,
+        
+            // TODO: crobora information (broken at the moment) 
+            value: req.query?.value,
+            type: req.query?.type,
+            token: req.query?.token
+        });
+});
+
+app.get(prefix + '/:app/query-config', (req, res) => {
+    const queryEnvKey = `APP_${req.params.app.toUpperCase()}_QUERY`;
+    const endpointEnvKey = `APP_${req.params.app.toUpperCase()}_ENDPOINT`
+
+    const queryPath = process.env[queryEnvKey];
+    const endpoint = process.env[endpointEnvKey]
+    
+    if (!queryPath || !endpoint) {
+      return res.status(400).json({error: `No query file configured for app "${req.params.app}"`});
+    }
+    
+    const queryFilePath = path.join(__dirname, queryPath);
+
+    if (!fs.existsSync(queryFilePath))
+        return res.status(404).json({error: `No query file found for app "${req.params.app}"`})
+
+    let queryString = fs.readFileSync(queryFilePath, 'utf8')
+
+    res.json({
+        endpoint: endpoint,
+        query: queryString,
+        proxy: `/muvin/sparql/${req.params.app}`,
+    })
+})
+
+app.get(prefix + '/:app/encoding', (req, res) => {
+    const encodingEnvKey = `APP_${req.params.app.toUpperCase()}_ENCODING`;
+    const encodingPath = process.env[encodingEnvKey];
+
+    if (!encodingEnvKey) {
+        return res.status(400).json({error: `No encoding file configured for app "${req.params.app}".`});
+    }
+
+    res.sendFile(path.join(__dirname, encodingPath))
+})
 
 // Nodes route
 app.get(prefix + '/:app/data/nodes', async (req, res) => {
+    const nodesEnvKey = `APP_${req.params.app.toUpperCase()}_NODES`;
+    const endpointEnvKey = `APP_${req.params.app.toUpperCase()}_ENDPOINT`
+    
+    const nodesQueryPath = process.env[nodesEnvKey];
+    const endpoint = process.env[endpointEnvKey]
+
+    if (!nodesEnvKey) {
+        return res.status(400).json({error: `No query file configured to retrieve nodes for app "${req.params.app}".`});
+    }
+
     const dir = path.join(__dirname, `data/${req.params.app}/`);
     const datafile = path.join(dir, 'nodes.json');
 
@@ -119,22 +159,29 @@ app.get(prefix + '/:app/data/nodes', async (req, res) => {
 
     if (fs.existsSync(datafile)) {
         res.sendFile(datafile);
-    } else if (datasets[req.params.app]) {
-        const nodes = await getNodesList(datasets[req.params.app].endpoint, datasets[req.params.app].nodeNames);
+    } else if (nodesQueryPath && endpoint) {
+        let queryString = fs.readFileSync(nodesQueryPath, 'utf8')
+        const nodes = await getNodesList(endpoint, queryString);
+
         fs.writeFileSync(datafile, JSON.stringify(nodes, null, 4))
+        
         res.json(nodes);
     } else {
-        res.status(404).send(`404: App "${req.params.app}" not found.`);
+        res.status(400).json({error: `App "${req.params.app}" is not configured.`});
     }
 })
 
 async function getNodesList(endpoint, query) {
     const data = []
     let offset = 0;
+
+    let loopQuery = `${query} limit 10000 offset $offset`
+    
     while (true) {
         let json;
 
-        const pagedQuery = query.replace('$offset', offset);
+        const pagedQuery = loopQuery.replace('$offset', offset);
+       
         const response = await fetch(`${endpoint}?query=${encodeURIComponent(pagedQuery)}`, {
             method: 'GET',
             headers: { 'Accept': 'application/sparql-results+json' },
@@ -150,7 +197,7 @@ async function getNodesList(endpoint, query) {
         data.push(...bindings);
         
         if (bindings.length === 0 || bindings.length < 10000) break;
-        
+       
         offset += 10000;
     }
 
@@ -201,22 +248,20 @@ function hash(...args) {
 }
 
 // Start HTTP
-const port = 8020;
-app.listen(port, () => {
-    console.log(`✅ HTTP Server started on port ${port}`);
+app.listen(process.env.PORT_HTTP, () => {
+    console.log(`✅ HTTP Server started on port ${process.env.PORT_HTTP}`);
 });
 
 // Start HTTPS
 try {
-    const certPath = '/etc/httpd/certificate/exp_20250808/';
+    const certPath = process.env.CERT_FOLDER;
     const options = {
-        key: fs.readFileSync(path.join(certPath, 'dataviz_i3s_unice_fr.key')),
-        cert: fs.readFileSync(path.join(certPath, 'dataviz_i3s_unice_fr_cert.crt')),
-        ca: fs.readFileSync(path.join(certPath, 'dataviz_i3s_unice_fr_AC.cer'))
+        key: fs.readFileSync(path.join(certPath, process.env.CERT_KEY)),
+        cert: fs.readFileSync(path.join(certPath, process.env.CERT_CERT)),
     };
 
-    https.createServer(options, app).listen(8023, () => {
-        console.log(`✅ HTTPS Server started on port 8023`);
+    https.createServer(options, app).listen(process.env.PORT_HTTPS, () => {
+        console.log(`✅ HTTPS Server started on port ${process.env.PORT_HTTPS}`);
     });
 } catch (e) {
     console.log("⚠️ Could not start HTTPS server:", e.message);

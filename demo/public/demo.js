@@ -1,14 +1,18 @@
 class Demo{
     constructor() {
         this.chart = document.querySelector('vis-muvin')
-
     }
 
-    async init(key) {
+    async init() {
         const _this = this;
         let eventSource;   
 
         this.nodesLabels = await this.fetchNodesLabels()
+
+        if (this.nodesLabels.error) {
+            alert(this.nodesLabels.error)
+            return
+        }
         
         d3.select("#nodes-input")
             .on('keydown', () => eventSource = d3.event.key ? 'key' : 'list')
@@ -27,9 +31,20 @@ class Demo{
 
         d3.select('#clear-cache').on('click', async () => await this.handleClearCache())
 
-        this.chart.sparqlQuery = locals?.query
-        this.chart.sparqlEndpoint = locals?.endpoint
-        this.chart.sparqlProxy = locals?.proxy
+        d3.select('#reset-vis').on('click', () => {
+            this.displayWelcomeText()
+            this.clearSessionStorage()
+            this.chart.reset()
+        })
+
+        this.config = await fetch(`/muvin/${locals.app}/query-config/`).then(res => res.json())
+
+        if (this.config.error)
+            alert(this.config.error)
+
+        this.encoding = await fetch(`/muvin/${locals.app}/encoding/`).then(res => res.json())
+            
+        if (this.encoding.error) this.encoding = {}
         
         let values;
         if (locals?.value) {
@@ -54,6 +69,10 @@ class Demo{
         let values = sessionStorage.getItem("values")
         
         if (values) this.displayMuvin(JSON.parse(values))
+    }
+
+    clearSessionStorage() {
+        sessionStorage.removeItem('values')
     }
 
     storeValue(value) {
@@ -148,17 +167,31 @@ class Demo{
         return labels
     }
 
-    toggleVisualization() {
-        const visDiv = document.querySelector('#visualization');
-        visDiv.style.display = visDiv.style.display === 'none' ? 'block' : 'none';
+    displayVis() {
+        document.querySelector('#visualization').style.display = 'block'
 
-        document.querySelector(".welcome-text").style.display = visDiv.style.display === "block" ? "none" : "block"
+        document.querySelector(".welcome-text").style.display = 'none'
 
-        this.isVisDisplayed = visDiv.style.display === 'block'
+        this.isVisDisplayed = true
+    }
+
+    displayWelcomeText() {
+        document.querySelector('#visualization').style.display = 'none'
+
+        document.querySelector(".welcome-text").style.display = 'flex'
+
+        this.isVisDisplayed = false
     }
 
     displayMuvin(values) {
-        this.toggleVisualization()
+        this.displayVis()
+
+        this.chart.app = locals.app
+        this.chart.sparqlQuery = this.config.query
+        this.chart.sparqlEndpoint = this.config.endpoint
+        this.chart.sparqlProxy = this.config.proxy
+        this.chart.encoding = this.encoding
+
         this.chart.launch(values)
     }
 
@@ -183,25 +216,41 @@ class Demo{
               .replace(/>/g, "&gt;");
           }
           
-        const safeQuery = escapeHtml(locals.query)
+        const safeQuery = escapeHtml(this.config.query)
 
+        this.displayWelcomeText()
 
         let appNodes = {'hal': 'author', 'wasabi': 'artist', 'crobora': 'keyword'}
 
         let welcomeMessage = `<div class="welcome-message">
                 <h3 style="text-align:center;">Welcome to <b>Muvin</b>.</h3><br>`
 
-        if (locals.app === "preview" && !locals.query)
+        if (locals.app === "preview" && !this.config.query)
             welcomeMessage +=  `<p>This page requires a SPARQL query and endpoint as parameter. Use it via <a href="https://dataviz.i3s.unice.fr/ldviz/">LDViz.</p>`
         else if (locals.app !== "preview")
-            welcomeMessage += `<p style='text-align:center'><strong>Welcome!</strong> Start by searching for a <strong>${appNodes[locals.app]}</strong> to explore its connections.</p><br>
-                <p>Data used in this demo comes from the following source:</p><br>
-                <p><strong>SPARQL Endpoint:</strong> <code>${locals.endpoint}</code></p> <br>
+            welcomeMessage += `<p style='text-align:center'>
+            In this demo, you can explore data from the ${locals.app.toUpperCase()} knowledge graph. <br><br>
+            Start by searching for a <strong>${appNodes[locals.app]}</strong> to explore its connections.</p><br><br>
+                    <p><strong>SPARQL Endpoint:</strong> <code>${this.config.endpoint}</code></p><br><br>
 
-                <p><strong>SPARQL Query:</strong></p>
-                <pre><code class="sparql">
-                    ${safeQuery}
-                </code></pre>`
+                    <div style="display: flex; gap: 2rem; align-items: flex-start; flex-wrap: wrap;">
+
+                    <!-- Left column: SPARQL -->
+                    <div style="flex: 1; min-width: 300px;">
+                        <p><strong>SPARQL Query:</strong></p><br>
+                        <pre style="background-color: white;><code class="sparql">${safeQuery.trim()}</code></pre>
+                    </div>
+
+                    <!-- Right column: Encoding -->
+                    <div style="flex: 1; min-width: 300px;">
+                        <p><strong>Visual encoding</strong></p><br>
+                        <pre style="background-color: white;><code class="json">${JSON.stringify(this.encoding, null, 4)}</code></pre>
+                    </div>
+
+                </div>
+                `
+
+                
 
         welcomeMessage += `</div>`
 

@@ -1,0 +1,41 @@
+{
+    "nodes": {
+        "field": ["ego", "alter"],
+        "label": "Researcher"
+    },
+    "events": {
+        "field": "uri",
+        "label": "Publication",
+        "browse": { "field": "link" },
+        "title": { "field": "title" },
+        "display": true
+    },
+    "temporal": {
+        "field": "year",
+        "label": "Year"
+    },
+    "color": {
+        "field": "type",
+        "label": "Publication Type",
+        "scale": {
+            "type": "ordinal",
+            "domain": null,
+            "range": "Set2"
+        },
+        "legend": {
+            "display": true
+        }
+    },
+    "size": {
+        "field": null,
+        "label": "Number of Co-authors",
+        "scale": {
+            "range": [5, 25],
+            "type": "linear"
+        },
+        "legend": {
+            "display": true
+            
+        }
+    }    
+}

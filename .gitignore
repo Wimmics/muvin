@@ -3,6 +3,11 @@ package-lock.json
 
 demo/node_modules/**
 demo/package-lock.json  
+demo/data/**
+demo/datatools/**
+demo/.env
+
+demo/queries/wasabi*
 
 web-component/node_modules/**
 web-component/package-lock.json
@@ -10,7 +15,8 @@ web-component/dist/**
 
 data/**
 dist/**
-demo/data/**
+
+docker/**
 
 # General
 .DS_Store
@@ -38,4 +44,6 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+.vscode
 

@@ -12,12 +12,14 @@ class NodeLinksGroup{
 
         // this.linkInfo = d => `${this.chart.getItemLabel()}: ${d.item.title}\n\n${this.chart.getColorLabel()}: ${d.type}`  
         
+        let colorScale = this.chart.getColorScale()
+
         this.linkGenerator = d3.linkVertical()
             .x(d => d.x)
             .y(d => d.y)
 
         this.pathAttrs = {
-            "stroke": d => this.chart.getTypeColor(d.type),
+            "stroke": d => colorScale(d.type),
             'stroke-width': 5,
             'fill': 'none',
             'd': d => this.linkGenerator(d),
@@ -25,7 +27,7 @@ class NodeLinksGroup{
         }
 
         this.strokeAttrs = {
-            "stroke": d => d3.rgb(this.chart.getTypeColor(d.type)).darker(),
+            "stroke": d => d3.rgb(colorScale(d.type)).darker(),
             'stroke-width': 7,
             'fill': 'none',
             'd': d => this.linkGenerator(d),

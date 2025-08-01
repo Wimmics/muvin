@@ -1,5 +1,6 @@
 import * as d3 from 'd3'
 import { treatRequest, transform } from './transform/transform';
+import { calculateColorDomain, calculateSizeDomain } from './lib/DomainCalculator';
 
 class DataModel {
     constructor(chart) {
@@ -9,7 +10,6 @@ class DataModel {
         this.items = []
         this.nodes = {}
         this.links = []
-        this.linkTypes = []
 
         this.filters = {
             linkTypes: [],
@@ -18,9 +18,9 @@ class DataModel {
             focus: null
         }
 
-        this.colors = { 
-            item: '#ccc',
-            typeScale: d3.scaleOrdinal(d3.schemeSet2)
+        this.domainValues = {
+            color: null,
+            size: null
         }
     }
 
@@ -29,7 +29,14 @@ class DataModel {
         this.items = []
         this.nodes = {}
         this.links = []
-        this.linkTypes = []
+        this.dates = []
+
+        this.filters = {
+            linkTypes: [],
+            timeFrom: null,
+            timeTo: null,
+            focus: null
+        }
     }
 
     isEmpty() {
@@ -37,13 +44,9 @@ class DataModel {
     }
 
     async remove(node, focus) {
-        
         delete this.nodes[node];
         this.items = this.items.filter(d => d.node.key !== node)
-
-        //await this.load(await this.getNodesList())
         await this.chart.update()
-       
     }
 
     async reload() {
@@ -53,13 +56,18 @@ class DataModel {
         await this.load(nodes)
     }
 
-    async load(values, body) {    
+    async load(values) {    
         if (!values || !values.length) {
             console.warn('No values provided to load data model')
             return
         }
         
         this.chart.showLoading()
+
+        let body = { query: this.chart.sparqlQuery, 
+                    endpoint: this.chart.sparqlEndpoint, 
+                    proxy: this.chart.sparqlProxy, 
+                    token: this.chart.token }
 
         let errormessages = []
 
@@ -69,8 +77,7 @@ class DataModel {
             if (response && response.message) {
                 errormessages.push(response.message)
             } else  {
-                let data = await transform(node, response, this.chart.encoding)
-                await this.update(data)
+                await this.addData(node, response)
             }
         }
 
@@ -93,29 +100,102 @@ class DataModel {
        
     }
 
+    async addData(node, sparqlResults) {
+        let encoding = this.chart.encoding
+        let defaultEncoding = this.chart.getDefaultEncoding()
+
+        let options = {
+            sparqlResults: sparqlResults,
+            egoLabel: node.name || node.value || node,
+            nodesField: encoding?.nodes?.field || defaultEncoding.nodes.field,
+            temporalField: encoding?.temporal?.field || defaultEncoding.temporal.field,
+            eventsField: encoding?.events?.field || defaultEncoding.events.field,
+            colorField: encoding?.color?.field || defaultEncoding.color.field,
+            browseField: encoding?.events?.browse?.field || defaultEncoding.events.browse.field,
+            titleField: encoding?.events?.title?.field || defaultEncoding.events.title.field,
+            sizeField: encoding?.size?.field || defaultEncoding.size.field
+        }
+
+        let data = await transform(options)
+        if (!data) return
+
+        await this.update(data)
+        await this.updateDomainValues(sparqlResults)
+    }
+
     // updates
 
     async update(data) {
         
-        this.nodes[data.node.key] = data.node 
+        if (!data.length)
+            return
 
-        await this.updateItems(data.items)
+        let node = data[0]?.node
+        this.nodes[node.key] = { ...node }
+
+        await this.updateItems(data)
 
         await this.updateLinks()
 
-        await this.updateCollaborations(data.node.key)
+        await this.updateCollaborations(node.key)
 
         await this.updateTime()
 
-        await this.updateLinkTypes()
-
         return
+    }
+
+    async updateDomainValues(sparqlResults) {
+        let encoding = this.chart.encoding
+        let defaultEncoding = this.chart.getDefaultEncoding()
+
+        // Compute domain values for color scalee
+        let colorOptions = {
+            sparqlResults: sparqlResults,
+            dataField: encoding?.color?.field || defaultEncoding.color.field,
+            givenDomain: encoding?.color?.scale?.domain || defaultEncoding.color.scale.domain
+        }
+       
+        let currentColorDomain = this.domainValues.color || []
+        let extendedColorDomain = currentColorDomain.concat(calculateColorDomain(colorOptions))
+        this.domainValues.color = [...new Set(extendedColorDomain)]
+
+        // Compute domain values for size scale
+        let sizeOptions = {
+            sparqlResults: sparqlResults,
+            dataField: encoding?.size?.field || defaultEncoding.size.field,
+            givenDomain:  encoding?.size?.scale?.domain || defaultEncoding.size.scale.domain
+        }
+
+        let sizeDomain = calculateSizeDomain(sizeOptions)
+
+        if (!sizeDomain) { // Default size domain: count of co-occurrent items
+            sizeDomain = this.items.map(d => d.size)
+            sizeDomain = [...new Set(sizeDomain)]
+        }
+
+        let currentSizeDomain = this.domainValues.size || []
+        let extendedSizeDomain = currentSizeDomain.concat(sizeDomain)
+        
+        this.domainValues.size = [...new Set(extendedSizeDomain)]
+        this.domainValues.size.sort( (a,b) => a - b)
+
+    }
+
+    getSizeDomain() {
+        return this.domainValues.size
+    }
+
+    getColorDomain() {
+        return this.domainValues.color
     }
 
     async updateItems(items) {
         
         if (items) { // if new items
-            items.forEach(d => { d.year = +d.year })
+            items.forEach(d => { 
+                if (!isNaN(+d.year) && isFinite(+d.year)) 
+                    d.year = +d.year 
+                })
             this.items = this.items.concat(items)
         }
 
@@ -136,13 +216,6 @@ class DataModel {
 
     getFocus() {
         return this.filters.focus
-    }
-
-    async updateLinkTypes() {
-        this.linkTypes = this.items.map(d => d.type).filter(d => d).flat()
-        this.linkTypes = this.linkTypes.filter( (d,i) => this.linkTypes.indexOf(d) === i)
-
-        this.colors.typeScale.domain(this.linkTypes)
     }
 
     async updateTime() {
@@ -167,7 +240,7 @@ class DataModel {
 
         collaborators = collaborators.filter( (d,i) => collaborators.findIndex(e => e.key === d.key) === i && d.key !== key)
         collaborators = collaborators.map(d => { 
-            let values = items.filter(e => e.contnames.includes(d.name))
+            let values = items.filter(e => e.contributors.some(x => x.name === d.name))
             return { ...d, values: values } 
         })
 
@@ -208,7 +281,6 @@ class DataModel {
 
         let jointItems = nestedValues.filter(d => d.values.length > 1)
 
-
         if (!jointItems.length) return
 
         for (let item of jointItems) {
@@ -220,11 +292,11 @@ class DataModel {
 
                     for (let type of v1.type) {
                         this.links.push({
+                            item: item.key,
                             source: v1.node,
                             target: v2.node,
-                            type: type,
-                            item: item.key,
-                            year: v1.year
+                            year: v1.year,
+                            type: type
                         })    
                     }
                 }
@@ -291,10 +363,6 @@ class DataModel {
         }
     }
 
-    getLinkTypes() {
-        return this.linkTypes
-    }
-
 
     /// Getters for nodes
     getNodesKeys() {
@@ -341,9 +409,6 @@ class DataModel {
         values.sort()
         return values;
     }
-
-    
-
     
 }
 

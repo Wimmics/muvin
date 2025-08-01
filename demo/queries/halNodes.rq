@@ -2,4 +2,4 @@ prefix foaf:    <http://xmlns.com/foaf/0.1/>
 
 SELECT distinct ?value WHERE {
     ?a a foaf:Person ; foaf:name ?value . 
-}
+} 

@@ -42,7 +42,7 @@ class StreamGraph extends Profile {
 
     setArea(d, key) {
         let height = this.getHeight(key)
-        this.heightScale.range([-height, height]) // changes for each node
+        this.heightScale.range([-height * .7, height * .7]) // changes for each node
         return this.area(d)
     }
 

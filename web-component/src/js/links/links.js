@@ -36,7 +36,6 @@ class LinksGroup {
             x2: 0,
             y1: d => this.chart.yAxis.scale(d.source),
             y2: d => this.chart.yAxis.scale(d.target),
-            //'stroke-dasharray': d => this.chart.isUncertain(d) ? 4 : 'none',
             'stroke': '#000',
             'stroke-opacity': 1,
             'stroke-width': d => strokeScale(d.values.length),

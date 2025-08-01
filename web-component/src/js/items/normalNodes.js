@@ -1,5 +1,6 @@
 import * as d3 from 'd3'
 import NodesGroup from "./nodes";
+import { getSizeScale } from '../lib/SizeScaleCalculator';
 
 class NormalNodes extends NodesGroup{
     constructor(chart) {
@@ -7,7 +8,7 @@ class NormalNodes extends NodesGroup{
 
         this.radius = {min: 3, max: 15, minFocus: 10, maxFocus: 30}
 
-        this.radiusScale = d3.scaleLinear().range([this.radius.min, this.radius.max])
+        //this.radiusScale = d3.scaleLinear().range([this.radius.min, this.radius.max])
     }
 
     set() {
@@ -17,14 +18,28 @@ class NormalNodes extends NodesGroup{
     }
 
     async computeRadius() {
-        this.radiusScale.domain(d3.extent(this.data, d => d.contributors.length))
+        // this.radiusScale.domain(d3.extent(this.data, d => d.contributors.length))
+        let encoding = this.chart.encoding
+        let defaultEncoding = this.chart.getDefaultEncoding()
+
+        let options = {
+            domain: this.chart.data.getSizeDomain(),
+            range: encoding?.size?.scale?.range || defaultEncoding.size.scale.range,
+            type: encoding?.size?.scale?.type || defaultEncoding.size.scale.type
+        }
+
+        let scale = getSizeScale(options)
 
         this.data.forEach(d => {
-            if (this.chart.getTimeSelection() && this.chart.isSelected(d.year)) {
-                    this.radiusScale.range([this.radius.minFocus, this.radius.maxFocus])
-            } else this.radiusScale.range([this.radius.min, this.radius.max])
+            // if (this.chart.getTimeSelection() && this.chart.isSelected(d.year)) {
+            //         this.radiusScale.range([this.radius.minFocus, this.radius.maxFocus])
+            // } else this.radiusScale.range([this.radius.min, this.radius.max])
 
-            d.r = this.radiusScale(d.contributors.length)
+            // d.r = this.radiusScale(d.contributors.length)
+            d.r = scale(d.size)
+
+            if (this.chart.getTimeSelection() && this.chart.isSelected(d.year)) 
+                d.r *= 2         
         })
     }
 

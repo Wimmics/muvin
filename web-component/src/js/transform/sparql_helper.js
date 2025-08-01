@@ -3,7 +3,7 @@ const prepareQuery = (query) => {
     return encoded.replace(/%20/g, '+'); // optional if you need '+' instead of '%20'
 };
 
-async function sendRequest(url) {
+export async function sendRequest(url) {
     try {
         const response = await fetch(url, {
             method: 'GET',

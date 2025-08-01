@@ -25,9 +25,11 @@ class NodesGroup {
         this.mouseoverTimeout;
         this.tooltipId = null;
 
+        this.defaultColor = "#ccc"
+
         this.circleAttrs = {
             r: d => d.r,
-            fill: () => this.chart.getItemColor(),
+            fill: () => this.defaultColor,
             stroke: '#000',
             opacity: d => this.opacity(d),
             class: 'item-circle',
@@ -55,7 +57,7 @@ class NodesGroup {
         await this.appendNodes()
 
         this.group.selectAll('.doc')
-            .on('click', d => window.open(d.link))
+            .on('click', d => { if (d.link) window.open(d.link) })
             .on('mouseenter', d => { let e = d3.event; this.mouseover(e, d, 'item') })
             .on('mouseleave', () => this.mouseout()) // set a timeout to ensure that mouseout is not triggered while rapidly changing the hover
 
@@ -116,7 +118,7 @@ class NodesGroup {
 
         if (this.chart.isFreezeActive())  return
 
-        let collab = d.contnames ? d.contnames.filter( (e,i) => e != d.node.name && this.chart.areItemsVisible(e)) : []
+        let collab = d.contributors ? d.contributors.filter( (e,i) => e.name != d.node.name && this.chart.areItemsVisible(e.name)) : []
 
         this.group.selectAll('.item-circle')
             .attr('opacity', e => {
@@ -160,7 +162,7 @@ class NodesGroup {
         this.group.selectAll('.item-circle')
             .attr('opacity', d => this.chart.isFreezeActive() ? (this.chart.isFrozen(d.id) ? 1 : .1) : this.opacity(d) ) 
             .attr('stroke-width', 1)
-            .attr('fill', this.chart.getItemColor())
+            .attr('fill', this.defaultColor)
 
         this.chart.group.selectAll('.image-border').attr('stroke', '#fff')
     }
@@ -169,9 +171,9 @@ class NodesGroup {
         this.group.selectAll('.item-circle')
             .filter(e => this.chart.areItemsVisible(e.node.key))
             .transition('focus-items')
-            .duration(200)
+            .duration(500)
             .attr('opacity', e => nodes.includes(e.id) ? 1 : .1)
-            .attr('fill', this.chart.getItemColor())
+            .attr('fill', this.defaultColor)
     }
 
     highlightItem(name){
@@ -227,7 +229,7 @@ class NodesGroup {
             .append("rect")
             .attr("height", "100%")
             .attr("width", "100%")
-            .attr("fill", this.chart.getItemColor())
+            .attr("fill", this.defaultColor)
 
         pattern
             .append("rect")
