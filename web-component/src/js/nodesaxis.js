@@ -243,9 +243,6 @@ class NodesAxis {
 
         let concernedData = group.selectAll('g.link').filter(e => e.source === d || e.target === d).data()
         concernedData.sort((a,b) => +a.year - (+b.year))
-        for (let x of concernedData) {
-            console.log(x.year, x.values)
-        }
 
         group.selectAll('g.link')
             .transition()
@@ -253,7 +250,6 @@ class NodesAxis {
             .attr('opacity', e => e.source === d || e.target === d ? 1 : 0)
 
         this.frozenNodes = await this.chart.getConnectedNodes(d)
-        console.log('frozenNodes = ', this.frozenNodes)
 
         group.selectAll('g.artist')
             .transition('focus-artist')

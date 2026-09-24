@@ -40,7 +40,7 @@ class NodeLinksGroup{
         const _this = this;
 
         let data = await this.getData()
-        console.log("data = ", data)
+       
         let link = this.group.selectAll('.node-link')
             .data(data)
             .join(
